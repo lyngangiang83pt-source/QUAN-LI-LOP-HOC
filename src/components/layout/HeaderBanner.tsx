@@ -25,6 +25,7 @@ interface HeaderBannerProps {
   onExportCSV: () => void;
   onResetDayAttendance: () => void;
   onManualSync: () => void;
+  onOpenSupabaseModal: () => void;
   onShowToast: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
@@ -46,6 +47,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onExportCSV,
   onResetDayAttendance,
   onManualSync,
+  onOpenSupabaseModal,
   onShowToast,
 }) => {
   const [mascotBubble, setMascotBubble] = useState<string>('Chúc các em học tốt! 🌟');
@@ -216,7 +218,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
           </button>
 
           {/* Supabase Status Button */}
-          <SyncStatusBadge status={syncStatus} onClick={onManualSync} />
+          <SyncStatusBadge status={syncStatus} onClick={onOpenSupabaseModal} />
         </div>
       </div>
 

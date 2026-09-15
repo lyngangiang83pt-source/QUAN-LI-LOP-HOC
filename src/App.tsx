@@ -11,6 +11,7 @@ import { LeaderboardModal } from './features/leaderboard/components/LeaderboardM
 import { ImportModal } from './features/import-export/components/ImportModal';
 import { AddStudentModal } from './features/students/components/AddStudentModal';
 import { ScoreModal } from './features/students/components/ScoreModal';
+import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
 import { exportStudentsToCSV } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
 
@@ -49,6 +50,7 @@ export const App: React.FC = () => {
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [scoreModalData, setScoreModalData] = useState<{
     student: Student | null;
     mode: 'plus' | 'minus';
@@ -102,6 +104,7 @@ export const App: React.FC = () => {
         onExportCSV={handleExportCSV}
         onResetDayAttendance={resetDayAttendance}
         onManualSync={manualSync}
+        onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
         onShowToast={showToast}
       />
 
@@ -185,6 +188,14 @@ export const App: React.FC = () => {
         student={scoreModalData.student}
         mode={scoreModalData.mode}
         onApplyScore={updateScore}
+      />
+
+      <SupabaseConfigModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
+        classes={classes}
+        onReloadData={manualSync}
+        onShowToast={showToast}
       />
     </div>
   );
