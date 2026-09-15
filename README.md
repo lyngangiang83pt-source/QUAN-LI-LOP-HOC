@@ -90,17 +90,22 @@ vercel
 Để kích hoạt toàn quyền CRUD an toàn trên Supabase, truy cập **SQL Editor** trên Supabase Dashboard và thực thi:
 
 ```sql
--- Kích hoạt Row Level Security
-ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendance_logs ENABLE ROW LEVEL SECURITY;
+-- 1. Kích hoạt Row Level Security (Bảo mật cấp độ hàng)
+ALTER TABLE IF EXISTS public.classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.attendance_logs ENABLE ROW LEVEL SECURITY;
 
--- Cấp quyền truy cập cho Anon Key
+-- 2. Xóa các chính sách (policy) cũ nếu đã tồn tại để tránh lỗi trùng lặp (Error 42710)
+DROP POLICY IF EXISTS "Allow public all access on classes" ON public.classes;
+DROP POLICY IF EXISTS "Allow public all access on students" ON public.students;
+DROP POLICY IF EXISTS "Allow public all access on attendance_logs" ON public.attendance_logs;
+
+-- 3. Tạo lại chính sách toàn quyền Đọc/Ghi/Sửa/Xóa cho ứng dụng Web
 CREATE POLICY "Allow public all access on classes" ON public.classes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all access on students" ON public.students FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public all access on attendance_logs" ON public.attendance_logs FOR ALL USING (true) WITH CHECK (true);
 
--- Đánh chỉ mục hiệu năng cao
+-- 4. Tạo chỉ mục (Index) tăng tốc độ tìm kiếm và lọc dữ liệu
 CREATE INDEX IF NOT EXISTS idx_students_class_id ON public.students(class_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_logs_student_id ON public.attendance_logs(student_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_logs_check_date ON public.attendance_logs(check_date);
