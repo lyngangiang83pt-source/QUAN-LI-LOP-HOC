@@ -1,0 +1,17 @@
+{
+  "name": "quan-li-lop-hoc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sổ Tay Quản Lý Lớp Học, Điểm Danh & Vòng Quay May Mắn",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "quan-ly-lop-hoc",
+    "supabase",
+    "lucky-wheel",
+    "classroom-management"
+  ],
+  "author": "Docbuoc.vn",
+  "license": "MIT"
+}
