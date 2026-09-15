@@ -1,3 +1,9 @@
+# Agent rules and skills
+.agent/
+.Agent/
+.agent
+.Agent
+
 # Temporary files
 ~$*
 *.tmp
