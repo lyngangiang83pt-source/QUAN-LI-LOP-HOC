@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { MASCOT_MESSAGES } from '../../constants/classroomData';
-import { audioService } from '../../services/audioService';
 import { Sparkles, Trophy, FolderUp, CheckCircle, Zap, Download, RotateCcw } from 'lucide-react';
 
 interface HeaderBannerProps {
@@ -50,29 +48,16 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenSupabaseModal,
   onShowToast,
 }) => {
-  const [mascotBubble, setMascotBubble] = useState<string>('Chúc các em học tốt! 🌟');
-
   const qualifiedCount = students.filter((s) => (s.points || 0) >= minWheelPoints).length;
-
-  const handleMascotClick = () => {
-    audioService.play('plus');
-    const randomMsg = MASCOT_MESSAGES[Math.floor(Math.random() * MASCOT_MESSAGES.length)];
-    setMascotBubble(randomMsg);
-    onShowToast(randomMsg, 'wheel');
-  };
 
   return (
     <header className="bg-gradient-to-r from-sky-600 via-sky-700 to-teal-700 text-white rounded-3xl p-5 md:p-6 shadow-xl mb-6 relative overflow-hidden border border-white/20">
       {/* Top Illustrated Hero Banner */}
-      <div
-        onClick={handleMascotClick}
-        className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg cursor-pointer group"
-        title="Bấm vào banner để nhận lời chúc học tập vui vẻ!"
-      >
+      <div className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg">
         <img
           src="/banner-header.png"
           alt="Banner Sổ Tay Quản Lý Lớp Học"
-          className="w-full h-auto block object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+          className="w-full h-auto block object-cover"
           onError={(e) => {
             (e.target as HTMLElement).style.display = 'none';
           }}
