@@ -67,36 +67,19 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
       <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full pointer-events-none blur-xl" />
 
       {/* Top Illustrated Hero Banner */}
-      <div className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg min-h-[140px] sm:min-h-[170px] md:min-h-[200px] flex items-center justify-end bg-sky-800">
+      <div
+        onClick={handleMascotClick}
+        className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg bg-sky-800 cursor-pointer group"
+        title="Bấm vào banner để nhận lời chúc học tập vui vẻ!"
+      >
         <img
           src="/banner-header.png"
           alt="Banner Sổ Tay Quản Lý Lớp Học"
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="w-full h-auto block object-cover transition-transform duration-300 group-hover:scale-[1.01]"
           onError={(e) => {
             (e.target as HTMLElement).style.display = 'none';
           }}
         />
-
-        {/* Right Mascot (Robot Lớn Nổi Bật Tương Tác) */}
-        <div className="relative z-10 p-3 sm:p-4 md:p-6 flex items-center gap-3">
-          <div
-            onClick={handleMascotClick}
-            className="relative cursor-pointer group flex flex-col items-center"
-            title="Bấm vào tôi để nhận lời chúc học tập vui vẻ!"
-          >
-            <img
-              src="/robot-mascot.png"
-              alt="Robot Mascot"
-              className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/icon-wheel.png';
-              }}
-            />
-            <div className="text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-400 to-amber-300 text-slate-900 px-3 py-1 rounded-full shadow-lg border border-amber-200 mt-1 truncate max-w-[140px] animate-bounce">
-              {mascotBubble}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Class Selector Bar & Header Action Buttons */}
