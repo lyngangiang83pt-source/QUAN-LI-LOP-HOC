@@ -63,13 +63,10 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
 
   return (
     <header className="bg-gradient-to-r from-sky-600 via-sky-700 to-teal-700 text-white rounded-3xl p-5 md:p-6 shadow-xl mb-6 relative overflow-hidden border border-white/20">
-      {/* Background Decorative Bubble */}
-      <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full pointer-events-none blur-xl" />
-
       {/* Top Illustrated Hero Banner */}
       <div
         onClick={handleMascotClick}
-        className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg bg-sky-800 cursor-pointer group"
+        className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg cursor-pointer group"
         title="Bấm vào banner để nhận lời chúc học tập vui vẻ!"
       >
         <img
