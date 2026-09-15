@@ -8,13 +8,15 @@ dist-ssr/
 .env
 .env*.local
 
-# Agent rules and skills
+# Agent configuration, rules and skills
 .agent/
 .Agent/
 .agent
 .Agent
+.[aA]gent/
+.[aA]gent*
 
-# Temporary files
+# Temporary files & Office temp
 ~$*
 *.tmp
 *.temp
@@ -22,7 +24,7 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Logs & cache
+# Logs & IDE cache
 *.log
 .vscode/
 .idea/
