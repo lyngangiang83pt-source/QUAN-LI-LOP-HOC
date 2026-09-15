@@ -67,7 +67,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
       <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full pointer-events-none blur-xl" />
 
       {/* Top Illustrated Hero Banner */}
-      <div className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg min-h-[140px] md:min-h-[180px] flex items-center justify-between bg-sky-800">
+      <div className="relative rounded-2xl overflow-hidden mb-6 border border-white/30 shadow-lg min-h-[140px] sm:min-h-[170px] md:min-h-[200px] flex items-center justify-end bg-sky-800">
         <img
           src="/banner-header.png"
           alt="Banner Sổ Tay Quản Lý Lớp Học"
@@ -77,46 +77,23 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
           }}
         />
 
-        <div className="relative z-10 w-full p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-black/25 backdrop-blur-[2px]">
-          {/* Left Quote */}
-          <div className="hidden lg:flex flex-col items-start gap-1">
-            <div className="font-handwriting text-xl md:text-2xl text-amber-200 drop-shadow-md flex items-center gap-2">
-              <span>Mỗi ngày đến trường là một ngày vui! ♡</span>
-              <span className="animate-bounce">✈️</span>
-            </div>
-          </div>
-
-          {/* Center 3D Titles */}
-          <div className="text-center">
-            <div className="text-xs md:text-sm font-black tracking-widest text-amber-300 uppercase drop-shadow-sm">
-              SỔ TAY
-            </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-md font-sans">
-              QUẢN LÝ LỚP HỌC
-            </h1>
-            <div className="inline-block mt-1 px-3 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] md:text-xs font-bold text-sky-100 border border-white/30">
-              ✨ Tổ chức - Kết nối - Truyền cảm hứng
-            </div>
-          </div>
-
-          {/* Right Mascot & Planks */}
-          <div className="flex items-center gap-3">
-            <div
-              onClick={handleMascotClick}
-              className="relative cursor-pointer group flex flex-col items-center"
-              title="Bấm vào tôi để nhận lời chúc học tập vui vẻ!"
-            >
-              <img
-                src="/robot-mascot.png"
-                alt="Robot Mascot"
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/icon-wheel.png';
-                }}
-              />
-              <div className="hidden sm:block text-[10px] font-extrabold bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full shadow-md mt-1 truncate max-w-[120px]">
-                {mascotBubble}
-              </div>
+        {/* Right Mascot (Robot Lớn Nổi Bật Tương Tác) */}
+        <div className="relative z-10 p-3 sm:p-4 md:p-6 flex items-center gap-3">
+          <div
+            onClick={handleMascotClick}
+            className="relative cursor-pointer group flex flex-col items-center"
+            title="Bấm vào tôi để nhận lời chúc học tập vui vẻ!"
+          >
+            <img
+              src="/robot-mascot.png"
+              alt="Robot Mascot"
+              className="w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/icon-wheel.png';
+              }}
+            />
+            <div className="text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-400 to-amber-300 text-slate-900 px-3 py-1 rounded-full shadow-lg border border-amber-200 mt-1 truncate max-w-[140px] animate-bounce">
+              {mascotBubble}
             </div>
           </div>
         </div>
