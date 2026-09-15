@@ -4,7 +4,7 @@ import { ClassItem, Student } from '../../types';
 export class SupabaseSyncService {
   private static debounceTimer: NodeJS.Timeout | null = null;
 
-  // 1. Tải danh sách lớp và học sinh từ Supabase
+  // 1. Tải toàn bộ danh sách lớp và học sinh từ Supabase
   public static async fetchRemoteData(): Promise<ClassItem[] | null> {
     const client = supabase;
     if (!client) return null;
@@ -63,7 +63,7 @@ export class SupabaseSyncService {
       for (const c of classes) {
         let classDbId = c.dbId;
 
-        // Kiểm tra hoặc thêm lớp vào DB
+        // Kiểm tra hoặc tạo lớp trong DB
         if (!classDbId) {
           const { data: found } = await client
             .from('classes')
@@ -114,9 +114,11 @@ export class SupabaseSyncService {
               .limit(1);
 
             if (existingStu && existingStu.length > 0) {
+              s.dbId = existingStu[0].id;
               await client.from('students').update(payload).eq('id', existingStu[0].id);
             } else {
-              await client.from('students').insert(payload);
+              const { data: createdStu } = await client.from('students').insert(payload).select().single();
+              if (createdStu) s.dbId = createdStu.id;
             }
           }
         }
@@ -172,6 +174,26 @@ export class SupabaseSyncService {
         }
 
         if (classDbId && currentClass.students) {
+          // Lấy danh sách ID học sinh hiện có trong DB của lớp này để dọn dẹp nếu có học sinh bị xóa
+          const { data: remoteStuList } = await client
+            .from('students')
+            .select('id, student_code')
+            .eq('class_id', classDbId);
+
+          const currentStudentCodes = new Set(currentClass.students.map((s) => s.id));
+
+          // Xóa những học sinh đã bị xóa khỏi lớp trên giao diện
+          if (remoteStuList && remoteStuList.length > 0) {
+            const idsToDelete = remoteStuList
+              .filter((rs) => !currentStudentCodes.has(rs.student_code))
+              .map((rs) => rs.id);
+
+            if (idsToDelete.length > 0) {
+              await client.from('students').delete().in('id', idsToDelete);
+            }
+          }
+
+          // Cập nhật hoặc thêm mới học sinh hiện có
           for (const s of currentClass.students) {
             const payload = {
               class_id: classDbId,
@@ -183,25 +205,87 @@ export class SupabaseSyncService {
               stars_count: Number(s.points || 0),
             };
 
-            const { data: ex } = await client
-              .from('students')
-              .select('id')
-              .eq('class_id', classDbId)
-              .eq('student_code', s.id)
-              .limit(1);
+            const existingInDb = remoteStuList?.find((rs) => rs.student_code === s.id);
 
-            if (ex && ex.length > 0) {
-              await client.from('students').update(payload).eq('id', ex[0].id);
+            if (existingInDb) {
+              s.dbId = existingInDb.id;
+              await client.from('students').update(payload).eq('id', existingInDb.id);
             } else {
-              await client.from('students').insert(payload);
+              const { data: inserted } = await client.from('students').insert(payload).select().single();
+              if (inserted) s.dbId = inserted.id;
             }
           }
         }
 
         onStateChange?.('connected');
-      } catch {
+      } catch (err) {
+        console.warn('Lỗi đồng bộ tự động lên Supabase:', err);
         onStateChange?.('error');
       }
     }, 600);
+  }
+
+  // 4. Xóa vĩnh viễn một lớp trên Supabase
+  public static async deleteClassFromDb(classDbId: number): Promise<void> {
+    const client = supabase;
+    if (!client || !classDbId) return;
+
+    try {
+      await client.from('students').delete().eq('class_id', classDbId);
+      await client.from('classes').delete().eq('id', classDbId);
+    } catch (err) {
+      console.warn('Lỗi khi xóa lớp trên Supabase:', err);
+    }
+  }
+
+  // 5. Ghi nhận nhật ký điểm danh vào attendance_logs
+  public static async logAttendance(
+    studentDbId: number,
+    status: string,
+    pointsAwarded: number,
+    note: string
+  ): Promise<void> {
+    const client = supabase;
+    if (!client || !studentDbId) return;
+
+    try {
+      await client.from('attendance_logs').insert({
+        student_id: studentDbId,
+        check_date: new Date().toISOString().slice(0, 10),
+        status,
+        points_awarded: pointsAwarded,
+        note,
+      });
+    } catch {
+      // Non-blocking log
+    }
+  }
+
+  // 6. Đăng ký nhận thông báo thay đổi thời gian thực (Supabase Realtime)
+  public static subscribeToRealtime(onDataChange: () => void): () => void {
+    const client = supabase;
+    if (!client) return () => {};
+
+    try {
+      const channel = client
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'students' },
+          () => onDataChange()
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'classes' },
+          () => onDataChange()
+        )
+        .subscribe();
+
+      return () => {
+        client.removeChannel(channel);
+      };
+    } catch {
+      return () => {};
+    }
   }
 }

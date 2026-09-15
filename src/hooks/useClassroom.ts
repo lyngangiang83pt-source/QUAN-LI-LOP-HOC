@@ -33,7 +33,7 @@ export const useClassroom = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     state: 'idle',
-    message: '☁️ Supabase: Sẵn sàng',
+    message: '☁️ Supabase: Đang kết nối...',
   });
 
   // Current active class
@@ -83,8 +83,17 @@ export const useClassroom = () => {
       if (remote && remote.length > 0) {
         setClasses(remote);
         localStorage.setItem(STORAGE_CLASSES, JSON.stringify(remote));
+        
+        const savedCurId = localStorage.getItem(STORAGE_CURRENT_ID);
+        if (savedCurId && remote.some((c) => c.id === savedCurId)) {
+          setCurrentClassId(savedCurId);
+        } else {
+          setCurrentClassId(remote[0].id);
+          localStorage.setItem(STORAGE_CURRENT_ID, remote[0].id);
+        }
+
         setSyncStatus({ state: 'connected', message: '☁️ Supabase: Đã kết nối ✅' });
-        showToast('Đã đồng bộ dữ liệu từ Supabase Cloud thành công! 🚀', 'success');
+        showToast(`Đã đồng bộ ${remote.length} lớp học từ Supabase Cloud! 🚀`, 'success');
       } else if (remote && remote.length === 0) {
         // Supabase is empty, push local data
         await SupabaseSyncService.pushAllData(classes);
@@ -167,6 +176,10 @@ export const useClassroom = () => {
     const updated = classes.filter((c) => c.id !== classId);
     const nextId = currentClassId === classId ? updated[0].id : currentClassId;
 
+    if (target?.dbId) {
+      SupabaseSyncService.deleteClassFromDb(target.dbId);
+    }
+
     persistClasses(updated, nextId);
     setCurrentClassId(nextId);
     showToast(`Đã xóa lớp "${target?.name || ''}"!`, 'danger');
@@ -237,6 +250,10 @@ export const useClassroom = () => {
       s.id === studentId ? { ...s, attendance: newStatus, points: newPts, lastNote: note } : s
     );
 
+    if (student.dbId) {
+      SupabaseSyncService.logAttendance(student.dbId, newStatus, pointDiff, note);
+    }
+
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     if (pointDiff > 0) audioService.play('plus');
     else if (pointDiff < 0) audioService.play('minus');
@@ -256,6 +273,10 @@ export const useClassroom = () => {
     const updatedStudents = students.map((s) =>
       s.id === studentId ? { ...s, points: newPts, lastNote: note } : s
     );
+
+    if (student.dbId) {
+      SupabaseSyncService.logAttendance(student.dbId, student.attendance, pointDiff, reason);
+    }
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     if (pointDiff > 0) audioService.play('plus');
@@ -386,6 +407,13 @@ export const useClassroom = () => {
       if (remote && remote.length > 0) {
         setClasses(remote);
         localStorage.setItem(STORAGE_CLASSES, JSON.stringify(remote));
+        const savedCurId = localStorage.getItem(STORAGE_CURRENT_ID);
+        if (savedCurId && remote.some((c) => c.id === savedCurId)) {
+          setCurrentClassId(savedCurId);
+        } else {
+          setCurrentClassId(remote[0].id);
+          localStorage.setItem(STORAGE_CURRENT_ID, remote[0].id);
+        }
         setSyncStatus({ state: 'connected', message: '☁️ Supabase: Đã kết nối ✅' });
         showToast('Đã tải và đồng bộ thành công dữ liệu từ Supabase Cloud!', 'success');
       } else {
