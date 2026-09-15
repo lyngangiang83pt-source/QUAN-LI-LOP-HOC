@@ -1,3 +1,13 @@
+# Dependencies & Build output
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+.env
+.env*.local
+
 # Agent rules and skills
 .agent/
 .Agent/
