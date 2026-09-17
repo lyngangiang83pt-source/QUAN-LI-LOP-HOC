@@ -11,10 +11,9 @@ import {
   XCircle, 
   Sparkles, 
   ExternalLink,
-  RotateCcw,
-  FolderOpen
+  RotateCcw
 } from 'lucide-react';
-import { STUDENT_RESULTS_DRIVE_URL } from '../../../constants/classroomData';
+
 
 interface FindStudentByCodeModalProps {
   isOpen: boolean;
@@ -418,18 +417,8 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                   <ExternalLink size={14} />
                   <span>Xem trên danh sách</span>
                 </button>
-
-                <a
-                  href={STUDENT_RESULTS_DRIVE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs transition-colors flex items-center gap-1.5 border border-teal-200"
-                  title="Mở thư mục Google Drive: Kết quả bài làm học sinh"
-                >
-                  <FolderOpen size={14} />
-                  <span>Nộp bài Drive ↗</span>
-                </a>
               </div>
+
 
               <button
                 type="button"

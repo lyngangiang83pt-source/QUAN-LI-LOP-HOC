@@ -3,8 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, FolderUp, Download, FolderOpen, FileSpreadsheet } from 'lucide-react';
-import { STUDENT_RESULTS_DRIVE_URL } from '../../constants/classroomData';
+import { Sparkles, Trophy, FolderUp, Download, FileSpreadsheet } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -95,18 +94,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Top điểm</span>
           </button>
 
-          {/* Link Kết quả học sinh Google Drive */}
-          <a
-            href={STUDENT_RESULTS_DRIVE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3.5 py-2 rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-teal-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
-            title="Mở thư mục Google Drive: Kết quả bài làm & sản phẩm của học sinh"
-          >
-            <FolderOpen size={16} />
-            <span>Kết quả học sinh ↗</span>
-          </a>
-
           {/* Import Student List Button */}
           <button
             type="button"
@@ -117,6 +104,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <FolderUp size={15} />
             <span>Tải DS</span>
           </button>
+
 
           {/* Export Score File Button */}
           <button
