@@ -57,3 +57,5 @@ export const DEFAULT_CLASSES: ClassItem[] = [
     ]
   }
 ];
+
+export const STUDENT_RESULTS_DRIVE_URL = 'https://drive.google.com/drive/folders/12P6BqxX0BeqLGhFwCeaHMWEu-mcex-ba?usp=drive_link';

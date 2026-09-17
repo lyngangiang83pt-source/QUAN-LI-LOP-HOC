@@ -11,8 +11,10 @@ import {
   XCircle, 
   Sparkles, 
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  FolderOpen
 } from 'lucide-react';
+import { STUDENT_RESULTS_DRIVE_URL } from '../../../constants/classroomData';
 
 interface FindStudentByCodeModalProps {
   isOpen: boolean;
@@ -405,16 +407,29 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
               </div>
             )}
 
-            {/* Action Group 3: Locate on Main List & Close */}
-            <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => handleLocateAndClose(activeStudent)}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-bold text-xs transition-colors flex items-center gap-1.5 border border-slate-200"
-              >
-                <ExternalLink size={14} />
-                <span>Xem trên danh sách chính</span>
-              </button>
+            {/* Action Group 3: Locate on Main List, Drive Folder & Close */}
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleLocateAndClose(activeStudent)}
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 font-bold text-xs transition-colors flex items-center gap-1.5 border border-slate-200"
+                >
+                  <ExternalLink size={14} />
+                  <span>Xem trên danh sách</span>
+                </button>
+
+                <a
+                  href={STUDENT_RESULTS_DRIVE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs transition-colors flex items-center gap-1.5 border border-teal-200"
+                  title="Mở thư mục Google Drive: Kết quả bài làm học sinh"
+                >
+                  <FolderOpen size={14} />
+                  <span>Nộp bài Drive ↗</span>
+                </a>
+              </div>
 
               <button
                 type="button"

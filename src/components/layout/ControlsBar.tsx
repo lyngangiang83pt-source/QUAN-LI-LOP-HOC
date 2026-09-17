@@ -1,6 +1,7 @@
 import React from 'react';
 import { FilterType } from '../../types';
-import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash } from 'lucide-react';
+import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash, FolderOpen } from 'lucide-react';
+import { STUDENT_RESULTS_DRIVE_URL } from '../../constants/classroomData';
 
 interface ControlsBarProps {
   currentFilter: FilterType;
@@ -118,6 +119,17 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
+        <a
+          href={STUDENT_RESULTS_DRIVE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-2xs"
+          title="Mở thư mục Google Drive: Kết quả bài làm học sinh"
+        >
+          <FolderOpen size={14} />
+          <span>Kết quả HS ↗</span>
+        </a>
+
         <button
           type="button"
           onClick={onOpenWheelModal}
