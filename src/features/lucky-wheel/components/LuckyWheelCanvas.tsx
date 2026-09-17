@@ -1,14 +1,18 @@
 import React, { useRef, useEffect } from 'react';
-import { Student } from '../../../types';
+import { Student, PrizeItem, WheelMode } from '../../../types';
 import { WHEEL_COLORS } from '../../../constants/classroomData';
 
 interface LuckyWheelCanvasProps {
-  candidates: Student[];
+  mode: WheelMode;
+  prizeSlices?: PrizeItem[];
+  candidates?: Student[];
   rotation: number;
 }
 
 export const LuckyWheelCanvas: React.FC<LuckyWheelCanvasProps> = ({
-  candidates,
+  mode,
+  prizeSlices = [],
+  candidates = [],
   rotation,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,8 +31,84 @@ export const LuckyWheelCanvas: React.FC<LuckyWheelCanvasProps> = ({
 
     ctx.clearRect(0, 0, width, height);
 
+    // --- MODE 1: PRIZE WHEEL (+1Đ, +2Đ, 0Đ, ĐẠT, MAY MẮN LẦN SAU) ---
+    if (mode === 'prize') {
+      const slices = prizeSlices;
+      const numSlices = slices.length;
+      if (numSlices === 0) return;
+
+      const sliceAngle = (2 * Math.PI) / numSlices;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(rotation);
+
+      for (let i = 0; i < numSlices; i++) {
+        const startAngle = i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+        const prize = slices[i];
+
+        // Draw Slice
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = prize.color || WHEEL_COLORS[i % WHEEL_COLORS.length];
+        ctx.fill();
+
+        // Slice Border
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Draw Text & Icon
+        ctx.save();
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        // Icon
+        ctx.font = '22px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText(prize.icon, radius - 20, 0);
+
+        // Label Text
+        ctx.font = '900 18px "Plus Jakarta Sans", sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(prize.label, radius - 55, 0);
+
+        ctx.restore();
+      }
+
+      // Outer Rim
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Center Pin
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '20px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🎁', centerX, centerY);
+      return;
+    }
+
+    // --- MODE 2: STUDENT NAMES WHEEL ---
     if (candidates.length === 0) {
-      // Empty wheel placeholder
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
       ctx.fillStyle = '#f1f5f9';
@@ -77,7 +157,6 @@ export const LuckyWheelCanvas: React.FC<LuckyWheelCanvasProps> = ({
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#ffffff';
 
-      // Dynamic font size
       const fontSize = numSlices > 25 ? 12 : numSlices > 15 ? 14 : 17;
       ctx.font = `bold ${fontSize}px "Plus Jakarta Sans", sans-serif`;
       ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
@@ -112,7 +191,7 @@ export const LuckyWheelCanvas: React.FC<LuckyWheelCanvasProps> = ({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('⭐', centerX, centerY);
-  }, [candidates, rotation]);
+  }, [mode, prizeSlices, candidates, rotation]);
 
   return (
     <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto my-2 flex items-center justify-center">
@@ -129,3 +208,4 @@ export const LuckyWheelCanvas: React.FC<LuckyWheelCanvasProps> = ({
     </div>
   );
 };
+

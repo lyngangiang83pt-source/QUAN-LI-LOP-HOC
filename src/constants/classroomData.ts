@@ -1,4 +1,4 @@
-import { ClassItem, Criteria } from '../types';
+import { ClassItem, Criteria, PrizeItem } from '../types';
 
 export const BONUS_CRITERIA: Criteria[] = [
   { icon: '🙋‍♂️', label: 'Phát biểu đúng', pts: 1 },
@@ -16,10 +16,22 @@ export const PENALTY_CRITERIA: Criteria[] = [
   { icon: '📱', label: 'Làm việc riêng', pts: -1 },
 ];
 
+export const DEFAULT_PRIZE_SLICES: PrizeItem[] = [
+  { id: 'p1', label: '+1 Điểm', shortLabel: '+1Đ', points: 1, type: 'points', color: '#10b981', icon: '🌟', description: 'Cộng 1 điểm thưởng' },
+  { id: 'p2', label: '+2 Điểm', shortLabel: '+2Đ', points: 2, type: 'points', color: '#8b5cf6', icon: '👑', description: 'Cộng 2 điểm xuất sắc' },
+  { id: 'p3', label: '0 Điểm', shortLabel: '0Đ', points: 0, type: 'points', color: '#64748b', icon: '🎯', description: 'Giữ nguyên số điểm' },
+  { id: 'p4', label: 'ĐẠT', shortLabel: 'ĐẠT', points: 1, type: 'pass', color: '#06b6d4', icon: '🎉', description: 'Đạt yêu cầu bài tập (+1đ)' },
+  { id: 'p5', label: 'MAY MẮN LẦN SAU', shortLabel: 'MAY MẮN', points: 0, type: 'lucky_next', color: '#f43f5e', icon: '☘️', description: 'Chúc bạn may mắn lần sau' },
+  { id: 'p6', label: '+1 Điểm', shortLabel: '+1Đ', points: 1, type: 'points', color: '#3b82f6', icon: '🌟', description: 'Cộng 1 điểm thưởng' },
+  { id: 'p7', label: '+2 Điểm', shortLabel: '+2Đ', points: 2, type: 'points', color: '#f59e0b', icon: '🔥', description: 'Cộng 2 điểm xuất sắc' },
+  { id: 'p8', label: 'MAY MẮN LẦN SAU', shortLabel: 'MAY MẮN', points: 0, type: 'lucky_next', color: '#ec4899', icon: '🎁', description: 'Chúc bạn may mắn lần sau' },
+];
+
 export const WHEEL_COLORS: string[] = [
   '#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
   '#ec4899', '#3b82f6', '#14b8a6', '#84cc16', '#e11d48'
 ];
+
 
 export const MASCOT_MESSAGES: string[] = [
   'Chào Thầy/Cô và các bạn học sinh! Điểm danh có mặt hôm nay mỗi bạn được nhận ngay 2 điểm chuyên cần! 🌟',

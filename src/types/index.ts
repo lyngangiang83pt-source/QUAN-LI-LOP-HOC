@@ -38,3 +38,17 @@ export interface SyncStatus {
   state: SyncState;
   message: string;
 }
+
+export type WheelMode = 'prize' | 'student';
+
+export interface PrizeItem {
+  id: string;
+  label: string; // e.g. '+1 Điểm', '+2 Điểm', '0 Điểm', 'ĐẠT', 'MAY MẮN LẦN SAU'
+  shortLabel: string;
+  points: number;
+  type: 'points' | 'pass' | 'lucky_next';
+  color: string;
+  icon: string;
+  description: string;
+}
+
