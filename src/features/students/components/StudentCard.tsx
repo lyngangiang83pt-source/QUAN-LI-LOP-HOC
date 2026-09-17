@@ -25,36 +25,61 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   const [starAnimKey, setStarAnimKey] = useState<number>(0);
   const [pointDiff, setPointDiff] = useState<number>(0);
   const [isGlowing, setIsGlowing] = useState<boolean>(false);
+  const [isMilestoneReached, setIsMilestoneReached] = useState<boolean>(false);
   const prevPointsRef = useRef<number>(student.points || 0);
 
   useEffect(() => {
     const currentPoints = student.points || 0;
-    const diff = currentPoints - prevPointsRef.current;
+    const prevPoints = prevPointsRef.current;
+    const diff = currentPoints - prevPoints;
+
     if (diff > 0) {
+      const reachedMilestone = prevPoints < minWheelPoints && currentPoints >= minWheelPoints;
+
       setPointDiff(diff);
       setStarAnimKey((prev) => prev + 1);
       setIsGlowing(true);
-      const timer = setTimeout(() => setIsGlowing(false), 1800);
+      setIsMilestoneReached(reachedMilestone);
+
+      const animDuration = reachedMilestone ? 2400 : 1800;
+      const timer = setTimeout(() => {
+        setIsGlowing(false);
+        setIsMilestoneReached(false);
+      }, animDuration);
+
       return () => clearTimeout(timer);
     }
     prevPointsRef.current = currentPoints;
-  }, [student.points]);
+  }, [student.points, minWheelPoints]);
 
   return (
     <div
       className={`bg-white rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
-        isGlowing
+        isMilestoneReached
+          ? 'animate-crownGlow ring-4 ring-pink-400/80 border-pink-400 shadow-2xl scale-[1.03] z-20'
+          : isGlowing
           ? 'animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
           : 'border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
       }`}
     >
-      {/* Flying Gold Stars & Floating Score Effect Layer */}
-      <FloatingStarsEffect key={starAnimKey} pointGain={pointDiff} isActive={isGlowing} />
+      {/* Flying Gold Stars & Milestone Crown/Heart Celebration Effect Layer */}
+      <FloatingStarsEffect
+        key={starAnimKey}
+        pointGain={pointDiff}
+        isActive={isGlowing}
+        isMilestoneReached={isMilestoneReached}
+      />
 
       {/* Top Banner Tag if Qualified */}
       {isQualified && (
-        <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-pink-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs">
-          🎡 Đủ đk quay
+        <div
+          className={`absolute top-0 right-0 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all ${
+            isMilestoneReached
+              ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 scale-110 shadow-lg'
+              : 'bg-gradient-to-l from-purple-600 to-pink-600'
+          }`}
+        >
+          {isMilestoneReached ? '👑 ĐỦ ĐK QUAY! 🎉' : '🎡 Đủ đk quay'}
         </div>
       )}
 
