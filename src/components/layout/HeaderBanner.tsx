@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, Hash, Download, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -19,6 +19,8 @@ interface HeaderBannerProps {
   onOpenLeaderboardModal: () => void;
   onOpenFindCodeModal: () => void;
   onOpenImportScoreModal: () => void;
+  onMarkAllPresent: () => void;
+  onAddAllClassBonus: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
@@ -39,6 +41,8 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenLeaderboardModal,
   onOpenFindCodeModal,
   onOpenImportScoreModal,
+  onMarkAllPresent,
+  onAddAllClassBonus,
   onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
@@ -105,6 +109,35 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Tìm Mã HS</span>
           </button>
 
+          {/* Mark All Present Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Thầy/Cô có muốn điểm danh TẤT CẢ học sinh là CÓ MẶT (+2đ chuyên cần) không?')) {
+                onMarkAllPresent();
+              }
+            }}
+            className="px-3.5 py-2 rounded-full bg-emerald-500/80 hover:bg-emerald-600 text-white font-bold text-xs md:text-sm border border-white/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+            title="Điểm danh tất cả học sinh có mặt (+2đ chuyên cần)"
+          >
+            <CheckCircle size={15} />
+            <span>Có mặt tất cả (+2đ)</span>
+          </button>
+
+          {/* Whole Class +2pts Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Thầy/Cô có muốn cộng thêm +2 ĐIỂM THƯỞNG cho TẤT CẢ học sinh trong lớp không?')) {
+                onAddAllClassBonus();
+              }
+            }}
+            className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            title="Cộng thêm +2 điểm thưởng cho tất cả học sinh cả lớp"
+          >
+            <Zap size={15} />
+            <span>Cả lớp +2đ</span>
+          </button>
 
           {/* Export Score File Button */}
           <button
@@ -116,7 +149,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <Download size={15} />
             <span>Xuất file điểm</span>
           </button>
-
 
           {/* Import Score File Button */}
           <button

@@ -251,15 +251,15 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Thầy/Cô có muốn đặt lại (reset) điểm của em "${activeStudent.name}" về 0 không?`)) {
+                    if (confirm(`Thầy/Cô có muốn đặt lại (reset) điểm của em "${activeStudent.name}" về 2 điểm ban đầu không?`)) {
                       onResetScore(activeStudent.id);
                     }
                   }}
-                  className="mt-1 px-2 py-0.5 rounded-lg bg-black/20 hover:bg-rose-600/80 text-white text-[10px] font-extrabold flex items-center gap-1 transition-colors"
-                  title="Reset điểm về 0"
+                  className="mt-1 px-2 py-0.5 rounded-lg bg-black/20 hover:bg-amber-600/80 text-white text-[10px] font-extrabold flex items-center gap-1 transition-colors"
+                  title="Reset điểm về 2đ ban đầu"
                 >
                   <RotateCcw size={10} />
-                  <span>Reset 0đ</span>
+                  <span>Reset 2đ</span>
                 </button>
               )}
             </div>

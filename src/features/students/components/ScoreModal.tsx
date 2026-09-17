@@ -126,16 +126,16 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" về 0 không?`)) {
+              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" về 2 điểm ban đầu không?`)) {
                 onResetScore(student.id);
                 onClose();
               }
             }}
             className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition-colors flex items-center gap-1.5"
-            title="Đặt lại điểm số em này về 0"
+            title="Đặt lại điểm số em này về 2 điểm ban đầu"
           >
             <RotateCcw size={13} />
-            <span>Reset 0 điểm</span>
+            <span>Reset 2 điểm</span>
           </button>
         </div>
       )}

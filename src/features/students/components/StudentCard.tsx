@@ -109,12 +109,12 @@ export const StudentCard: React.FC<StudentCardProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" (Mã: ${student.id}) về 0 điểm không?`)) {
+              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" (Mã: ${student.id}) về 2 điểm ban đầu không?`)) {
                 onResetStudentScore(student.id);
               }
             }}
             className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 hover:border-amber-400 text-[11px] font-extrabold transition-all flex items-center gap-1 shadow-2xs active:scale-95"
-            title={`Đặt lại (reset) điểm của em ${student.name} về 0`}
+            title={`Đặt lại (reset) điểm của em ${student.name} về 2 điểm ban đầu`}
           >
             <RotateCcw size={12} />
             <span>Reset</span>

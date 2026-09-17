@@ -318,6 +318,18 @@ export const useClassroom = () => {
     showToast('Đã cấp 2 điểm tích lũy ban đầu cho toàn bộ học sinh trong lớp! 🌟', 'success');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
+  const addAllClassBonus = useCallback((bonusPts: number = 2, reason: string = 'Thưởng cả lớp') => {
+    const updatedStudents = students.map((s) => ({
+      ...s,
+      points: Math.max(0, (s.points || 0) + bonusPts),
+      lastNote: `${reason} (+${bonusPts}đ)`,
+    }));
+
+    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
+    audioService.play('plus');
+    showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho TẤT CẢ học sinh trong lớp (${reason})!`, 'success');
+  }, [classes, currentClassId, persistClasses, showToast, students]);
+
   const addStudent = useCallback((name: string) => {
     if (!name || !name.trim()) return;
     const nextId = `HS${String(students.length + 1).padStart(2, '0')}`;
@@ -343,19 +355,19 @@ export const useClassroom = () => {
       s.id === studentId
         ? {
             ...s,
-            points: 0,
-            lastNote: 'Đặt lại (reset) điểm về 0đ',
+            points: 2,
+            lastNote: 'Đặt lại (reset) điểm về 2đ ban đầu',
           }
         : s
     );
 
     if (student.dbId) {
-      SupabaseSyncService.logAttendance(student.dbId, student.attendance, -student.points, 'Reset điểm về 0');
+      SupabaseSyncService.logAttendance(student.dbId, student.attendance, 2 - (student.points || 0), 'Reset điểm về 2đ ban đầu');
     }
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('minus');
-    showToast(`Đã reset điểm của em ${student.name} (${student.id}) về 0 điểm! 🔄`, 'info');
+    audioService.play('plus');
+    showToast(`Đã reset điểm của em ${student.name} (${student.id}) về 2 điểm ban đầu! 🔄`, 'info');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
   const deleteStudent = useCallback((studentId: string) => {
@@ -496,6 +508,7 @@ export const useClassroom = () => {
     updateScore,
     markAllPresent,
     setAllDefault2Points,
+    addAllClassBonus,
     addStudent,
     deleteStudent,
     importStudents,
