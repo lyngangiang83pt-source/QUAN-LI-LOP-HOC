@@ -94,28 +94,35 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         </div>
       </div>
 
-      {/* Footer: Score Pill & Fast Plus/Minus */}
+      {/* Footer: Score Pill, Reset Button & Fast Plus/Minus */}
       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xl font-extrabold text-sky-700">
-            {student.points > 0 ? '+' : ''}{student.points}
-          </span>
-          <span className="text-amber-400 text-sm">⭐</span>
-        </div>
+        {/* Left: Score Badge & Dedicated Reset Button */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <span className="text-xl font-extrabold text-sky-700">
+              {student.points > 0 ? '+' : ''}{student.points}
+            </span>
+            <span className="text-amber-400 text-sm">⭐</span>
+          </div>
 
-        <div className="flex items-center gap-1.5">
+          {/* Nút Reset riêng từng thẻ học sinh */}
           <button
             type="button"
             onClick={() => {
-              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" về 0 không?`)) {
+              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" (Mã: ${student.id}) về 0 điểm không?`)) {
                 onResetStudentScore(student.id);
               }
             }}
-            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-700 border border-slate-200 hover:border-amber-300 transition-all font-bold flex items-center justify-center active:scale-95 shadow-xs"
-            title="Đặt lại (reset) điểm của em này về 0"
+            className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 hover:border-amber-400 text-[11px] font-extrabold transition-all flex items-center gap-1 shadow-2xs active:scale-95"
+            title={`Đặt lại (reset) điểm của em ${student.name} về 0`}
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={12} />
+            <span>Reset</span>
           </button>
+        </div>
+
+        {/* Right: Plus / Minus */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => onOpenScoreModal(student, 'plus')}
