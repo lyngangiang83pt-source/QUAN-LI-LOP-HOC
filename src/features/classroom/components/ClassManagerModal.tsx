@@ -235,7 +235,7 @@ export const ClassManagerModal: React.FC<ClassManagerModalProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        onSwitchClass(c.id, true);
+                        onSwitchClass(c.id, false);
                         onClose();
                       }}
                       className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1"

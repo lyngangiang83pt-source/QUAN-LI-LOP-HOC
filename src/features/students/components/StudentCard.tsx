@@ -1,12 +1,13 @@
 import React from 'react';
 import { Student, AttendanceStatus } from '../../../types';
-import { Plus, Minus, Trash2 } from 'lucide-react';
+import { Plus, Minus, Trash2, RotateCcw } from 'lucide-react';
 
 interface StudentCardProps {
   student: Student;
   minWheelPoints?: number;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
+  onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
 }
 
@@ -15,6 +16,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   minWheelPoints = 5,
   onToggleAttendance,
   onOpenScoreModal,
+  onResetStudentScore,
   onDeleteStudent,
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
@@ -102,6 +104,18 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" về 0 không?`)) {
+                onResetStudentScore(student.id);
+              }
+            }}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-700 border border-slate-200 hover:border-amber-300 transition-all font-bold flex items-center justify-center active:scale-95 shadow-xs"
+            title="Đặt lại (reset) điểm của em này về 0"
+          >
+            <RotateCcw size={14} />
+          </button>
           <button
             type="button"
             onClick={() => onOpenScoreModal(student, 'plus')}

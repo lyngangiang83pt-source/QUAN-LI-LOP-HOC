@@ -10,6 +10,7 @@ interface StudentGridProps {
   minWheelPoints?: number;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
+  onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
@@ -22,6 +23,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   minWheelPoints = 5,
   onToggleAttendance,
   onOpenScoreModal,
+  onResetStudentScore,
   onDeleteStudent,
   onOpenImportModal,
   onOpenAddModal,
@@ -93,6 +95,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
           minWheelPoints={minWheelPoints}
           onToggleAttendance={onToggleAttendance}
           onOpenScoreModal={onOpenScoreModal}
+          onResetStudentScore={onResetStudentScore}
           onDeleteStudent={onDeleteStudent}
         />
       ))}

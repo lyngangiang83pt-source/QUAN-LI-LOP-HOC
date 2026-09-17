@@ -34,6 +34,7 @@ export const App: React.FC = () => {
     editClass,
     deleteClass,
     resetClassPoints,
+    resetStudentScore,
     toggleAttendance,
     updateScore,
     markAllPresent,
@@ -92,7 +93,7 @@ export const App: React.FC = () => {
         students={students}
         syncStatus={syncStatus}
         minWheelPoints={5}
-        onSelectClass={(id) => switchClass(id, true)}
+        onSelectClass={(id) => switchClass(id, false)}
         onOpenClassModal={() => setIsClassModalOpen(true)}
         onEditClassInfo={handleEditClassInfo}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
@@ -139,6 +140,7 @@ export const App: React.FC = () => {
         minWheelPoints={5}
         onToggleAttendance={toggleAttendance}
         onOpenScoreModal={handleOpenScoreModal}
+        onResetStudentScore={resetStudentScore}
         onDeleteStudent={deleteStudent}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
@@ -153,6 +155,7 @@ export const App: React.FC = () => {
         minWheelPoints={5}
         onToggleAttendance={toggleAttendance}
         onApplyScore={updateScore}
+        onResetScore={resetStudentScore}
         onOpenDetailedScoreModal={handleOpenScoreModal}
         onLocateStudent={(studentId) => {
           setSearchQuery(studentId);
@@ -206,6 +209,7 @@ export const App: React.FC = () => {
         student={scoreModalData.student}
         mode={scoreModalData.mode}
         onApplyScore={updateScore}
+        onResetScore={resetStudentScore}
       />
 
       <SupabaseConfigModal

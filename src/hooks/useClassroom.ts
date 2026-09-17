@@ -129,7 +129,7 @@ export const useClassroom = () => {
       persistClasses(updated, classId);
       showToast(`✨ Đã chọn lớp ${target.name} (${target.students.length} HS) - Điểm số đã reset về ${defPts}đ ban đầu!`, 'success');
     } else {
-      showToast(`Đã chuyển sang lớp: ${target.name}`, 'info');
+      showToast(`Đã chuyển sang lớp: ${target.name} (Bảo toàn nguyên vẹn điểm số)`, 'info');
     }
     audioService.play('plus');
   }, [classes, persistClasses, showToast]);
@@ -347,6 +347,29 @@ export const useClassroom = () => {
     showToast(`Đã thêm học sinh: ${name.trim()} (+2đ có mặt ban đầu)`, 'success');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
+  const resetStudentScore = useCallback((studentId: string) => {
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const updatedStudents = students.map((s) =>
+      s.id === studentId
+        ? {
+            ...s,
+            points: 0,
+            lastNote: 'Đặt lại (reset) điểm về 0đ',
+          }
+        : s
+    );
+
+    if (student.dbId) {
+      SupabaseSyncService.logAttendance(student.dbId, student.attendance, -student.points, 'Reset điểm về 0');
+    }
+
+    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
+    audioService.play('minus');
+    showToast(`Đã reset điểm của em ${student.name} (${student.id}) về 0 điểm! 🔄`, 'info');
+  }, [classes, currentClassId, persistClasses, showToast, students]);
+
   const deleteStudent = useCallback((studentId: string) => {
     const student = students.find((s) => s.id === studentId);
     if (!student) return;
@@ -439,6 +462,7 @@ export const useClassroom = () => {
     editClass,
     deleteClass,
     resetClassPoints,
+    resetStudentScore,
     toggleAttendance,
     updateScore,
     markAllPresent,

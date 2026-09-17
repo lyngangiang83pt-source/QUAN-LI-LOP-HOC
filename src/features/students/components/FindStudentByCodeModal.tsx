@@ -10,7 +10,8 @@ import {
   Clock, 
   XCircle, 
   Sparkles, 
-  ExternalLink
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react';
 
 interface FindStudentByCodeModalProps {
@@ -22,6 +23,7 @@ interface FindStudentByCodeModalProps {
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onApplyScore: (studentId: string, pointDiff: number, reason: string) => void;
   onOpenDetailedScoreModal: (student: Student, type: 'plus' | 'minus') => void;
+  onResetScore?: (studentId: string) => void;
   onLocateStudent?: (studentId: string) => void;
 }
 
@@ -34,6 +36,7 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
   onToggleAttendance,
   onApplyScore,
   onOpenDetailedScoreModal,
+  onResetScore,
   onLocateStudent,
 }) => {
   const [codeQuery, setCodeQuery] = useState('');
@@ -237,12 +240,27 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
             </div>
 
             {/* Score Display */}
-            <div className="bg-white/15 backdrop-blur-xs px-4 py-2 rounded-2xl border border-white/20 text-center">
+            <div className="bg-white/15 backdrop-blur-xs px-4 py-2 rounded-2xl border border-white/20 text-center flex flex-col items-center justify-center">
               <div className="text-[10px] uppercase font-bold text-sky-100 tracking-wider">Điểm số</div>
               <div className="text-2xl font-black text-amber-300 flex items-center justify-center gap-1">
                 <span>{activeStudent.points > 0 ? `+${activeStudent.points}` : activeStudent.points}</span>
                 <span className="text-lg">⭐</span>
               </div>
+              {onResetScore && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`Thầy/Cô có muốn đặt lại (reset) điểm của em "${activeStudent.name}" về 0 không?`)) {
+                      onResetScore(activeStudent.id);
+                    }
+                  }}
+                  className="mt-1 px-2 py-0.5 rounded-lg bg-black/20 hover:bg-rose-600/80 text-white text-[10px] font-extrabold flex items-center gap-1 transition-colors"
+                  title="Reset điểm về 0"
+                >
+                  <RotateCcw size={10} />
+                  <span>Reset 0đ</span>
+                </button>
+              )}
             </div>
           </div>
 

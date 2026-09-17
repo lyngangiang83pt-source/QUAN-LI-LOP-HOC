@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
 import { BONUS_CRITERIA, PENALTY_CRITERIA } from '../../../constants/classroomData';
-import { PlusCircle, MinusCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle, RotateCcw } from 'lucide-react';
 
 interface ScoreModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface ScoreModalProps {
   student: Student | null;
   mode: 'plus' | 'minus';
   onApplyScore: (studentId: string, pointDiff: number, reason: string) => void;
+  onResetScore?: (studentId: string) => void;
 }
 
 export const ScoreModal: React.FC<ScoreModalProps> = ({
@@ -18,6 +19,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
   student,
   mode,
   onApplyScore,
+  onResetScore,
 }) => {
   const [customReason, setCustomReason] = useState('');
   const [customPoints, setCustomPoints] = useState(1);
@@ -114,6 +116,29 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Reset Student Score Option */}
+      {onResetScore && (
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+          <span className="text-xs text-slate-500 font-medium">
+            Đặt lại điểm học sinh này:
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm(`Thầy/Cô có chắc chắn muốn đặt lại (reset) điểm của em "${student.name}" về 0 không?`)) {
+                onResetScore(student.id);
+                onClose();
+              }
+            }}
+            className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition-colors flex items-center gap-1.5"
+            title="Đặt lại điểm số em này về 0"
+          >
+            <RotateCcw size={13} />
+            <span>Reset 0 điểm</span>
+          </button>
+        </div>
+      )}
     </Modal>
   );
 };
