@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
-import { parseScoreRows, ParsedScoreRow } from '../utils/scoreParser';
-import { downloadSampleScoreCSV } from '../utils/csvExporter';
+import { parseScoreRows, parseScoreFromExcelBuffer, ParsedScoreRow } from '../utils/scoreParser';
+import { downloadSampleScoreExcel, downloadSampleScoreCSV } from '../utils/csvExporter';
 import { FileSpreadsheet, FileText, Upload, DownloadCloud, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 interface ImportScoreModalProps {
@@ -23,9 +23,16 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
   const [activeTab, setActiveTab] = useState<'paste' | 'file' | 'template'>('paste');
   const [text, setText] = useState('');
   const [fileName, setFileName] = useState('');
+  const [fileParsedRows, setFileParsedRows] = useState<ParsedScoreRow[]>([]);
   const [importMode, setImportMode] = useState<'override' | 'add'>('override');
 
-  const parsedRows = useMemo(() => parseScoreRows(text), [text]);
+  // Dữ liệu bảng điểm hiệu lực tùy theo tab hiện hành
+  const parsedRows = useMemo(() => {
+    if (activeTab === 'file') {
+      return fileParsedRows;
+    }
+    return parseScoreRows(text);
+  }, [activeTab, fileParsedRows, text]);
 
   // Đối chiếu từng dòng parsed với danh sách học sinh hiện tại trong lớp
   const previewMatches = useMemo(() => {
@@ -67,12 +74,33 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
     if (!file) return;
 
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      if (content) setText(content);
-    };
-    reader.readAsText(file, 'UTF-8');
+    const lowerName = file.name.toLowerCase();
+
+    // 1. File Excel (.xlsx, .xls)
+    if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const buffer = event.target?.result as ArrayBuffer;
+        if (buffer) {
+          const rows = parseScoreFromExcelBuffer(buffer);
+          setFileParsedRows(rows);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    // 2. File văn bản (.csv, .txt)
+    else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        if (content) {
+          const rows = parseScoreRows(content);
+          setFileParsedRows(rows);
+          setText(content);
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
   };
 
   const handleConfirmImport = () => {
@@ -88,6 +116,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
     onImportScores(parsedRows, importMode);
     setText('');
     setFileName('');
+    setFileParsedRows([]);
     onClose();
   };
 
@@ -128,7 +157,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
           }`}
         >
           <Upload size={15} />
-          <span>Chọn file (.csv, .txt)</span>
+          <span>Chọn file (.xlsx, .csv)</span>
         </button>
         <button
           type="button"
@@ -148,7 +177,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
       {activeTab === 'paste' && (
         <div className="space-y-2">
           <p className="text-xs text-slate-600 font-medium">
-            Copy 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</strong>) từ Excel rồi dán trực tiếp vào đây:
+            Copy 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</strong>) từ bảng tính Excel rồi dán trực tiếp vào đây:
           </p>
           <textarea
             rows={5}
@@ -164,17 +193,20 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
       {activeTab === 'file' && (
         <div className="space-y-3">
           <p className="text-xs text-slate-600 font-medium">
-            Tải lên file bảng điểm 3 cột (.csv hoặc .txt) từ máy tính:
+            Tải lên file bảng điểm 3 cột (.xlsx, .xls, .csv, .txt) từ máy tính:
           </p>
           <label className="border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/40 hover:bg-indigo-50/80 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
             <Upload className="text-indigo-600 mb-2" size={32} />
             <strong className="text-indigo-900 text-sm">Bấm vào đây để chọn file bảng điểm</strong>
-            <span className="text-[11px] text-slate-500 mt-1">Hỗ trợ file .csv (UTF-8) hoặc .txt chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</span>
-            <input type="file" accept=".csv,.txt" className="hidden" onChange={handleFileUpload} />
+            <span className="text-[11px] text-slate-500 mt-1">Hỗ trợ Excel (.xlsx, .xls) hoặc CSV/TXT chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</span>
+            <input type="file" accept=".xlsx,.xls,.csv,.txt" className="hidden" onChange={handleFileUpload} />
           </label>
           {fileName && (
-            <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
-              📄 Đã chọn file: {fileName}
+            <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 flex items-center justify-between">
+              <span>📄 Đã nạp file: <strong>{fileName}</strong></span>
+              <span className="text-[11px] bg-emerald-200/70 text-emerald-900 px-2 py-0.5 rounded-full font-extrabold">
+                {fileParsedRows.length} dòng dữ liệu
+              </span>
             </div>
           )}
         </div>
@@ -186,14 +218,24 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
           <p className="text-xs text-slate-600 max-w-md mx-auto">
             Tải file mẫu Excel chuẩn 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</strong>). Thầy/Cô chỉ cần mở bằng Excel, điền điểm rồi nạp vào phần mềm:
           </p>
-          <button
-            type="button"
-            onClick={downloadSampleScoreCSV}
-            className="py-3 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-colors inline-flex items-center gap-2"
-          >
-            <DownloadCloud size={16} />
-            <span>Tải file Excel mẫu 3 cột (.csv) về máy</span>
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={downloadSampleScoreExcel}
+              className="py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all inline-flex items-center gap-2 hover:scale-105 active:scale-95"
+            >
+              <FileSpreadsheet size={16} />
+              <span>Tải file Excel mẫu (.xlsx) chuẩn</span>
+            </button>
+            <button
+              type="button"
+              onClick={downloadSampleScoreCSV}
+              className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors inline-flex items-center gap-2 border border-slate-200"
+            >
+              <DownloadCloud size={16} />
+              <span>Tải bản CSV (.csv)</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -251,9 +293,9 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0">
                 <tr>
-                  <th className="p-2">Mã HS</th>
-                  <th className="p-2">Họ và tên</th>
-                  <th className="p-2 text-center">Điểm file</th>
+                  <th className="p-2">MÃ HS</th>
+                  <th className="p-2">HỌ VÀ TÊN</th>
+                  <th className="p-2 text-center">TỔNG ĐIỂM (File)</th>
                   <th className="p-2 text-center">Điểm hiện tại</th>
                   <th className="p-2 text-center">Điểm sau nạp</th>
                   <th className="p-2 text-center">Trạng thái</th>
@@ -324,3 +366,4 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
     </Modal>
   );
 };
+

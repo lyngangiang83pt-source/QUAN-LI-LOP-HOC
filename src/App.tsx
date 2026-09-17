@@ -14,7 +14,7 @@ import { AddStudentModal } from './features/students/components/AddStudentModal'
 import { ScoreModal } from './features/students/components/ScoreModal';
 import { FindStudentByCodeModal } from './features/students/components/FindStudentByCodeModal';
 import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
-import { exportScoreFileCSV } from './features/import-export/utils/csvExporter';
+import { exportScoreFileExcel } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
 
 export const App: React.FC = () => {
@@ -78,9 +78,10 @@ export const App: React.FC = () => {
   };
 
   const handleExportScoreFile = () => {
-    exportScoreFileCSV(students, currentClass.name);
-    showToast(`Đã xuất file bảng điểm 3 cột lớp ${currentClass.name} thành công! 📥`, 'success');
+    exportScoreFileExcel(students, currentClass.name);
+    showToast(`Đã xuất file Excel (.xlsx) bảng điểm 3 cột lớp ${currentClass.name} thành công! 📥`, 'success');
   };
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">

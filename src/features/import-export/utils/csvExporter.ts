@@ -1,8 +1,61 @@
+import * as XLSX from 'xlsx';
 import { Student } from '../../../types';
 
 /**
- * Xuất file bảng điểm chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM
- * Hỗ trợ UTF-8 BOM để mở trực tiếp trong Excel tiếng Việt không bị lỗi font
+ * Xuất file Excel (.xlsx) bảng điểm chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM
+ * Mở trực tiếp trong Excel / Google Sheets / WPS mượt mà, căn chỉnh độ rộng cột chuẩn đẹp
+ */
+export const exportScoreFileExcel = (students: Student[], className: string): void => {
+  const data = students.map((s) => ({
+    'MÃ HS': s.id || '',
+    'HỌ VÀ TÊN': s.name || '',
+    'TỔNG ĐIỂM': s.points !== undefined && s.points !== null ? s.points : 0,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // Thiết lập độ rộng cột trực quan
+  worksheet['!cols'] = [
+    { wch: 15 }, // MÃ HS
+    { wch: 30 }, // HỌ VÀ TÊN
+    { wch: 15 }, // TỔNG ĐIỂM
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  const safeSheetName = `BangDiem_${className}`.replace(/[:\\/?*\[\]]/g, '_').slice(0, 31);
+  XLSX.utils.book_append_sheet(workbook, worksheet, safeSheetName);
+
+  const fileName = `Bang_Diem_Lop_${className.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+};
+
+/**
+ * Tải file mẫu Excel (.xlsx) chuẩn 3 cột để Thầy/Cô điền điểm và nạp lại vào phần mềm
+ */
+export const downloadSampleScoreExcel = (): void => {
+  const sampleData = [
+    { 'MÃ HS': 'HS01', 'HỌ VÀ TÊN': 'Nguyễn Văn An', 'TỔNG ĐIỂM': 10 },
+    { 'MÃ HS': 'HS02', 'HỌ VÀ TÊN': 'Trần Thị Mai', 'TỔNG ĐIỂM': 8.5 },
+    { 'MÃ HS': 'HS03', 'HỌ VÀ TÊN': 'Lê Hoàng Nam', 'TỔNG ĐIỂM': 9 },
+    { 'MÃ HS': 'HS04', 'HỌ VÀ TÊN': 'Phạm Thu Hà', 'TỔNG ĐIỂM': 7.5 },
+    { 'MÃ HS': 'HS05', 'HỌ VÀ TÊN': 'Đỗ Minh Quân', 'TỔNG ĐIỂM': 10 },
+  ];
+
+  const worksheet = XLSX.utils.json_to_sheet(sampleData);
+  worksheet['!cols'] = [
+    { wch: 15 },
+    { wch: 30 },
+    { wch: 15 },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Mau_Bang_Diem_3_Cot');
+
+  XLSX.writeFile(workbook, 'Mau_Nap_Diem_3_Cot.xlsx');
+};
+
+/**
+ * Xuất file bảng điểm chuẩn 3 cột định dạng CSV UTF-8 BOM
  */
 export const exportScoreFileCSV = (students: Student[], className: string): void => {
   let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // UTF-8 BOM
@@ -25,7 +78,7 @@ export const exportScoreFileCSV = (students: Student[], className: string): void
 };
 
 /**
- * Tải file Excel mẫu 3 cột chuẩn để Thầy/Cô điền điểm và nạp lại vào phần mềm
+ * Tải file CSV mẫu 3 cột chuẩn
  */
 export const downloadSampleScoreCSV = (): void => {
   let csv = "data:text/csv;charset=utf-8,\uFEFF";
@@ -82,4 +135,5 @@ export const downloadSampleCSV = (): void => {
   link.click();
   document.body.removeChild(link);
 };
+
 

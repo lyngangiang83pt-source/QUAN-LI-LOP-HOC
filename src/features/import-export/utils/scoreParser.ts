@@ -1,9 +1,106 @@
+import * as XLSX from 'xlsx';
+
 export interface ParsedScoreRow {
   code: string;
   name: string;
   score: number;
   rawText?: string;
 }
+
+/**
+ * Đọc và phân tích trực tiếp file Excel nhị phân (.xlsx, .xls)
+ * Tìm và bóc tách bảng điểm 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM
+ */
+export const parseScoreFromExcelBuffer = (buffer: ArrayBuffer): ParsedScoreRow[] => {
+  try {
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheetName = workbook.SheetNames[0];
+    if (!firstSheetName) return [];
+
+    const worksheet = workbook.Sheets[firstSheetName];
+    // Chuyển worksheet thành mảng 2 chiều
+    const rawRows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+    const result: ParsedScoreRow[] = [];
+
+    for (let r = 0; r < rawRows.length; r++) {
+      const row = rawRows[r];
+      if (!row || !Array.isArray(row) || row.length === 0) continue;
+
+      const cells = row.map((c) => (c !== null && c !== undefined ? String(c).trim() : ''));
+      const lineStr = cells.join(' ');
+      if (!lineStr.trim()) continue;
+
+      const lower = lineStr.toLowerCase();
+      // Bỏ qua dòng tiêu đề
+      if (
+        (lower.includes('mã') || lower.includes('stt') || lower.includes('code')) &&
+        (lower.includes('họ') || lower.includes('tên') || lower.includes('name')) &&
+        (lower.includes('điểm') || lower.includes('score') || lower.includes('tổng'))
+      ) {
+        continue;
+      }
+
+      // Xử lý khi có 3 cột trở lên: [0: Mã HS, 1: Họ và tên, 2: Điểm]
+      let code = '';
+      let name = '';
+      let scoreNum: number | null = null;
+
+      if (cells.length >= 3) {
+        const first = cells[0];
+        const second = cells[1];
+        const third = cells[2].replace(',', '.');
+
+        const parsed3rd = parseFloat(third);
+        if (!isNaN(parsed3rd)) {
+          code = first;
+          name = second;
+          scoreNum = parsed3rd;
+        } else {
+          // Thử tìm cột điểm ở các cột sau cùng
+          for (let i = cells.length - 1; i >= 1; i--) {
+            const val = cells[i].replace(',', '.');
+            const tryScore = parseFloat(val);
+            if (!isNaN(tryScore)) {
+              scoreNum = tryScore;
+              if (i >= 2) {
+                code = cells[0];
+                name = cells.slice(1, i).filter(Boolean).join(' ');
+              } else {
+                name = cells[0];
+              }
+              break;
+            }
+          }
+        }
+      } else if (cells.length === 2) {
+        const first = cells[0];
+        const second = cells[1].replace(',', '.');
+        const parsed2nd = parseFloat(second);
+        if (!isNaN(parsed2nd)) {
+          const isCode = /^HS\d+/i.test(first) || (/^\d+$/.test(first) && first.length <= 4);
+          code = isCode ? (first.startsWith('HS') ? first.toUpperCase() : `HS${first.padStart(2, '0')}`) : '';
+          name = isCode ? '' : first;
+          scoreNum = parsed2nd;
+        }
+      }
+
+      if (scoreNum !== null && (code || name)) {
+        result.push({
+          code: code ? code.toUpperCase() : '',
+          name: name.trim(),
+          score: Math.max(0, Math.round(scoreNum * 10) / 10),
+          rawText: cells.filter(Boolean).join(' - '),
+        });
+      }
+    }
+
+    return result;
+  } catch (err) {
+    console.error('Lỗi khi đọc file Excel nhị phân:', err);
+    return [];
+  }
+};
 
 /**
  * Phân tích dữ liệu bảng điểm 3 cột từ văn bản copy từ Excel hoặc file CSV
@@ -131,3 +228,4 @@ export const parseScoreRows = (rawText: string): ParsedScoreRow[] => {
 
   return result;
 };
+
