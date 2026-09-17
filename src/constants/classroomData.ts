@@ -19,13 +19,14 @@ export const PENALTY_CRITERIA: Criteria[] = [
 export const DEFAULT_PRIZE_SLICES: PrizeItem[] = [
   { id: 'p1', label: '+1 Điểm', shortLabel: '+1Đ', points: 1, type: 'points', color: '#10b981', icon: '🌟', description: 'Cộng 1 điểm thưởng' },
   { id: 'p2', label: '+2 Điểm', shortLabel: '+2Đ', points: 2, type: 'points', color: '#8b5cf6', icon: '👑', description: 'Cộng 2 điểm xuất sắc' },
-  { id: 'p3', label: '0 Điểm', shortLabel: '0Đ', points: 0, type: 'points', color: '#64748b', icon: '🎯', description: 'Giữ nguyên số điểm' },
+  { id: 'p3', label: 'NHẬN QUÀ', shortLabel: 'NHẬN QUÀ', points: 1, type: 'gift', color: '#ec4899', icon: '🎁', description: 'Chúc mừng em nhận được 1 phần quà từ Thầy/Cô!' },
   { id: 'p4', label: 'ĐẠT', shortLabel: 'ĐẠT', points: 1, type: 'pass', color: '#06b6d4', icon: '🎉', description: 'Đạt yêu cầu bài tập (+1đ)' },
-  { id: 'p5', label: 'MAY MẮN LẦN SAU', shortLabel: 'MAY MẮN', points: 0, type: 'lucky_next', color: '#f43f5e', icon: '☘️', description: 'Chúc bạn may mắn lần sau' },
-  { id: 'p6', label: '+1 Điểm', shortLabel: '+1Đ', points: 1, type: 'points', color: '#3b82f6', icon: '🌟', description: 'Cộng 1 điểm thưởng' },
-  { id: 'p7', label: '+2 Điểm', shortLabel: '+2Đ', points: 2, type: 'points', color: '#f59e0b', icon: '🔥', description: 'Cộng 2 điểm xuất sắc' },
-  { id: 'p8', label: 'MAY MẮN LẦN SAU', shortLabel: 'MAY MẮN', points: 0, type: 'lucky_next', color: '#ec4899', icon: '🎁', description: 'Chúc bạn may mắn lần sau' },
+  { id: 'p5', label: '0 Điểm', shortLabel: '0Đ', points: 0, type: 'points', color: '#64748b', icon: '🎯', description: 'Giữ nguyên số điểm' },
+  { id: 'p6', label: 'MAY MẮN LẦN SAU', shortLabel: 'MAY MẮN', points: 0, type: 'lucky_next', color: '#f43f5e', icon: '☘️', description: 'Chúc bạn may mắn lần sau' },
+  { id: 'p7', label: 'NHẬN QUÀ', shortLabel: 'NHẬN QUÀ', points: 1, type: 'gift', color: '#f59e0b', icon: '🎁', description: 'Chúc mừng em nhận được 1 phần quà từ Thầy/Cô!' },
+  { id: 'p8', label: '+1 Điểm', shortLabel: '+1Đ', points: 1, type: 'points', color: '#3b82f6', icon: '🌟', description: 'Cộng 1 điểm thưởng' },
 ];
+
 
 export const WHEEL_COLORS: string[] = [
   '#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',

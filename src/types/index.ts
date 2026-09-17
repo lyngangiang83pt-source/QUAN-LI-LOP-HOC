@@ -43,12 +43,13 @@ export type WheelMode = 'prize' | 'student';
 
 export interface PrizeItem {
   id: string;
-  label: string; // e.g. '+1 Điểm', '+2 Điểm', '0 Điểm', 'ĐẠT', 'MAY MẮN LẦN SAU'
+  label: string; // e.g. '+1 Điểm', '+2 Điểm', '0 Điểm', 'ĐẠT', 'MAY MẮN LẦN SAU', 'NHẬN QUÀ'
   shortLabel: string;
   points: number;
-  type: 'points' | 'pass' | 'lucky_next';
+  type: 'points' | 'pass' | 'lucky_next' | 'gift';
   color: string;
   icon: string;
   description: string;
 }
+
 

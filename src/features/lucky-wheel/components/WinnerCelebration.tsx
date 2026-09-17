@@ -24,13 +24,16 @@ export const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
   // --- PRIZE MODE RESULT CELEBRATION ---
   if (mode === 'prize' && wonPrize) {
     const isLuckyNext = wonPrize.type === 'lucky_next';
+    const isGift = wonPrize.type === 'gift';
     const isZero = wonPrize.points === 0 && !isLuckyNext;
     const isPass = wonPrize.type === 'pass';
 
     return (
       <div
         className={`mt-4 p-4 rounded-2xl text-white shadow-xl text-center animate-scaleUp border ${
-          isLuckyNext
+          isGift
+            ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 border-pink-300 shadow-pink-500/30'
+            : isLuckyNext
             ? 'bg-gradient-to-r from-rose-500 via-pink-600 to-rose-700 border-pink-300'
             : isZero
             ? 'bg-gradient-to-r from-slate-600 to-slate-800 border-slate-400'
@@ -38,9 +41,11 @@ export const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
         }`}
       >
         <div className="text-xs font-black uppercase tracking-wider text-white/90 flex items-center justify-center gap-1.5 mb-1">
-          {isLuckyNext ? <HeartHandshake size={18} /> : <Award size={18} />}
+          {isGift ? <Sparkles size={18} className="text-yellow-200" /> : isLuckyNext ? <HeartHandshake size={18} /> : <Award size={18} />}
           <span>
-            {isLuckyNext
+            {isGift
+              ? '🎁 CHÚC MỪNG EM NHẬN ĐƯỢC PHẦN QUÀ!'
+              : isLuckyNext
               ? 'CHÚC BẠN MAY MẮN LẦN SAU!'
               : isPass
               ? 'XUẤT SẮC - ĐẠT YÊU CẦU!'
@@ -48,7 +53,7 @@ export const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
               ? 'KẾT QUẢ QUAY THƯỞNG'
               : 'CHÚC MỪNG PHẦN THƯỞNG!'}
           </span>
-          {isLuckyNext ? <HeartHandshake size={18} /> : <Sparkles size={18} />}
+          {isGift ? <Sparkles size={18} className="text-yellow-200" /> : isLuckyNext ? <HeartHandshake size={18} /> : <Sparkles size={18} />}
         </div>
 
         <div className="text-2xl md:text-3xl font-black my-2 drop-shadow-md flex items-center justify-center gap-2">
@@ -61,13 +66,33 @@ export const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
             Học sinh nhận thưởng: <strong>{targetStudent.name}</strong> ({targetStudent.id} — Hiện có: {targetStudent.points}đ)
           </div>
         ) : (
-          <div className="text-xs font-medium text-white/80 mb-3">
+          <div className="text-xs font-medium text-white/90 mb-3">
             {wonPrize.description}
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          {targetStudent && wonPrize.points > 0 && (
+          {targetStudent && isGift && (
+            <>
+              <button
+                type="button"
+                onClick={() => onApplyPrizeBonus(1, 'Trúng thưởng: Nhận quà (+1đ)')}
+                className="px-4 py-2 rounded-xl bg-white text-pink-700 hover:bg-pink-50 font-black text-xs shadow-md transition-transform active:scale-95 flex items-center gap-1.5"
+              >
+                <Plus size={15} />
+                <span>🎁 Trao quà & Cộng +1đ cho {targetStudent.name}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onApplyPrizeBonus(0, 'Trúng thưởng: Nhận quà (0đ)')}
+                className="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs border border-white/30 transition-colors flex items-center gap-1.5"
+              >
+                <span>🎁 Chỉ trao quà</span>
+              </button>
+            </>
+          )}
+
+          {targetStudent && !isGift && wonPrize.points > 0 && (
             <button
               type="button"
               onClick={() => onApplyPrizeBonus(wonPrize.points, `Quay thưởng trúng ${wonPrize.label}`)}
@@ -112,6 +137,7 @@ export const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
       </div>
     );
   }
+
 
   // --- STUDENT MODE RESULT CELEBRATION ---
   if (mode === 'student' && winnerStudent) {
