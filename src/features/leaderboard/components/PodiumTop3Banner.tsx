@@ -1,15 +1,17 @@
 import React from 'react';
 import { Student } from '../../../types';
-import { Crown, Trophy, ExternalLink } from 'lucide-react';
+import { Crown, Trophy, ExternalLink, Sparkles } from 'lucide-react';
 
 interface PodiumTop3BannerProps {
   students: Student[];
   onOpenLeaderboardModal: () => void;
+  onOpenSpotlightModal?: () => void;
 }
 
 export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
   students,
   onOpenLeaderboardModal,
+  onOpenSpotlightModal,
 }) => {
   const sorted = React.useMemo(() => {
     return [...students].sort((a, b) => (b.points || 0) - (a.points || 0));
@@ -29,15 +31,29 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
             Bảng Vinh Danh Học Sinh Điểm Cao Nhất Lớp
           </h2>
         </div>
-        <button
-          type="button"
-          onClick={onOpenLeaderboardModal}
-          className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
-        >
-          <Trophy size={14} />
-          <span>Mở Bảng Xếp Hạng Đầy Đủ</span>
-          <ExternalLink size={12} />
-        </button>
+        <div className="flex items-center gap-2">
+          {onOpenSpotlightModal && (
+            <button
+              type="button"
+              onClick={onOpenSpotlightModal}
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-950 text-xs font-black shadow-md transition-transform active:scale-95 flex items-center gap-1.5"
+              title="Mở Lễ vinh danh Spotlight Top 1 với luồng sáng vàng và nhạc trao giải"
+            >
+              <Sparkles size={14} className="text-amber-950" />
+              <span>🔦 Chiếu sáng Spotlight Top 1</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onOpenLeaderboardModal}
+            className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
+          >
+            <Trophy size={14} />
+            <span>Mở Bảng Xếp Hạng</span>
+            <ExternalLink size={12} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet, Gauge } from 'lucide-react';
+import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet, Gauge, Crown } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -19,6 +19,7 @@ interface HeaderBannerProps {
   onEditClassInfo: () => void;
   onOpenWheelModal: () => void;
   onOpenLeaderboardModal: () => void;
+  onOpenSpotlightModal?: () => void;
   onOpenFindCodeModal: () => void;
   onOpenImportScoreModal: () => void;
   onMarkAllPresent: () => void;
@@ -43,6 +44,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onEditClassInfo,
   onOpenWheelModal,
   onOpenLeaderboardModal,
+  onOpenSpotlightModal,
   onOpenFindCodeModal,
   onOpenImportScoreModal,
   onMarkAllPresent,
@@ -101,6 +103,19 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <Trophy size={16} />
             <span>Top điểm</span>
           </button>
+
+          {/* Spotlight Ceremony Top 1 Button */}
+          {onOpenSpotlightModal && (
+            <button
+              type="button"
+              onClick={onOpenSpotlightModal}
+              className="px-3.5 py-2 rounded-full bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-400 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-black text-xs md:text-sm border-2 border-white shadow-xl shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 animate-pulse"
+              title="Lễ vinh danh Quán Quân: Chiếu luồng sáng vàng Spotlight và nhạc trao giải"
+            >
+              <Crown size={16} className="text-amber-950 fill-amber-950" />
+              <span>Vinh danh Top 1</span>
+            </button>
+          )}
 
           {/* Find Student By Code Button */}
           <button

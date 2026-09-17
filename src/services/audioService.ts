@@ -1,5 +1,4 @@
-// Web Audio API Engine - 100% Programmatic Audio Synthesis (No external files needed)
-type SoundType = 'plus' | 'minus' | 'tick' | 'win';
+type SoundType = 'plus' | 'minus' | 'tick' | 'win' | 'fanfare';
 
 class AudioService {
   private ctx: AudioContext | null = null;
@@ -80,6 +79,32 @@ class AudioService {
           gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
           osc.start(now + i * 0.1);
           osc.stop(now + i * 0.1 + 0.5);
+        });
+      } else if (type === 'fanfare') {
+        // Triumphal Fanfare Award Chords: G4 -> C5 -> E5 -> G5 -> C6 -> Grand Chord
+        const sequence: [number, number, number][] = [
+          [392.00, 0.00, 0.18], // G4
+          [523.25, 0.18, 0.18], // C5
+          [659.25, 0.36, 0.18], // E5
+          [783.99, 0.54, 0.40], // G5
+          [659.25, 0.98, 0.18], // E5
+          [1046.50, 1.18, 1.20], // C6 (Grand Long Finish)
+          [783.99, 1.18, 1.20],  // G5 harmony
+          [523.25, 1.18, 1.20],  // C5 root harmony
+        ];
+
+        sequence.forEach(([freq, delay, dur]) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + delay);
+          gain.gain.setValueAtTime(0.14, now + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
+          osc.start(now + delay);
+          osc.stop(now + delay + dur);
         });
       }
     } catch {

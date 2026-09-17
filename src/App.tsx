@@ -9,6 +9,7 @@ import { UndoNotificationBanner } from './components/common/UndoNotificationBann
 import { ClassManagerModal } from './features/classroom/components/ClassManagerModal';
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
+import { SpotlightCeremonyModal } from './features/leaderboard/components/SpotlightCeremonyModal';
 import { ImportModal } from './features/import-export/components/ImportModal';
 import { ImportScoreModal } from './features/import-export/components/ImportScoreModal';
 import { AddStudentModal } from './features/students/components/AddStudentModal';
@@ -58,6 +59,7 @@ export const App: React.FC = () => {
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
+  const [isSpotlightModalOpen, setIsSpotlightModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportScoreModalOpen, setIsImportScoreModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -121,6 +123,7 @@ export const App: React.FC = () => {
           setCurrentFilter('top');
           setIsLeaderboardModalOpen(true);
         }}
+        onOpenSpotlightModal={() => setIsSpotlightModalOpen(true)}
         onOpenFindCodeModal={() => setIsFindCodeModalOpen(true)}
         onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
         onMarkAllPresent={markAllPresent}
@@ -149,6 +152,7 @@ export const App: React.FC = () => {
         <PodiumTop3Banner
           students={students}
           onOpenLeaderboardModal={() => setIsLeaderboardModalOpen(true)}
+          onOpenSpotlightModal={() => setIsSpotlightModalOpen(true)}
         />
       )}
 
@@ -210,6 +214,14 @@ export const App: React.FC = () => {
         className={currentClass.name}
         minWheelPoints={5}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
+      />
+
+      <SpotlightCeremonyModal
+        isOpen={isSpotlightModalOpen}
+        onClose={() => setIsSpotlightModalOpen(false)}
+        students={students}
+        className={currentClass.name}
+        onApplyBonusScore={updateScore}
       />
 
       <ImportModal

@@ -228,4 +228,47 @@
   animation: crownGlow 2.4s ease-in-out forwards;
 }
 
+/* --- Spotlight Ceremony Animation --- */
+@keyframes spotlightPulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.06);
+  }
+}
+
+@keyframes pedestalGlow {
+  0%, 100% {
+    box-shadow: 0 0 45px 15px rgba(245, 158, 11, 0.45), 0 0 80px 25px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 65px 22px rgba(245, 158, 11, 0.7), 0 0 110px 40px rgba(251, 191, 36, 0.5);
+  }
+}
+
+@keyframes floatMvpCrown {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-3deg) scale(1.08);
+  }
+}
+
+.animate-spotlightPulse {
+  animation: spotlightPulse 3.5s ease-in-out infinite;
+}
+
+.animate-pedestalGlow {
+  animation: pedestalGlow 2.5s ease-in-out infinite;
+}
+
+.animate-floatMvpCrown {
+  animation: floatMvpCrown 2.5s ease-in-out infinite;
+}
+
+
 
