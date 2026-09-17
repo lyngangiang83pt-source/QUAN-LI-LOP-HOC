@@ -130,102 +130,143 @@
   animation: goldCardGlow 1.8s ease-in-out forwards;
 }
 
-/* --- Milestone Qualification Celebration (Crown & Hearts) --- */
-@keyframes floatCrown {
+/* --- Milestone Qualification Celebration (Giant Golden Crown 👑 & Aura Burst) --- */
+@keyframes giantCrownAscend {
   0% {
     opacity: 0;
-    transform: translate(-50%, 10px) scale(0.4) rotate(-12deg);
+    transform: translate(-50%, -50%) scale(0.18) rotate(-18deg);
+    filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0));
   }
-  20% {
+  15% {
     opacity: 1;
-    transform: translate(-50%, -25px) scale(1.4) rotate(0deg);
+    transform: translate(-50%, -50%) scale(1.9) rotate(0deg);
+    filter: drop-shadow(0 0 35px #f59e0b) drop-shadow(0 0 16px #fef08a);
   }
-  75% {
+  35% {
     opacity: 1;
-    transform: translate(-50%, -60px) scale(1.2) rotate(10deg);
+    transform: translate(-50%, -75px) scale(1.6) rotate(12deg);
+    filter: drop-shadow(0 0 30px #f59e0b) drop-shadow(0 0 12px #fef08a);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -125px) scale(1.35) rotate(-10deg);
+    filter: drop-shadow(0 0 25px #f59e0b);
+  }
+  85% {
+    opacity: 0.9;
+    transform: translate(-50%, -175px) scale(1.1) rotate(6deg);
+    filter: drop-shadow(0 0 15px #f59e0b);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -95px) scale(0.8) rotate(20deg);
+    transform: translate(-50%, -225px) scale(0.75) rotate(0deg);
+    filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0));
   }
 }
 
-@keyframes floatHeartLeft {
+@keyframes crownAuraBurst {
   0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(0.5) rotate(0deg);
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.15);
   }
-  50% {
-    opacity: 1;
-    transform: translate(-25px, -45px) scale(1.3) rotate(-30deg);
+  40% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.9);
   }
   100% {
     opacity: 0;
-    transform: translate(-45px, -90px) scale(0.7) rotate(-55deg);
+    transform: translate(-50%, -50%) scale(3.4);
   }
 }
 
-@keyframes floatHeartRight {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(0.5) rotate(0deg);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(25px, -45px) scale(1.3) rotate(30deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(45px, -90px) scale(0.7) rotate(55deg);
-  }
-}
-
-@keyframes floatMilestoneBadge {
+@keyframes crownSparkleFloatLeft {
   0% {
     opacity: 0;
-    transform: translate(-50%, 0) scale(0.6);
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
   }
   25% {
     opacity: 1;
-    transform: translate(-50%, -28px) scale(1.15);
+    transform: translate(-60px, -70px) scale(1.4) rotate(-25deg);
   }
   75% {
-    opacity: 1;
-    transform: translate(-50%, -55px) scale(1.05);
+    opacity: 0.9;
+    transform: translate(-80px, -140px) scale(1.1) rotate(-45deg);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -85px) scale(0.85);
+    transform: translate(-95px, -205px) scale(0.6) rotate(-70deg);
   }
 }
 
-@keyframes crownGlow {
+@keyframes crownSparkleFloatRight {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(60px, -70px) scale(1.4) rotate(25deg);
+  }
+  75% {
+    opacity: 0.9;
+    transform: translate(80px, -140px) scale(1.1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(95px, -205px) scale(0.6) rotate(70deg);
+  }
+}
+
+@keyframes floatMilestoneGoldenRibbon {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -45px) scale(1.15);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -95px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -150px) scale(0.8);
+  }
+}
+
+@keyframes milestoneCrownCardGlow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
   }
-  25%, 75% {
-    box-shadow: 0 0 25px 6px rgba(236, 72, 153, 0.5), 0 0 0 3px rgba(168, 85, 247, 0.85);
+  20%, 75% {
+    box-shadow: 0 0 35px 8px rgba(245, 158, 11, 0.6), 0 0 0 3px rgba(251, 191, 36, 0.95);
   }
 }
 
-.animate-floatCrown {
-  animation: floatCrown 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-giantCrownAscend {
+  animation: giantCrownAscend 3.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
-.animate-floatHeartLeft {
-  animation: floatHeartLeft 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-crownAuraBurst {
+  animation: crownAuraBurst 2.2s ease-out forwards;
 }
 
-.animate-floatHeartRight {
-  animation: floatHeartRight 2.2s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+.animate-crownSparkleFloatLeft {
+  animation: crownSparkleFloatLeft 3.0s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 
-.animate-floatMilestoneBadge {
-  animation: floatMilestoneBadge 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-crownSparkleFloatRight {
+  animation: crownSparkleFloatRight 3.0s cubic-bezier(0.2, 0.9, 0.3, 1) 0.08s forwards;
 }
 
-.animate-crownGlow {
-  animation: crownGlow 2.4s ease-in-out forwards;
+.animate-floatMilestoneGoldenRibbon {
+  animation: floatMilestoneGoldenRibbon 3.0s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.animate-milestoneCrownCardGlow {
+  animation: milestoneCrownCardGlow 3.0s ease-in-out forwards;
 }
 
 /* --- Spotlight Ceremony Animation --- */

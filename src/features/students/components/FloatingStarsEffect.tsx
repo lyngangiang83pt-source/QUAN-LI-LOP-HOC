@@ -16,51 +16,62 @@ export const FloatingStarsEffect: React.FC<FloatingStarsEffectProps> = ({
   return (
     <div className="absolute inset-0 pointer-events-none z-30 overflow-visible flex items-center justify-center">
       {isMilestoneReached ? (
-        /* --- 1. Milestone Celebration: Royal Crown 👑 + Red/Pink Hearts ❤️ --- */
+        /* --- 1. Milestone Celebration: Giant Golden Crown 👑 + Radiant Aura Burst --- */
         <>
-          {/* Floating Crown in Center */}
-          <span className="absolute top-1/2 left-1/2 text-4xl filter drop-shadow-xl animate-floatCrown select-none">
-            👑
+          {/* Inner Golden Aura Wave Ring */}
+          <div className="absolute top-1/2 left-1/2 w-28 h-28 rounded-full border-4 border-amber-400 bg-amber-400/20 backdrop-blur-xs pointer-events-none select-none animate-crownAuraBurst" />
+
+          {/* Outer Golden Aura Wave Ring */}
+          <div
+            className="absolute top-1/2 left-1/2 w-44 h-44 rounded-full border-2 border-yellow-300 bg-yellow-300/10 pointer-events-none select-none animate-crownAuraBurst"
+            style={{ animationDelay: '0.15s' }}
+          />
+
+          {/* Giant Golden Crown 👑 in Center */}
+          <div className="absolute top-1/2 left-1/2 pointer-events-none select-none animate-giantCrownAscend z-40">
+            <span className="text-6xl md:text-7xl block filter drop-shadow-[0_0_30px_rgba(251,191,36,0.95)]">
+              👑
+            </span>
+          </div>
+
+          {/* Left Sparkles & Gold Stars */}
+          <span className="absolute top-1/2 left-1/2 text-2xl filter drop-shadow-lg animate-crownSparkleFloatLeft select-none z-30">
+            ⭐
+          </span>
+          <span
+            className="absolute top-1/2 left-1/2 text-xl filter drop-shadow-md animate-crownSparkleFloatLeft select-none z-30"
+            style={{ animationDelay: '0.12s' }}
+          >
+            ✨
+          </span>
+          <span
+            className="absolute top-1/2 left-1/2 text-xl filter drop-shadow-md animate-crownSparkleFloatLeft select-none z-30"
+            style={{ animationDelay: '0.2s' }}
+          >
+            💛
           </span>
 
-          {/* Left Red Heart */}
-          <span className="absolute top-1/2 left-1/4 text-2xl filter drop-shadow-lg animate-floatHeartLeft select-none">
-            ❤️
+          {/* Right Sparkles & Gold Stars */}
+          <span className="absolute top-1/2 left-1/2 text-2xl filter drop-shadow-lg animate-crownSparkleFloatRight select-none z-30">
+            🌟
           </span>
-
-          {/* Right Sparkling Heart */}
-          <span className="absolute top-1/2 right-1/4 text-2xl filter drop-shadow-lg animate-floatHeartRight select-none">
+          <span
+            className="absolute top-1/2 left-1/2 text-xl filter drop-shadow-md animate-crownSparkleFloatRight select-none z-30"
+            style={{ animationDelay: '0.15s' }}
+          >
+            ✨
+          </span>
+          <span
+            className="absolute top-1/2 left-1/2 text-xl filter drop-shadow-md animate-crownSparkleFloatRight select-none z-30"
+            style={{ animationDelay: '0.25s' }}
+          >
             💖
           </span>
 
-          {/* Extra Heart Left */}
-          <span
-            className="absolute top-1/2 left-1/6 text-xl filter drop-shadow-md animate-floatHeartLeft select-none"
-            style={{ animationDelay: '0.15s' }}
-          >
-            💕
-          </span>
-
-          {/* Extra Heart Right */}
-          <span
-            className="absolute top-1/2 right-1/6 text-xl filter drop-shadow-md animate-floatHeartRight select-none"
-            style={{ animationDelay: '0.12s' }}
-          >
-            💝
-          </span>
-
-          {/* Twinkling Accent Stars */}
-          <span className="absolute top-1/3 left-1/3 text-lg filter drop-shadow-sm animate-floatStar1 select-none">
-            ✨
-          </span>
-          <span className="absolute top-1/3 right-1/3 text-lg filter drop-shadow-sm animate-floatStar2 select-none">
-            ⭐
-          </span>
-
-          {/* Milestone Floating Ribbon Badge */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 animate-floatMilestoneBadge select-none">
-            <div className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-black text-xs border-2 border-white shadow-2xl flex items-center gap-1.5 whitespace-nowrap">
-              <span>👑 ĐỦ ĐK QUAY THƯỞNG! ❤️</span>
+          {/* Golden Milestone Floating Ribbon Badge */}
+          <div className="absolute top-1/2 left-1/2 animate-floatMilestoneGoldenRibbon select-none z-40">
+            <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs border-2 border-white shadow-2xl flex items-center gap-1.5 whitespace-nowrap">
+              <span>👑 ĐẠT MỐC 5Đ - ĐỦ ĐK QUAY! 🎉</span>
             </div>
           </div>
         </>

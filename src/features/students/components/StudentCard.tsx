@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Student, AttendanceStatus } from '../../../types';
 import { Plus, Minus, Trash2, RotateCcw } from 'lucide-react';
 import { FloatingStarsEffect } from './FloatingStarsEffect';
+import { audioService } from '../../../services/audioService';
 
 interface StudentCardProps {
   student: Student;
@@ -45,7 +46,11 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         setIsGlowing(true);
         setIsMilestoneReached(reachedMilestone);
 
-        const animDuration = reachedMilestone ? 2400 : 1800;
+        if (reachedMilestone) {
+          audioService.play('win');
+        }
+
+        const animDuration = reachedMilestone ? 3200 : 1800;
         const timer = setTimeout(() => {
           setIsGlowing(false);
           setIsMilestoneReached(false);
@@ -61,13 +66,13 @@ export const StudentCard: React.FC<StudentCardProps> = ({
     <div
       className={`bg-white rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
         isMilestoneReached && animationsEnabled
-          ? 'animate-crownGlow ring-4 ring-pink-400/80 border-pink-400 shadow-2xl scale-[1.03] z-20'
+          ? 'animate-milestoneCrownCardGlow ring-4 ring-amber-400 border-amber-400 shadow-2xl scale-[1.04] z-30'
           : isGlowing && animationsEnabled
           ? 'animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
           : 'border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
       }`}
     >
-      {/* Flying Gold Stars & Milestone Crown/Heart Celebration Effect Layer */}
+      {/* Flying Gold Stars & Milestone Giant Golden Crown Celebration Effect Layer */}
       {animationsEnabled && (
         <FloatingStarsEffect
           key={starAnimKey}
@@ -80,10 +85,10 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       {/* Top Banner Tag if Qualified */}
       {isQualified && (
         <div
-          className={`absolute top-0 right-0 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all ${
+          className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all ${
             isMilestoneReached
-              ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 scale-110 shadow-lg'
-              : 'bg-gradient-to-l from-purple-600 to-pink-600'
+              ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
+              : 'bg-gradient-to-l from-purple-600 to-pink-600 text-white'
           }`}
         >
           {isMilestoneReached ? '👑 ĐỦ ĐK QUAY! 🎉' : '🎡 Đủ đk quay'}
