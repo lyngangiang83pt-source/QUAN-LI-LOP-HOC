@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet, Gauge } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -12,6 +12,8 @@ interface HeaderBannerProps {
   students: Student[];
   syncStatus: SyncStatus;
   minWheelPoints?: number;
+  animationsEnabled?: boolean;
+  onToggleAnimations?: () => void;
   onSelectClass: (id: string) => void;
   onOpenClassModal: () => void;
   onEditClassInfo: () => void;
@@ -34,6 +36,8 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   students,
   syncStatus,
   minWheelPoints = 5,
+  animationsEnabled = true,
+  onToggleAnimations,
   onSelectClass,
   onOpenClassModal,
   onEditClassInfo,
@@ -160,6 +164,36 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <FileSpreadsheet size={16} />
             <span>Nạp file điểm</span>
           </button>
+
+          {/* Animation Setting Toggle Button */}
+          {onToggleAnimations && (
+            <button
+              type="button"
+              onClick={onToggleAnimations}
+              className={`px-3.5 py-2 rounded-full font-bold text-xs md:text-sm border transition-all active:scale-95 flex items-center gap-1.5 shadow-sm ${
+                animationsEnabled
+                  ? 'bg-white/20 hover:bg-white/30 text-white border-white/30'
+                  : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20'
+              }`}
+              title={
+                animationsEnabled
+                  ? 'Đang bật đầy đủ hiệu ứng hoạt họa - Bấm để chuyển sang chế độ Siêu nhẹ cho máy cấu hình yếu'
+                  : 'Đang ở chế độ Siêu nhẹ mượt (Đã tắt hiệu ứng hoạt họa) - Bấm để bật lại đầy đủ hiệu ứng'
+              }
+            >
+              {animationsEnabled ? (
+                <>
+                  <Sparkles size={15} className="text-yellow-300" />
+                  <span>Hiệu ứng: Bật</span>
+                </>
+              ) : (
+                <>
+                  <Gauge size={15} className="text-slate-950" />
+                  <span>Hiệu ứng: Tắt (Nhẹ máy)</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Supabase Status Button */}
           <SyncStatusBadge status={syncStatus} onClick={onOpenSupabaseModal} />

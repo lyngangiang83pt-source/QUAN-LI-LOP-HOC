@@ -33,6 +33,8 @@ export const App: React.FC = () => {
     undoRecord,
     undoLastAction,
     dismissUndo,
+    animationsEnabled,
+    toggleAnimations,
     syncStatus,
     switchClass,
     addNewClass,
@@ -109,6 +111,8 @@ export const App: React.FC = () => {
         students={students}
         syncStatus={syncStatus}
         minWheelPoints={5}
+        animationsEnabled={animationsEnabled}
+        onToggleAnimations={toggleAnimations}
         onSelectClass={(id) => switchClass(id, false)}
         onOpenClassModal={() => setIsClassModalOpen(true)}
         onEditClassInfo={handleEditClassInfo}
@@ -154,6 +158,7 @@ export const App: React.FC = () => {
         currentFilter={currentFilter}
         searchQuery={searchQuery}
         minWheelPoints={5}
+        animationsEnabled={animationsEnabled}
         onToggleAttendance={toggleAttendance}
         onOpenScoreModal={handleOpenScoreModal}
         onResetStudentScore={resetStudentScore}

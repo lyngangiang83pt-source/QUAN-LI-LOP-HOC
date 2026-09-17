@@ -42,6 +42,15 @@ export const useClassroom = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [undoRecord, setUndoRecord] = useState<UndoRecord | null>(null);
+  const [animationsEnabled, setAnimationsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('CLASSROOM_ANIMATIONS_ENABLED');
+      if (saved !== null) return JSON.parse(saved);
+    } catch {
+      // Fallback
+    }
+    return true;
+  });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     state: 'idle',
     message: '☁️ Supabase: Đang kết nối...',
@@ -63,6 +72,19 @@ export const useClassroom = () => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 2800);
   }, []);
+
+  const toggleAnimations = useCallback(() => {
+    setAnimationsEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('CLASSROOM_ANIMATIONS_ENABLED', JSON.stringify(next));
+      if (next) {
+        showToast('✨ Đã BẬT đầy đủ hiệu ứng sao bay và pháo hoa rực rỡ!', 'success');
+      } else {
+        showToast('⚡ Đã BẬT chế độ Siêu nhẹ mượt (Tắt bớt hiệu ứng cho máy yếu)!', 'info');
+      }
+      return next;
+    });
+  }, [showToast]);
 
   // Save to LocalStorage & trigger debounced Supabase Cloud sync
   const persistClasses = useCallback((updatedClasses: ClassItem[], activeId?: string) => {
@@ -573,6 +595,8 @@ export const useClassroom = () => {
     undoRecord,
     undoLastAction,
     dismissUndo,
+    animationsEnabled,
+    toggleAnimations,
     syncStatus,
     switchClass,
     addNewClass,

@@ -6,6 +6,7 @@ import { FloatingStarsEffect } from './FloatingStarsEffect';
 interface StudentCardProps {
   student: Student;
   minWheelPoints?: number;
+  animationsEnabled?: boolean;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
   onResetStudentScore: (id: string) => void;
@@ -15,6 +16,7 @@ interface StudentCardProps {
 export const StudentCard: React.FC<StudentCardProps> = ({
   student,
   minWheelPoints = 5,
+  animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,
   onResetStudentScore,
@@ -37,38 +39,43 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       const reachedMilestone = prevPoints < minWheelPoints && currentPoints >= minWheelPoints;
 
       setPointDiff(diff);
-      setStarAnimKey((prev) => prev + 1);
-      setIsGlowing(true);
-      setIsMilestoneReached(reachedMilestone);
 
-      const animDuration = reachedMilestone ? 2400 : 1800;
-      const timer = setTimeout(() => {
-        setIsGlowing(false);
-        setIsMilestoneReached(false);
-      }, animDuration);
+      if (animationsEnabled) {
+        setStarAnimKey((prev) => prev + 1);
+        setIsGlowing(true);
+        setIsMilestoneReached(reachedMilestone);
 
-      return () => clearTimeout(timer);
+        const animDuration = reachedMilestone ? 2400 : 1800;
+        const timer = setTimeout(() => {
+          setIsGlowing(false);
+          setIsMilestoneReached(false);
+        }, animDuration);
+
+        return () => clearTimeout(timer);
+      }
     }
     prevPointsRef.current = currentPoints;
-  }, [student.points, minWheelPoints]);
+  }, [student.points, minWheelPoints, animationsEnabled]);
 
   return (
     <div
       className={`bg-white rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
-        isMilestoneReached
+        isMilestoneReached && animationsEnabled
           ? 'animate-crownGlow ring-4 ring-pink-400/80 border-pink-400 shadow-2xl scale-[1.03] z-20'
-          : isGlowing
+          : isGlowing && animationsEnabled
           ? 'animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
           : 'border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
       }`}
     >
       {/* Flying Gold Stars & Milestone Crown/Heart Celebration Effect Layer */}
-      <FloatingStarsEffect
-        key={starAnimKey}
-        pointGain={pointDiff}
-        isActive={isGlowing}
-        isMilestoneReached={isMilestoneReached}
-      />
+      {animationsEnabled && (
+        <FloatingStarsEffect
+          key={starAnimKey}
+          pointGain={pointDiff}
+          isActive={isGlowing}
+          isMilestoneReached={isMilestoneReached}
+        />
+      )}
 
       {/* Top Banner Tag if Qualified */}
       {isQualified && (

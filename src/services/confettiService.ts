@@ -1,6 +1,18 @@
 import confetti from 'canvas-confetti';
 
+export const areAnimationsEnabled = (): boolean => {
+  try {
+    const saved = localStorage.getItem('CLASSROOM_ANIMATIONS_ENABLED');
+    if (saved !== null) return JSON.parse(saved);
+  } catch {
+    // Fallback
+  }
+  return true;
+};
+
 export const triggerConfetti = (): void => {
+  if (!areAnimationsEnabled()) return;
+
   try {
     confetti({
       particleCount: 80,
@@ -32,6 +44,8 @@ export const triggerConfetti = (): void => {
  * Hiệu ứng mưa bão ngôi sao vàng rực rỡ toàn màn hình
  */
 export const triggerGoldStarsCelebration = (): void => {
+  if (!areAnimationsEnabled()) return;
+
   try {
     const starColors = ['#fbbf24', '#f59e0b', '#d97706', '#fef08a', '#ffffff', '#ffd700', '#f97316'];
 

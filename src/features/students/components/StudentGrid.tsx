@@ -8,6 +8,7 @@ interface StudentGridProps {
   currentFilter: FilterType;
   searchQuery: string;
   minWheelPoints?: number;
+  animationsEnabled?: boolean;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
   onResetStudentScore: (id: string) => void;
@@ -21,6 +22,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   currentFilter,
   searchQuery,
   minWheelPoints = 5,
+  animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,
   onResetStudentScore,
@@ -93,6 +95,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
           key={s.id}
           student={s}
           minWheelPoints={minWheelPoints}
+          animationsEnabled={animationsEnabled}
           onToggleAttendance={onToggleAttendance}
           onOpenScoreModal={onOpenScoreModal}
           onResetStudentScore={onResetStudentScore}
