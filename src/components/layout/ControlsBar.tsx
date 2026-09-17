@@ -1,6 +1,6 @@
 import React from 'react';
 import { FilterType } from '../../types';
-import { Search, Trophy, Sparkles, FolderUp, UserPlus } from 'lucide-react';
+import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash } from 'lucide-react';
 
 interface ControlsBarProps {
   currentFilter: FilterType;
@@ -11,6 +11,7 @@ interface ControlsBarProps {
   onOpenWheelModal: () => void;
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
+  onOpenFindCodeModal: () => void;
 }
 
 export const ControlsBar: React.FC<ControlsBarProps> = ({
@@ -22,19 +23,32 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   onOpenWheelModal,
   onOpenImportModal,
   onOpenAddModal,
+  onOpenFindCodeModal,
 }) => {
   return (
     <div className="bg-white p-3.5 md:p-4 rounded-2xl shadow-soft-sm border border-slate-200/80 mb-5 flex flex-wrap items-center justify-between gap-3">
-      {/* Search Box */}
-      <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Tìm tên hoặc mã học sinh..."
-          className="w-full pl-10 pr-4 py-2 rounded-full border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none text-xs md:text-sm font-semibold text-slate-800 transition-all placeholder:text-slate-400"
-        />
+      {/* Search Box & Quick Find By Code Button */}
+      <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Tìm tên hoặc mã học sinh..."
+            className="w-full pl-10 pr-4 py-2 rounded-full border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none text-xs md:text-sm font-semibold text-slate-800 transition-all placeholder:text-slate-400"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onOpenFindCodeModal}
+          className="px-3.5 py-2 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-xs shadow-xs transition-transform active:scale-95 flex items-center gap-1.5 shrink-0"
+          title="Tìm nhanh học sinh theo mã / số thứ tự"
+        >
+          <Hash size={14} />
+          <span className="hidden sm:inline">Tìm theo mã</span>
+          <span className="sm:hidden">Mã</span>
+        </button>
       </div>
 
       {/* Filter Tabs */}

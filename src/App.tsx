@@ -11,6 +11,7 @@ import { LeaderboardModal } from './features/leaderboard/components/LeaderboardM
 import { ImportModal } from './features/import-export/components/ImportModal';
 import { AddStudentModal } from './features/students/components/AddStudentModal';
 import { ScoreModal } from './features/students/components/ScoreModal';
+import { FindStudentByCodeModal } from './features/students/components/FindStudentByCodeModal';
 import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
 import { exportStudentsToCSV } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isFindCodeModalOpen, setIsFindCodeModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [scoreModalData, setScoreModalData] = useState<{
     student: Student | null;
@@ -118,6 +120,7 @@ export const App: React.FC = () => {
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
+        onOpenFindCodeModal={() => setIsFindCodeModalOpen(true)}
       />
 
       {/* Podium Top 3 Banner (Visible when Top filter is active) */}
@@ -142,6 +145,21 @@ export const App: React.FC = () => {
       />
 
       {/* --- ALL MODALS --- */}
+      <FindStudentByCodeModal
+        isOpen={isFindCodeModalOpen}
+        onClose={() => setIsFindCodeModalOpen(false)}
+        students={students}
+        className={currentClass.name}
+        minWheelPoints={5}
+        onToggleAttendance={toggleAttendance}
+        onApplyScore={updateScore}
+        onOpenDetailedScoreModal={handleOpenScoreModal}
+        onLocateStudent={(studentId) => {
+          setSearchQuery(studentId);
+          showToast(`Đã lọc hiển thị học sinh mã ${studentId} 🔍`, 'info');
+        }}
+      />
+
       <ClassManagerModal
         isOpen={isClassModalOpen}
         onClose={() => setIsClassModalOpen(false)}

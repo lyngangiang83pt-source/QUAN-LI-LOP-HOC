@@ -53,3 +53,5 @@ lerna-debug.log*
 .vercel
 .turbo/
 .eslintcache
+
+.vercel
