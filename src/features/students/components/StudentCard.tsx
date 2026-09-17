@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Student, AttendanceStatus } from '../../../types';
 import { Plus, Minus, Trash2, RotateCcw } from 'lucide-react';
+import { FloatingStarsEffect } from './FloatingStarsEffect';
 
 interface StudentCardProps {
   student: Student;
@@ -21,11 +22,38 @@ export const StudentCard: React.FC<StudentCardProps> = ({
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
 
+  const [starAnimKey, setStarAnimKey] = useState<number>(0);
+  const [pointDiff, setPointDiff] = useState<number>(0);
+  const [isGlowing, setIsGlowing] = useState<boolean>(false);
+  const prevPointsRef = useRef<number>(student.points || 0);
+
+  useEffect(() => {
+    const currentPoints = student.points || 0;
+    const diff = currentPoints - prevPointsRef.current;
+    if (diff > 0) {
+      setPointDiff(diff);
+      setStarAnimKey((prev) => prev + 1);
+      setIsGlowing(true);
+      const timer = setTimeout(() => setIsGlowing(false), 1800);
+      return () => clearTimeout(timer);
+    }
+    prevPointsRef.current = currentPoints;
+  }, [student.points]);
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-soft-sm hover:shadow-soft-md transition-all duration-200 p-4 flex flex-col justify-between relative group overflow-hidden">
+    <div
+      className={`bg-white rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
+        isGlowing
+          ? 'animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
+          : 'border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
+      }`}
+    >
+      {/* Flying Gold Stars & Floating Score Effect Layer */}
+      <FloatingStarsEffect key={starAnimKey} pointGain={pointDiff} isActive={isGlowing} />
+
       {/* Top Banner Tag if Qualified */}
       {isQualified && (
-        <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-pink-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-bl-xl shadow-xs">
+        <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-pink-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs">
           🎡 Đủ đk quay
         </div>
       )}

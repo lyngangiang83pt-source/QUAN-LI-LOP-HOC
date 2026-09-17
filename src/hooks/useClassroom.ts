@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClassItem, Student, AttendanceStatus, FilterType, ToastItem, SyncStatus } from '../types';
 import { DEFAULT_CLASSES } from '../constants/classroomData';
 import { audioService } from '../services/audioService';
+import { triggerGoldStarsCelebration } from '../services/confettiService';
 import { SupabaseSyncService } from '../features/supabase-sync/supabaseSyncService';
 import { ParsedScoreRow } from '../features/import-export/utils/scoreParser';
 
@@ -301,7 +302,8 @@ export const useClassroom = () => {
     });
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('plus');
+    audioService.play('win');
+    triggerGoldStarsCelebration();
     showToast('Tất cả học sinh đã có mặt và được cộng 2 điểm chuyên cần! 🌟', 'success');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
@@ -326,8 +328,9 @@ export const useClassroom = () => {
     }));
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('plus');
-    showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho TẤT CẢ học sinh trong lớp (${reason})!`, 'success');
+    audioService.play('win');
+    triggerGoldStarsCelebration();
+    showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho TẤT CẢ học sinh trong lớp (${reason})! ⭐`, 'success');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
   const addStudent = useCallback((name: string) => {
