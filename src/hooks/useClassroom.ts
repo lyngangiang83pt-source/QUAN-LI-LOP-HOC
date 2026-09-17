@@ -3,6 +3,7 @@ import { ClassItem, Student, AttendanceStatus, FilterType, ToastItem, SyncStatus
 import { DEFAULT_CLASSES } from '../constants/classroomData';
 import { audioService } from '../services/audioService';
 import { SupabaseSyncService } from '../features/supabase-sync/supabaseSyncService';
+import { ParsedScoreRow } from '../features/import-export/utils/scoreParser';
 
 const STORAGE_CLASSES = 'CLASSROOM_CLASSES_DATA';
 const STORAGE_CURRENT_ID = 'CLASSROOM_CURRENT_CLASS_ID';
@@ -409,6 +410,47 @@ export const useClassroom = () => {
     showToast(`🎉 Đã nạp thành công ${names.length} học sinh vào lớp ${currentClass.name}!`, 'success');
   }, [classes, currentClass, currentClassId, persistClasses, showToast, students]);
 
+  const importScores = useCallback((rows: ParsedScoreRow[], mode: 'override' | 'add') => {
+    let updatedCount = 0;
+    const updatedStudents = students.map((s) => {
+      const matchedRow = rows.find((r) => {
+        if (r.code && s.id.toLowerCase() === r.code.toLowerCase()) return true;
+        if (r.name && s.name.trim().toLowerCase() === r.name.trim().toLowerCase()) return true;
+        return false;
+      });
+
+      if (matchedRow) {
+        updatedCount++;
+        const newScore = mode === 'override'
+          ? matchedRow.score
+          : Math.max(0, (s.points || 0) + matchedRow.score);
+
+        const pointDiff = mode === 'override' ? newScore - (s.points || 0) : matchedRow.score;
+        const note = mode === 'override'
+          ? `Nạp file điểm mới (${matchedRow.score}đ)`
+          : `Nạp cộng dồn điểm (+${matchedRow.score}đ)`;
+
+        if (s.dbId) {
+          SupabaseSyncService.logAttendance(s.dbId, s.attendance, pointDiff, note);
+        }
+
+        return {
+          ...s,
+          points: newScore,
+          lastNote: note,
+        };
+      }
+      return s;
+    });
+
+    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
+    audioService.play('plus');
+    showToast(
+      `🎉 Đã nạp và cập nhật điểm thành công cho ${updatedCount} học sinh trong lớp ${currentClass.name}!`,
+      'success'
+    );
+  }, [classes, currentClass.name, currentClassId, persistClasses, showToast, students]);
+
   const manualSync = useCallback(async () => {
     const choice = window.confirm(
       'Thao tác đồng bộ với Supabase Cloud:\n\n- Bấm [OK]: Đẩy dữ liệu lớp học hiện tại lên Supabase Cloud (Lưu trữ)\n- Bấm [Hủy / Cancel]: Tải dữ liệu mới nhất từ Supabase Cloud về máy'
@@ -471,6 +513,7 @@ export const useClassroom = () => {
     addStudent,
     deleteStudent,
     importStudents,
+    importScores,
     manualSync,
   };
 };

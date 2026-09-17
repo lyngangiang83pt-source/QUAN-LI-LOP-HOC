@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, FolderUp, CheckCircle, Zap, Download, RotateCcw, FolderOpen } from 'lucide-react';
+import { Sparkles, Trophy, FolderUp, CheckCircle, Zap, Download, FolderOpen, FileSpreadsheet } from 'lucide-react';
 import { STUDENT_RESULTS_DRIVE_URL } from '../../constants/classroomData';
 
 interface HeaderBannerProps {
@@ -19,10 +19,10 @@ interface HeaderBannerProps {
   onOpenWheelModal: () => void;
   onOpenLeaderboardModal: () => void;
   onOpenImportModal: () => void;
+  onOpenImportScoreModal: () => void;
   onMarkAllPresent: () => void;
   onSetAllDefault2Points: () => void;
-  onExportCSV: () => void;
-  onResetDayAttendance: () => void;
+  onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
   onShowToast: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
@@ -41,10 +41,10 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenWheelModal,
   onOpenLeaderboardModal,
   onOpenImportModal,
+  onOpenImportScoreModal,
   onMarkAllPresent,
   onSetAllDefault2Points,
-  onExportCSV,
-  onResetDayAttendance,
+  onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
   onShowToast,
@@ -110,11 +110,12 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Kết quả học sinh ↗</span>
           </a>
 
-          {/* Import Button */}
+          {/* Import Student List Button */}
           <button
             type="button"
             onClick={onOpenImportModal}
             className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+            title="Tải hoặc nhập danh sách học sinh"
           >
             <FolderUp size={15} />
             <span>Tải DS</span>
@@ -148,28 +149,26 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Cấp 2đ cả lớp</span>
           </button>
 
-          {/* Export CSV */}
+          {/* Export Score File Button */}
           <button
             type="button"
-            onClick={onExportCSV}
-            className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+            onClick={onExportScoreFile}
+            className="px-3.5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+            title="Xuất file Excel bảng 3 cột: MÃ HS / HỌ VÀ TÊN HS / ĐIỂM TỔNG"
           >
             <Download size={15} />
-            <span>Xuất Excel</span>
+            <span>Xuất file điểm</span>
           </button>
 
-          {/* Reset Day */}
+          {/* Import Score File Button (Thay thế nút Điểm danh mới) */}
           <button
             type="button"
-            onClick={() => {
-              if (confirm('Thầy/Cô có muốn ĐẶT LẠI buổi điểm danh mới (Tất cả Có mặt + 2 điểm chuyên cần)?')) {
-                onResetDayAttendance();
-              }
-            }}
-            className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+            onClick={onOpenImportScoreModal}
+            className="px-3.5 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            title="Nạp bảng điểm từ Excel/CSV 3 cột vào danh sách lớp"
           >
-            <RotateCcw size={15} />
-            <span>Điểm danh mới</span>
+            <FileSpreadsheet size={16} />
+            <span>Nạp file điểm</span>
           </button>
 
           {/* Supabase Status Button */}
@@ -182,3 +181,4 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
     </header>
   );
 };
+

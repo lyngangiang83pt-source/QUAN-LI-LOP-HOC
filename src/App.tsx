@@ -9,11 +9,12 @@ import { ClassManagerModal } from './features/classroom/components/ClassManagerM
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
 import { ImportModal } from './features/import-export/components/ImportModal';
+import { ImportScoreModal } from './features/import-export/components/ImportScoreModal';
 import { AddStudentModal } from './features/students/components/AddStudentModal';
 import { ScoreModal } from './features/students/components/ScoreModal';
 import { FindStudentByCodeModal } from './features/students/components/FindStudentByCodeModal';
 import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
-import { exportStudentsToCSV } from './features/import-export/utils/csvExporter';
+import { exportScoreFileCSV } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
 
 export const App: React.FC = () => {
@@ -38,11 +39,11 @@ export const App: React.FC = () => {
     toggleAttendance,
     updateScore,
     markAllPresent,
-    resetDayAttendance,
     setAllDefault2Points,
     addStudent,
     deleteStudent,
     importStudents,
+    importScores,
     manualSync,
   } = useClassroom();
 
@@ -51,6 +52,7 @@ export const App: React.FC = () => {
   const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImportScoreModalOpen, setIsImportScoreModalOpen] = useState(false);
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isFindCodeModalOpen, setIsFindCodeModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
@@ -75,9 +77,9 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    exportStudentsToCSV(students, currentClass.name);
-    showToast('Đã xuất file bảng điểm xếp hạng Excel thành công! 📥', 'success');
+  const handleExportScoreFile = () => {
+    exportScoreFileCSV(students, currentClass.name);
+    showToast(`Đã xuất file bảng điểm 3 cột lớp ${currentClass.name} thành công! 📥`, 'success');
   };
 
   return (
@@ -102,10 +104,10 @@ export const App: React.FC = () => {
           setIsLeaderboardModalOpen(true);
         }}
         onOpenImportModal={() => setIsImportModalOpen(true)}
+        onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
         onMarkAllPresent={markAllPresent}
         onSetAllDefault2Points={setAllDefault2Points}
-        onExportCSV={handleExportCSV}
-        onResetDayAttendance={resetDayAttendance}
+        onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
         onShowToast={showToast}
@@ -197,6 +199,14 @@ export const App: React.FC = () => {
         onImportStudents={importStudents}
       />
 
+      <ImportScoreModal
+        isOpen={isImportScoreModalOpen}
+        onClose={() => setIsImportScoreModalOpen(false)}
+        students={students}
+        className={currentClass.name}
+        onImportScores={importScores}
+      />
+
       <AddStudentModal
         isOpen={isAddStudentModalOpen}
         onClose={() => setIsAddStudentModalOpen(false)}
@@ -222,3 +232,4 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
