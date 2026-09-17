@@ -104,8 +104,9 @@ export const App: React.FC = () => {
           setCurrentFilter('top');
           setIsLeaderboardModalOpen(true);
         }}
-        onOpenImportModal={() => setIsImportModalOpen(true)}
+        onOpenFindCodeModal={() => setIsFindCodeModalOpen(true)}
         onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
+
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}

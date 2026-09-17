@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, FolderUp, Download, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, Trophy, Hash, Download, FileSpreadsheet } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -17,7 +17,7 @@ interface HeaderBannerProps {
   onEditClassInfo: () => void;
   onOpenWheelModal: () => void;
   onOpenLeaderboardModal: () => void;
-  onOpenImportModal: () => void;
+  onOpenFindCodeModal: () => void;
   onOpenImportScoreModal: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
@@ -37,7 +37,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onEditClassInfo,
   onOpenWheelModal,
   onOpenLeaderboardModal,
-  onOpenImportModal,
+  onOpenFindCodeModal,
   onOpenImportScoreModal,
   onExportScoreFile,
   onManualSync,
@@ -94,15 +94,15 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Top điểm</span>
           </button>
 
-          {/* Import Student List Button */}
+          {/* Find Student By Code Button */}
           <button
             type="button"
-            onClick={onOpenImportModal}
-            className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-            title="Tải hoặc nhập danh sách học sinh"
+            onClick={onOpenFindCodeModal}
+            className="px-3.5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+            title="Tìm nhanh học sinh theo mã / số thứ tự"
           >
-            <FolderUp size={15} />
-            <span>Tải DS</span>
+            <Hash size={16} />
+            <span>Tìm Mã HS</span>
           </button>
 
 
