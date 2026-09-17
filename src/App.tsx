@@ -106,8 +106,6 @@ export const App: React.FC = () => {
         }}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
-        onMarkAllPresent={markAllPresent}
-        onSetAllDefault2Points={setAllDefault2Points}
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}

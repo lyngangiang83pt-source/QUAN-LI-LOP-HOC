@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, FolderUp, CheckCircle, Zap, Download, FolderOpen, FileSpreadsheet } from 'lucide-react';
+import { Sparkles, Trophy, FolderUp, Download, FolderOpen, FileSpreadsheet } from 'lucide-react';
 import { STUDENT_RESULTS_DRIVE_URL } from '../../constants/classroomData';
 
 interface HeaderBannerProps {
@@ -20,8 +20,6 @@ interface HeaderBannerProps {
   onOpenLeaderboardModal: () => void;
   onOpenImportModal: () => void;
   onOpenImportScoreModal: () => void;
-  onMarkAllPresent: () => void;
-  onSetAllDefault2Points: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
@@ -42,13 +40,12 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenLeaderboardModal,
   onOpenImportModal,
   onOpenImportScoreModal,
-  onMarkAllPresent,
-  onSetAllDefault2Points,
   onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
   onShowToast,
 }) => {
+
   const qualifiedCount = students.filter((s) => (s.points || 0) >= minWheelPoints).length;
 
   return (
@@ -121,34 +118,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <span>Tải DS</span>
           </button>
 
-          {/* Mark All Present */}
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Thầy/Cô có muốn điểm danh TẤT CẢ học sinh là CÓ MẶT (+2 điểm chuyên cần) không?')) {
-                onMarkAllPresent();
-              }
-            }}
-            className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-          >
-            <CheckCircle size={15} />
-            <span>Có mặt tất cả (+2đ)</span>
-          </button>
-
-          {/* Set All Default 2 Points */}
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Thầy/Cô có muốn thiết lập TẤT CẢ học sinh đều có 2 điểm tích lũy ban đầu không?')) {
-                onSetAllDefault2Points();
-              }
-            }}
-            className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-          >
-            <Zap size={15} />
-            <span>Cấp 2đ cả lớp</span>
-          </button>
-
           {/* Export Score File Button */}
           <button
             type="button"
@@ -159,6 +128,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <Download size={15} />
             <span>Xuất file điểm</span>
           </button>
+
 
           {/* Import Score File Button */}
           <button
