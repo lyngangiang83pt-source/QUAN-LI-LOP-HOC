@@ -9,6 +9,14 @@ import { ParsedScoreRow } from '../features/import-export/utils/scoreParser';
 const STORAGE_CLASSES = 'CLASSROOM_CLASSES_DATA';
 const STORAGE_CURRENT_ID = 'CLASSROOM_CURRENT_CLASS_ID';
 
+export interface UndoRecord {
+  id: string;
+  description: string;
+  previousClasses: ClassItem[];
+  previousClassId: string;
+  timestamp: number;
+}
+
 export const useClassroom = () => {
   const [classes, setClasses] = useState<ClassItem[]>(() => {
     try {
@@ -33,6 +41,7 @@ export const useClassroom = () => {
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [undoRecord, setUndoRecord] = useState<UndoRecord | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     state: 'idle',
     message: '☁️ Supabase: Đang kết nối...',
@@ -187,10 +196,49 @@ export const useClassroom = () => {
     showToast(`Đã xóa lớp "${target?.name || ''}"!`, 'danger');
   }, [classes, currentClassId, persistClasses, showToast]);
 
+  const saveUndoSnapshot = useCallback((description: string) => {
+    setUndoRecord({
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+      description,
+      previousClasses: JSON.parse(JSON.stringify(classes)),
+      previousClassId: currentClassId,
+      timestamp: Date.now(),
+    });
+  }, [classes, currentClassId]);
+
+  const undoLastAction = useCallback(() => {
+    if (!undoRecord) return;
+    const { previousClasses, previousClassId, description } = undoRecord;
+
+    setClasses(previousClasses);
+    setCurrentClassId(previousClassId);
+    localStorage.setItem(STORAGE_CLASSES, JSON.stringify(previousClasses));
+    localStorage.setItem(STORAGE_CURRENT_ID, previousClassId);
+
+    const activeCls = previousClasses.find((c) => c.id === previousClassId);
+    if (activeCls) {
+      SupabaseSyncService.triggerDebouncedSync(activeCls, (st) => {
+        if (st === 'connected') {
+          setSyncStatus({ state: 'connected', message: '☁️ Supabase: Đã hoàn tác ✅' });
+        }
+      });
+    }
+
+    setUndoRecord(null);
+    audioService.play('plus');
+    showToast(`↩️ Đã hoàn tác: "${description}"!`, 'info');
+  }, [undoRecord, showToast]);
+
+  const dismissUndo = useCallback(() => {
+    setUndoRecord(null);
+  }, []);
+
   const resetClassPoints = useCallback((classId: string) => {
     const target = classes.find((c) => c.id === classId);
     if (!target) return;
     const defPts = target.defaultPoints ?? 2;
+
+    saveUndoSnapshot(`Reset điểm lớp ${target.name} về ${defPts}đ`);
 
     const updated = classes.map((c) => {
       if (c.id === classId) {
@@ -210,7 +258,7 @@ export const useClassroom = () => {
     persistClasses(updated);
     audioService.play('plus');
     showToast(`Đã reset điểm lớp ${target.name} về ${defPts} điểm ban đầu!`, 'success');
-  }, [classes, persistClasses, showToast]);
+  }, [classes, persistClasses, saveUndoSnapshot, showToast]);
 
   const toggleAttendance = useCallback((studentId: string, newStatus: AttendanceStatus) => {
     const student = students.find((s) => s.id === studentId);
@@ -219,6 +267,7 @@ export const useClassroom = () => {
     const oldStatus = student.attendance;
     if (oldStatus === newStatus) {
       if (newStatus === 'present' && (student.points || 0) < 2) {
+        saveUndoSnapshot(`Cập nhật điểm danh: ${student.name} (2đ)`);
         const updatedStudents = students.map((s) =>
           s.id === studentId ? { ...s, points: 2, lastNote: 'Có mặt (+2đ tích lũy)' } : s
         );
@@ -248,6 +297,9 @@ export const useClassroom = () => {
       newPts = 2;
     }
 
+    const statusText = newStatus === 'present' ? 'Có mặt (+2đ)' : newStatus === 'late' ? 'Đi muộn (+1đ)' : 'Vắng mặt';
+    saveUndoSnapshot(`Điểm danh: ${student.name} ➔ ${statusText}`);
+
     const updatedStudents = students.map((s) =>
       s.id === studentId ? { ...s, attendance: newStatus, points: newPts, lastNote: note } : s
     );
@@ -260,9 +312,8 @@ export const useClassroom = () => {
     if (pointDiff > 0) audioService.play('plus');
     else if (pointDiff < 0) audioService.play('minus');
 
-    const statusText = newStatus === 'present' ? 'Có mặt (+2đ)' : newStatus === 'late' ? 'Đi muộn (+1đ)' : 'Vắng mặt';
     showToast(`Đã điểm danh: ${student.name} ➔ ${statusText}`, pointDiff >= 0 ? 'success' : 'danger');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const updateScore = useCallback((studentId: string, pointDiff: number, reason: string) => {
     const student = students.find((s) => s.id === studentId);
@@ -271,6 +322,8 @@ export const useClassroom = () => {
     const newPts = Math.max(0, (student.points || 0) + pointDiff);
     const sign = pointDiff > 0 ? '+' : '';
     const note = `${reason} (${sign}${pointDiff}đ)`;
+
+    saveUndoSnapshot(`${student.name}: ${sign}${pointDiff} điểm (${reason})`);
 
     const updatedStudents = students.map((s) =>
       s.id === studentId ? { ...s, points: newPts, lastNote: note } : s
@@ -285,9 +338,11 @@ export const useClassroom = () => {
     else if (pointDiff < 0) audioService.play('minus');
 
     showToast(`${pointDiff > 0 ? '🌟' : '⚠️'} ${student.name}: ${sign}${pointDiff} điểm (${reason})`, pointDiff > 0 ? 'success' : 'danger');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const markAllPresent = useCallback(() => {
+    saveUndoSnapshot('Điểm danh tất cả học sinh CÓ MẶT (+2đ)');
+
     const updatedStudents = students.map((s) => {
       if (s.attendance !== 'present') {
         const addPts = s.attendance === 'late' ? 1 : 2;
@@ -305,9 +360,11 @@ export const useClassroom = () => {
     audioService.play('win');
     triggerGoldStarsCelebration();
     showToast('Tất cả học sinh đã có mặt và được cộng 2 điểm chuyên cần! 🌟', 'success');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const setAllDefault2Points = useCallback(() => {
+    saveUndoSnapshot('Cấp 2đ tích lũy ban đầu cho cả lớp');
+
     const updatedStudents = students.map((s) => ({
       ...s,
       attendance: 'present' as AttendanceStatus,
@@ -318,9 +375,11 @@ export const useClassroom = () => {
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     audioService.play('plus');
     showToast('Đã cấp 2 điểm tích lũy ban đầu cho toàn bộ học sinh trong lớp! 🌟', 'success');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const addAllClassBonus = useCallback((bonusPts: number = 2, reason: string = 'Thưởng cả lớp') => {
+    saveUndoSnapshot(`Cộng +${bonusPts}đ thưởng cho cả lớp (${reason})`);
+
     const updatedStudents = students.map((s) => ({
       ...s,
       points: Math.max(0, (s.points || 0) + bonusPts),
@@ -331,7 +390,7 @@ export const useClassroom = () => {
     audioService.play('win');
     triggerGoldStarsCelebration();
     showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho TẤT CẢ học sinh trong lớp (${reason})! ⭐`, 'success');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const addStudent = useCallback((name: string) => {
     if (!name || !name.trim()) return;
@@ -344,15 +403,19 @@ export const useClassroom = () => {
       lastNote: 'Có mặt ban đầu (+2đ chuyên cần)',
     };
 
+    saveUndoSnapshot(`Thêm học sinh ${name.trim()}`);
+
     const updatedStudents = [...students, newStudent];
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     audioService.play('plus');
     showToast(`Đã thêm học sinh: ${name.trim()} (+2đ có mặt ban đầu)`, 'success');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const resetStudentScore = useCallback((studentId: string) => {
     const student = students.find((s) => s.id === studentId);
     if (!student) return;
+
+    saveUndoSnapshot(`Reset điểm em ${student.name} về 2đ ban đầu`);
 
     const updatedStudents = students.map((s) =>
       s.id === studentId
@@ -371,20 +434,24 @@ export const useClassroom = () => {
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     audioService.play('plus');
     showToast(`Đã reset điểm của em ${student.name} (${student.id}) về 2 điểm ban đầu! 🔄`, 'info');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const deleteStudent = useCallback((studentId: string) => {
     const student = students.find((s) => s.id === studentId);
     if (!student) return;
 
+    saveUndoSnapshot(`Xóa học sinh ${student.name}`);
+
     const updatedStudents = students.filter((s) => s.id !== studentId);
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     showToast(`Đã xóa học sinh ${student.name}`, 'danger');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const importStudents = useCallback((names: string[], mode: 'replace' | 'append') => {
     const defPts = currentClass.defaultPoints ?? 2;
     let newStudentList: Student[] = [];
+
+    saveUndoSnapshot(`Nạp danh sách ${names.length} học sinh lớp ${currentClass.name}`);
 
     if (mode === 'replace') {
       newStudentList = names.map((sName, idx) => ({
@@ -410,10 +477,13 @@ export const useClassroom = () => {
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: newStudentList } : c)));
     audioService.play('plus');
     showToast(`🎉 Đã nạp thành công ${names.length} học sinh vào lớp ${currentClass.name}!`, 'success');
-  }, [classes, currentClass, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClass, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const importScores = useCallback((rows: ParsedScoreRow[], mode: 'override' | 'add') => {
     let updatedCount = 0;
+
+    saveUndoSnapshot(`Nạp bảng điểm cho lớp ${currentClass.name}`);
+
     const updatedStudents = students.map((s) => {
       const matchedRow = rows.find((r) => {
         if (r.code && s.id.toLowerCase() === r.code.toLowerCase()) return true;
@@ -451,7 +521,7 @@ export const useClassroom = () => {
       `🎉 Đã nạp và cập nhật điểm thành công cho ${updatedCount} học sinh trong lớp ${currentClass.name}!`,
       'success'
     );
-  }, [classes, currentClass.name, currentClassId, persistClasses, showToast, students]);
+  }, [classes, currentClass.name, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const manualSync = useCallback(async () => {
     const choice = window.confirm(
@@ -500,6 +570,9 @@ export const useClassroom = () => {
     setSearchQuery,
     toasts,
     showToast,
+    undoRecord,
+    undoLastAction,
+    dismissUndo,
     syncStatus,
     switchClass,
     addNewClass,

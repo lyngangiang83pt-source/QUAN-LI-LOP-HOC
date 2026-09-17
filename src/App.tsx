@@ -5,6 +5,7 @@ import { ControlsBar } from './components/layout/ControlsBar';
 import { StudentGrid } from './features/students/components/StudentGrid';
 import { PodiumTop3Banner } from './features/leaderboard/components/PodiumTop3Banner';
 import { ToastContainer } from './components/common/ToastContainer';
+import { UndoNotificationBanner } from './components/common/UndoNotificationBanner';
 import { ClassManagerModal } from './features/classroom/components/ClassManagerModal';
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
@@ -29,6 +30,9 @@ export const App: React.FC = () => {
     setSearchQuery,
     toasts,
     showToast,
+    undoRecord,
+    undoLastAction,
+    dismissUndo,
     syncStatus,
     switchClass,
     addNewClass,
@@ -88,6 +92,14 @@ export const App: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 py-5 md:py-6">
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} />
+
+      {/* Floating Undo Notification Banner */}
+      <UndoNotificationBanner
+        undoData={undoRecord}
+        onUndo={undoLastAction}
+        onDismiss={dismissUndo}
+        durationMs={7000}
+      />
 
       {/* Header with Mascot Hero Banner */}
       <HeaderBanner
