@@ -1,12 +1,12 @@
 import { Student } from '../../../types';
 
 /**
- * Xuất file bảng điểm chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN HS, ĐIỂM TỔNG
+ * Xuất file bảng điểm chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM
  * Hỗ trợ UTF-8 BOM để mở trực tiếp trong Excel tiếng Việt không bị lỗi font
  */
 export const exportScoreFileCSV = (students: Student[], className: string): void => {
   let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // UTF-8 BOM
-  csvContent += "MÃ HS,HỌ VÀ TÊN HS,ĐIỂM TỔNG\n";
+  csvContent += "MÃ HS,HỌ VÀ TÊN,TỔNG ĐIỂM\n";
 
   students.forEach((s) => {
     const code = s.id || '';
@@ -18,7 +18,7 @@ export const exportScoreFileCSV = (students: Student[], className: string): void
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `Bang_Diem_Tong_Lop_${className}_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute("download", `Bang_Diem_Lop_${className}_${new Date().toISOString().slice(0, 10)}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -29,7 +29,7 @@ export const exportScoreFileCSV = (students: Student[], className: string): void
  */
 export const downloadSampleScoreCSV = (): void => {
   let csv = "data:text/csv;charset=utf-8,\uFEFF";
-  csv += "MÃ HS,HỌ VÀ TÊN HS,ĐIỂM TỔNG\n";
+  csv += "MÃ HS,HỌ VÀ TÊN,TỔNG ĐIỂM\n";
   csv += "HS01,Nguyễn Văn An,10\n";
   csv += "HS02,Trần Thị Mai,8\n";
   csv += "HS03,Lê Hoàng Nam,9\n";

@@ -154,18 +154,18 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             type="button"
             onClick={onExportScoreFile}
             className="px-3.5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-            title="Xuất file Excel bảng 3 cột: MÃ HS / HỌ VÀ TÊN HS / ĐIỂM TỔNG"
+            title="Xuất file Excel bảng 3 cột: MÃ HS / HỌ VÀ TÊN / TỔNG ĐIỂM"
           >
             <Download size={15} />
             <span>Xuất file điểm</span>
           </button>
 
-          {/* Import Score File Button (Thay thế nút Điểm danh mới) */}
+          {/* Import Score File Button */}
           <button
             type="button"
             onClick={onOpenImportScoreModal}
             className="px-3.5 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-            title="Nạp bảng điểm từ Excel/CSV 3 cột vào danh sách lớp"
+            title="Nạp bảng điểm từ Excel/CSV 3 cột: MÃ HS / HỌ VÀ TÊN / TỔNG ĐIỂM"
           >
             <FileSpreadsheet size={16} />
             <span>Nạp file điểm</span>

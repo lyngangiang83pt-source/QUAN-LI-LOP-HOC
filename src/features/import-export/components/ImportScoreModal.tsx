@@ -148,7 +148,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
       {activeTab === 'paste' && (
         <div className="space-y-2">
           <p className="text-xs text-slate-600 font-medium">
-            Copy 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, ĐIỂM TỔNG</strong>) từ Excel rồi dán trực tiếp vào đây:
+            Copy 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</strong>) từ Excel rồi dán trực tiếp vào đây:
           </p>
           <textarea
             rows={5}
@@ -169,7 +169,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
           <label className="border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/40 hover:bg-indigo-50/80 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
             <Upload className="text-indigo-600 mb-2" size={32} />
             <strong className="text-indigo-900 text-sm">Bấm vào đây để chọn file bảng điểm</strong>
-            <span className="text-[11px] text-slate-500 mt-1">Hỗ trợ file .csv (UTF-8) hoặc .txt chuẩn 3 cột</span>
+            <span className="text-[11px] text-slate-500 mt-1">Hỗ trợ file .csv (UTF-8) hoặc .txt chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</span>
             <input type="file" accept=".csv,.txt" className="hidden" onChange={handleFileUpload} />
           </label>
           {fileName && (
@@ -184,7 +184,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
       {activeTab === 'template' && (
         <div className="space-y-3 text-center py-4">
           <p className="text-xs text-slate-600 max-w-md mx-auto">
-            Tải file mẫu Excel chuẩn 3 cột (<strong>MÃ HS, HỌ VÀ TÊN HS, ĐIỂM TỔNG</strong>). Thầy/Cô chỉ cần mở bằng Excel, điền điểm rồi nạp vào phần mềm:
+            Tải file mẫu Excel chuẩn 3 cột (<strong>MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM</strong>). Thầy/Cô chỉ cần mở bằng Excel, điền điểm rồi nạp vào phần mềm:
           </p>
           <button
             type="button"

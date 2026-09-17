@@ -305,19 +305,6 @@ export const useClassroom = () => {
     showToast('Tất cả học sinh đã có mặt và được cộng 2 điểm chuyên cần! 🌟', 'success');
   }, [classes, currentClassId, persistClasses, showToast, students]);
 
-  const resetDayAttendance = useCallback(() => {
-    const updatedStudents = students.map((s) => ({
-      ...s,
-      attendance: 'present' as AttendanceStatus,
-      points: 2,
-      lastNote: 'Điểm danh có mặt ngày mới (+2đ)',
-    }));
-
-    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('plus');
-    showToast('Đã làm mới ngày học: Mỗi em có mặt nhận 2 điểm chuyên cần ban đầu!', 'success');
-  }, [classes, currentClassId, persistClasses, showToast, students]);
-
   const setAllDefault2Points = useCallback(() => {
     const updatedStudents = students.map((s) => ({
       ...s,
@@ -508,7 +495,6 @@ export const useClassroom = () => {
     toggleAttendance,
     updateScore,
     markAllPresent,
-    resetDayAttendance,
     setAllDefault2Points,
     addStudent,
     deleteStudent,
