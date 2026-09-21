@@ -147,12 +147,12 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (confirm('Thầy/Cô có muốn cộng thêm +2 ĐIỂM THƯỞNG cho TẤT CẢ học sinh trong lớp không?')) {
+              if (confirm('Thầy/Cô có muốn cộng thêm +2 ĐIỂM THƯỞNG cho học sinh CÓ MẶT & ĐI MUỘN (học sinh vắng không được cộng) không?')) {
                 onAddAllClassBonus();
               }
             }}
             className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-            title="Cộng thêm +2 điểm thưởng cho tất cả học sinh cả lớp"
+            title="Cộng thêm +2 điểm thưởng cho học sinh có mặt và muộn (học sinh vắng không được cộng)"
           >
             <Zap size={15} />
             <span>Cả lớp +2đ</span>

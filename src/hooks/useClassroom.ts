@@ -400,18 +400,36 @@ export const useClassroom = () => {
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const addAllClassBonus = useCallback((bonusPts: number = 2, reason: string = 'Thưởng cả lớp') => {
-    saveUndoSnapshot(`Cộng +${bonusPts}đ thưởng cho cả lớp (${reason})`);
+    const eligibleStudents = students.filter((s) => s.attendance === 'present' || s.attendance === 'late');
+    const absentStudents = students.filter((s) => s.attendance === 'absent');
 
-    const updatedStudents = students.map((s) => ({
-      ...s,
-      points: Math.max(0, (s.points || 0) + bonusPts),
-      lastNote: `${reason} (+${bonusPts}đ)`,
-    }));
+    if (eligibleStudents.length === 0) {
+      showToast('⚠️ Không có học sinh nào đang Có mặt hoặc Đi muộn để cộng điểm thưởng!', 'danger');
+      return;
+    }
+
+    saveUndoSnapshot(`Cộng +${bonusPts}đ cho ${eligibleStudents.length} HS có mặt/muộn (${reason})`);
+
+    const updatedStudents = students.map((s) => {
+      if (s.attendance === 'present' || s.attendance === 'late') {
+        return {
+          ...s,
+          points: Math.max(0, (s.points || 0) + bonusPts),
+          lastNote: `${reason} (+${bonusPts}đ)`,
+        };
+      }
+      return s;
+    });
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
     audioService.play('win');
     triggerGoldStarsCelebration();
-    showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho TẤT CẢ học sinh trong lớp (${reason})! ⭐`, 'success');
+
+    if (absentStudents.length > 0) {
+      showToast(`🎉 Đã cộng +${bonusPts}đ cho ${eligibleStudents.length} học sinh Có mặt/Muộn (Đã bỏ qua ${absentStudents.length} học sinh Vắng)! ⭐`, 'success');
+    } else {
+      showToast(`🎉 Đã cộng +${bonusPts} điểm thưởng cho ${eligibleStudents.length} học sinh trong lớp (${reason})! ⭐`, 'success');
+    }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const addStudent = useCallback((name: string) => {
