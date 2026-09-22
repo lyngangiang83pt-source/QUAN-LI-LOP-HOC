@@ -7,6 +7,7 @@ import { PodiumTop3Banner } from './features/leaderboard/components/PodiumTop3Ba
 import { ToastContainer } from './components/common/ToastContainer';
 import { UndoNotificationBanner } from './components/common/UndoNotificationBanner';
 import { ClassManagerModal } from './features/classroom/components/ClassManagerModal';
+import { ClassPenaltyModal } from './features/classroom/components/ClassPenaltyModal';
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
 import { SpotlightCeremonyModal } from './features/leaderboard/components/SpotlightCeremonyModal';
@@ -58,6 +59,7 @@ export const App: React.FC = () => {
 
   // Modal Visibility States
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+  const [isClassPenaltyModalOpen, setIsClassPenaltyModalOpen] = useState(false);
   const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isSpotlightModalOpen, setIsSpotlightModalOpen] = useState(false);
@@ -130,6 +132,7 @@ export const App: React.FC = () => {
         onMarkAllPresent={markAllPresent}
         onAddAllClassBonus={() => addAllClassBonus(2, 'Thưởng cả lớp')}
         onDeductAllClassPenalty={() => deductAllClassPenalty(1, 'Nhắc nhở cả lớp')}
+        onOpenClassPenaltyModal={() => setIsClassPenaltyModalOpen(true)}
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
@@ -200,6 +203,14 @@ export const App: React.FC = () => {
         onEditClass={editClass}
         onDeleteClass={deleteClass}
         onResetPoints={resetClassPoints}
+      />
+
+      <ClassPenaltyModal
+        isOpen={isClassPenaltyModalOpen}
+        onClose={() => setIsClassPenaltyModalOpen(false)}
+        students={students}
+        className={currentClass.name}
+        onDeductAllClassPenalty={deductAllClassPenalty}
       />
 
       <LuckyWheelModal

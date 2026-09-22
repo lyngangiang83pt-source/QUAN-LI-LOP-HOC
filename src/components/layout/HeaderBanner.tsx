@@ -25,6 +25,7 @@ interface HeaderBannerProps {
   onMarkAllPresent: () => void;
   onAddAllClassBonus: () => void;
   onDeductAllClassPenalty?: () => void;
+  onOpenClassPenaltyModal?: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
@@ -51,6 +52,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onMarkAllPresent,
   onAddAllClassBonus,
   onDeductAllClassPenalty,
+  onOpenClassPenaltyModal,
   onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
@@ -150,16 +152,20 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
           </button>
 
           {/* Whole Class -1pt Button */}
-          {onDeductAllClassPenalty && (
+          {(onOpenClassPenaltyModal || onDeductAllClassPenalty) && (
             <button
               type="button"
               onClick={() => {
-                if (confirm('Thầy/Cô có muốn TRỪ -1 ĐIỂM của học sinh CÓ MẶT & ĐI MUỘN (học sinh vắng không bị trừ) không?')) {
-                  onDeductAllClassPenalty();
+                if (onOpenClassPenaltyModal) {
+                  onOpenClassPenaltyModal();
+                } else if (onDeductAllClassPenalty) {
+                  if (confirm('Thầy/Cô có muốn TRỪ -1 ĐIỂM của học sinh CÓ MẶT & ĐI MUỘN (học sinh vắng không bị trừ) không?')) {
+                    onDeductAllClassPenalty();
+                  }
                 }
               }}
               className="px-3.5 py-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-rose-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              title="Trừ -1 điểm nhắc nhở học sinh có mặt và muộn (học sinh vắng không bị trừ)"
+              title="Mở bảng chọn nhanh lý do trừ -1đ nhắc nhở cả lớp (Mất trật tự, chưa làm bài...)"
             >
               <MinusCircle size={15} />
               <span>Cả lớp -1đ</span>
