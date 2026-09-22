@@ -432,6 +432,38 @@ export const useClassroom = () => {
     }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
+  const deductAllClassPenalty = useCallback((penaltyPts: number = 1, reason: string = 'Nhắc nhở cả lớp') => {
+    const eligibleStudents = students.filter((s) => s.attendance === 'present' || s.attendance === 'late');
+    const absentStudents = students.filter((s) => s.attendance === 'absent');
+
+    if (eligibleStudents.length === 0) {
+      showToast('⚠️ Không có học sinh nào đang Có mặt hoặc Đi muộn để trừ điểm!', 'danger');
+      return;
+    }
+
+    saveUndoSnapshot(`Trừ -${penaltyPts}đ cho ${eligibleStudents.length} HS có mặt/muộn (${reason})`);
+
+    const updatedStudents = students.map((s) => {
+      if (s.attendance === 'present' || s.attendance === 'late') {
+        return {
+          ...s,
+          points: Math.max(0, (s.points || 0) - penaltyPts),
+          lastNote: `${reason} (-${penaltyPts}đ)`,
+        };
+      }
+      return s;
+    });
+
+    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
+    audioService.play('minus');
+
+    if (absentStudents.length > 0) {
+      showToast(`⚠️ Đã trừ -${penaltyPts}đ của ${eligibleStudents.length} học sinh Có mặt/Muộn (Đã bỏ qua ${absentStudents.length} học sinh Vắng)!`, 'danger');
+    } else {
+      showToast(`⚠️ Đã trừ -${penaltyPts} điểm của ${eligibleStudents.length} học sinh trong lớp (${reason})!`, 'danger');
+    }
+  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
+
   const addStudent = useCallback((name: string) => {
     if (!name || !name.trim()) return;
     const nextId = `HS${String(students.length + 1).padStart(2, '0')}`;
@@ -627,6 +659,7 @@ export const useClassroom = () => {
     markAllPresent,
     setAllDefault2Points,
     addAllClassBonus,
+    deductAllClassPenalty,
     addStudent,
     deleteStudent,
     importStudents,

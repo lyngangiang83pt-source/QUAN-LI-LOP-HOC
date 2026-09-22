@@ -48,6 +48,7 @@ export const App: React.FC = () => {
     markAllPresent,
     setAllDefault2Points,
     addAllClassBonus,
+    deductAllClassPenalty,
     addStudent,
     deleteStudent,
     importStudents,
@@ -128,6 +129,7 @@ export const App: React.FC = () => {
         onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
         onMarkAllPresent={markAllPresent}
         onAddAllClassBonus={() => addAllClassBonus(2, 'Thưởng cả lớp')}
+        onDeductAllClassPenalty={() => deductAllClassPenalty(1, 'Nhắc nhở cả lớp')}
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}

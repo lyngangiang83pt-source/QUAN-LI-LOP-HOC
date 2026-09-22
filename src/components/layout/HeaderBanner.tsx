@@ -3,7 +3,7 @@ import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, Hash, CheckCircle, Zap, Download, FileSpreadsheet, Gauge, Crown } from 'lucide-react';
+import { Sparkles, Trophy, CheckCircle, Zap, MinusCircle, Download, FileSpreadsheet, Gauge, Crown } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -20,10 +20,11 @@ interface HeaderBannerProps {
   onOpenWheelModal: () => void;
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
-  onOpenFindCodeModal: () => void;
+  onOpenFindCodeModal?: () => void;
   onOpenImportScoreModal: () => void;
   onMarkAllPresent: () => void;
   onAddAllClassBonus: () => void;
+  onDeductAllClassPenalty?: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
@@ -49,6 +50,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenImportScoreModal,
   onMarkAllPresent,
   onAddAllClassBonus,
+  onDeductAllClassPenalty,
   onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
@@ -117,17 +119,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             </button>
           )}
 
-          {/* Find Student By Code Button */}
-          <button
-            type="button"
-            onClick={onOpenFindCodeModal}
-            className="px-3.5 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xs md:text-sm border border-white/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
-            title="Tìm nhanh học sinh theo mã / số thứ tự"
-          >
-            <Hash size={16} />
-            <span>Tìm Mã HS</span>
-          </button>
-
           {/* Mark All Present Button */}
           <button
             type="button"
@@ -157,6 +148,23 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <Zap size={15} />
             <span>Cả lớp +2đ</span>
           </button>
+
+          {/* Whole Class -1pt Button */}
+          {onDeductAllClassPenalty && (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Thầy/Cô có muốn TRỪ -1 ĐIỂM của học sinh CÓ MẶT & ĐI MUỘN (học sinh vắng không bị trừ) không?')) {
+                  onDeductAllClassPenalty();
+                }
+              }}
+              className="px-3.5 py-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-rose-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+              title="Trừ -1 điểm nhắc nhở học sinh có mặt và muộn (học sinh vắng không bị trừ)"
+            >
+              <MinusCircle size={15} />
+              <span>Cả lớp -1đ</span>
+            </button>
+          )}
 
           {/* Export Score File Button */}
           <button
