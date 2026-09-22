@@ -432,19 +432,31 @@ export const useClassroom = () => {
     }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
-  const deductAllClassPenalty = useCallback((penaltyPts: number = 1, reason: string = 'Nhắc nhở cả lớp') => {
-    const eligibleStudents = students.filter((s) => s.attendance === 'present' || s.attendance === 'late');
-    const absentStudents = students.filter((s) => s.attendance === 'absent');
+  const deductAllClassPenalty = useCallback((
+    penaltyPts: number = 1,
+    reason: string = 'Nhắc nhở cả lớp',
+    targetStudentIds?: string[],
+    scopeName?: string
+  ) => {
+    const targetPool = targetStudentIds && targetStudentIds.length > 0
+      ? students.filter((s) => targetStudentIds.includes(s.id))
+      : students;
+
+    const eligibleStudents = targetPool.filter((s) => s.attendance === 'present' || s.attendance === 'late');
+    const absentStudents = targetPool.filter((s) => s.attendance === 'absent');
 
     if (eligibleStudents.length === 0) {
-      showToast('⚠️ Không có học sinh nào đang Có mặt hoặc Đi muộn để trừ điểm!', 'danger');
+      showToast('⚠️ Không có học sinh nào đang Có mặt hoặc Đi muộn trong phạm vi đã chọn để trừ điểm!', 'danger');
       return;
     }
 
-    saveUndoSnapshot(`Trừ -${penaltyPts}đ cho ${eligibleStudents.length} HS có mặt/muộn (${reason})`);
+    const scopeLabel = scopeName || (targetStudentIds ? `${eligibleStudents.length} HS` : 'Cả lớp');
+    saveUndoSnapshot(`Trừ -${penaltyPts}đ cho ${scopeLabel} (${reason})`);
+
+    const eligibleIds = new Set(eligibleStudents.map((s) => s.id));
 
     const updatedStudents = students.map((s) => {
-      if (s.attendance === 'present' || s.attendance === 'late') {
+      if (eligibleIds.has(s.id)) {
         return {
           ...s,
           points: Math.max(0, (s.points || 0) - penaltyPts),
@@ -458,9 +470,9 @@ export const useClassroom = () => {
     audioService.play('minus');
 
     if (absentStudents.length > 0) {
-      showToast(`⚠️ Đã trừ -${penaltyPts}đ của ${eligibleStudents.length} học sinh Có mặt/Muộn (Đã bỏ qua ${absentStudents.length} học sinh Vắng)!`, 'danger');
+      showToast(`⚠️ Đã trừ -${penaltyPts}đ của ${eligibleStudents.length} HS ${scopeLabel} (Đã bỏ qua ${absentStudents.length} HS Vắng)!`, 'danger');
     } else {
-      showToast(`⚠️ Đã trừ -${penaltyPts} điểm của ${eligibleStudents.length} học sinh trong lớp (${reason})!`, 'danger');
+      showToast(`⚠️ Đã trừ -${penaltyPts} điểm của ${eligibleStudents.length} học sinh ${scopeLabel} (${reason})!`, 'danger');
     }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
