@@ -16,7 +16,7 @@ interface StudentCardProps {
 
 export const StudentCard: React.FC<StudentCardProps> = ({
   student,
-  minWheelPoints = 5,
+  minWheelPoints = 18,
   animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,

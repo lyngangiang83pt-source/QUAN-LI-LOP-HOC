@@ -33,7 +33,7 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
   onClose,
   students,
   className,
-  minWheelPoints = 5,
+  minWheelPoints = 18,
   onToggleAttendance,
   onApplyScore,
   onOpenDetailedScoreModal,

@@ -18,7 +18,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   onClose,
   students,
   className,
-  minWheelPoints = 5,
+  minWheelPoints = 18,
   onOpenWheelModal,
 }) => {
   const sorted = React.useMemo(() => {

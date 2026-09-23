@@ -23,7 +23,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
 }) => {
   // Chế độ quay: 'prize' (Quay phần thưởng) hoặc 'student' (Quay gọi tên học sinh)
   const [wheelMode, setWheelMode] = useState<WheelMode>('prize');
-  const [threshold, setThreshold] = useState<number>(5);
+  const [threshold, setThreshold] = useState<number>(18);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [rotation, setRotation] = useState<number>(0);
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
@@ -252,7 +252,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
           <span>Điều kiện đủ điểm quay:</span>
         </div>
         <div className="flex items-center gap-1">
-          {[5, 3, 1, 0].map((val) => (
+          {[18, 15, 10, 5, 0].map((val) => (
             <button
               key={val}
               type="button"
@@ -267,7 +267,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
                   : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              {val === 0 ? 'Tất cả' : val === 5 ? '≥ 5đ (Chuẩn)' : `≥ ${val}đ`}
+              {val === 0 ? 'Tất cả' : val === 18 ? '≥ 18đ (Chuẩn)' : `≥ ${val}đ`}
             </button>
           ))}
         </div>

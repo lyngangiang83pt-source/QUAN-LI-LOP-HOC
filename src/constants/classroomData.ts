@@ -36,8 +36,8 @@ export const WHEEL_COLORS: string[] = [
 
 export const MASCOT_MESSAGES: string[] = [
   'Chào Thầy/Cô và các bạn học sinh! Điểm danh có mặt hôm nay mỗi bạn được nhận ngay 2 điểm chuyên cần! 🌟',
-  'Hôm nay bạn nào đạt đủ 5 điểm trở lên sẽ được tham gia Vòng quay may mắn nhận quà nhé! 🎡',
-  'Cố gắng phát biểu sôi nổi để vào Top đầu và đạt trên 5 sao nào! 🙋‍♂️',
+  'Hôm nay bạn nào đạt đủ 18 điểm trở lên sẽ được tham gia Vòng quay may mắn nhận quà nhé! 🎡',
+  'Cố gắng phát biểu sôi nổi để vào Top đầu và đạt trên 18 sao nào! 🙋‍♂️',
   'Học tập chăm chỉ - Đoàn kết giúp đỡ bạn bè cùng tiến bộ nhé! 🤝',
   'Docbuoc.vn đồng hành cùng Thầy/Cô và các bạn trên Hành Trang Số! 🚀'
 ];

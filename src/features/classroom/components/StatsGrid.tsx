@@ -6,7 +6,7 @@ interface StatsGridProps {
   minWheelPoints?: number;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({ students, minWheelPoints = 5 }) => {
+export const StatsGrid: React.FC<StatsGridProps> = ({ students, minWheelPoints = 18 }) => {
   const total = students.length;
   const presentCount = students.filter((s) => s.attendance === 'present').length;
   const qualifiedCount = students.filter((s) => (s.points || 0) >= minWheelPoints).length;

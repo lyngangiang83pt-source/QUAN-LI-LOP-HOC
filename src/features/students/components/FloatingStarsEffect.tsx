@@ -71,7 +71,7 @@ export const FloatingStarsEffect: React.FC<FloatingStarsEffectProps> = ({
           {/* Golden Milestone Floating Ribbon Badge */}
           <div className="absolute top-1/2 left-1/2 animate-floatMilestoneGoldenRibbon select-none z-40">
             <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs border-2 border-white shadow-2xl flex items-center gap-1.5 whitespace-nowrap">
-              <span>👑 ĐẠT MỐC 5Đ - ĐỦ ĐK QUAY! 🎉</span>
+              <span>👑 ĐẠT MỐC 18Đ - ĐỦ ĐK QUAY! 🎉</span>
             </div>
           </div>
         </>

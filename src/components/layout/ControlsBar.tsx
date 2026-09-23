@@ -18,7 +18,7 @@ interface ControlsBarProps {
 export const ControlsBar: React.FC<ControlsBarProps> = ({
   currentFilter,
   searchQuery,
-  minWheelPoints = 5,
+  minWheelPoints = 18,
   onSetFilter,
   onSearchChange,
   onOpenWheelModal,
