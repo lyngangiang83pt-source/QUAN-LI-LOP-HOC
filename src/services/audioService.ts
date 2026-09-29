@@ -1,7 +1,21 @@
-type SoundType = 'plus' | 'minus' | 'tick' | 'win' | 'fanfare';
+type SoundType = 'plus' | 'minus' | 'tick' | 'wheelTick' | 'win' | 'fanfare';
 
 class AudioService {
   private ctx: AudioContext | null = null;
+  private muted: boolean = false;
+
+  public isMuted(): boolean {
+    return this.muted;
+  }
+
+  public setMuted(muted: boolean): void {
+    this.muted = muted;
+  }
+
+  public toggleMute(): boolean {
+    this.muted = !this.muted;
+    return this.muted;
+  }
 
   private getContext(): AudioContext | null {
     try {
@@ -20,14 +34,32 @@ class AudioService {
     }
   }
 
-  public play(type: SoundType): void {
+  public play(type: SoundType, freqOffset: number = 0): void {
+    if (this.muted) return;
     const ctx = this.getContext();
     if (!ctx) return;
 
     try {
       const now = ctx.currentTime;
 
-      if (type === 'plus') {
+      if (type === 'wheelTick' || type === 'tick') {
+        // High-fidelity mechanical wheel ticker click
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const baseFreq = 950 + freqOffset;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.025);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+
+        osc.start(now);
+        osc.stop(now + 0.025);
+      } else if (type === 'plus') {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -53,18 +85,6 @@ class AudioService {
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
         osc.start(now);
         osc.stop(now + 0.35);
-      } else if (type === 'tick') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-        osc.start(now);
-        osc.stop(now + 0.04);
       } else if (type === 'win') {
         const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, i) => {

@@ -18,6 +18,7 @@ interface HeaderBannerProps {
   onOpenClassModal: () => void;
   onEditClassInfo: () => void;
   onOpenWheelModal: () => void;
+  onOpenGameshowWheelModal?: () => void;
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
   onOpenFindCodeModal?: () => void;
@@ -45,6 +46,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onOpenClassModal,
   onEditClassInfo,
   onOpenWheelModal,
+  onOpenGameshowWheelModal,
   onOpenLeaderboardModal,
   onOpenSpotlightModal,
   onOpenFindCodeModal,
@@ -88,7 +90,20 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
 
         {/* Action Buttons Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Wheel Button */}
+          {/* Nút Vòng quay may mắn Gameshow chuyên nghiệp */}
+          {onOpenGameshowWheelModal && (
+            <button
+              type="button"
+              onClick={onOpenGameshowWheelModal}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-500 hover:from-amber-200 hover:to-orange-400 text-slate-950 font-black text-xs md:text-sm border-2 border-white shadow-xl shadow-amber-500/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 animate-pulse"
+              title="Mở Vòng quay may mắn Gameshow trực tiếp từ danh sách học sinh"
+            >
+              <span className="text-base">🎡</span>
+              <span>Vòng quay may mắn</span>
+            </button>
+          )}
+
+          {/* Wheel Button (Quay thưởng mốc điểm) */}
           <button
             type="button"
             onClick={onOpenWheelModal}

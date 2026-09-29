@@ -9,6 +9,7 @@ import { UndoNotificationBanner } from './components/common/UndoNotificationBann
 import { ClassManagerModal } from './features/classroom/components/ClassManagerModal';
 import { ClassPenaltyModal } from './features/classroom/components/ClassPenaltyModal';
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
+import { GameshowLuckyWheelModal } from './features/lucky-wheel/components/GameshowLuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
 import { SpotlightCeremonyModal } from './features/leaderboard/components/SpotlightCeremonyModal';
 import { ImportModal } from './features/import-export/components/ImportModal';
@@ -61,6 +62,7 @@ export const App: React.FC = () => {
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isClassPenaltyModalOpen, setIsClassPenaltyModalOpen] = useState(false);
   const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
+  const [isGameshowWheelOpen, setIsGameshowWheelOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isSpotlightModalOpen, setIsSpotlightModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -122,6 +124,7 @@ export const App: React.FC = () => {
         onOpenClassModal={() => setIsClassModalOpen(true)}
         onEditClassInfo={handleEditClassInfo}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
+        onOpenGameshowWheelModal={() => setIsGameshowWheelOpen(true)}
         onOpenLeaderboardModal={() => {
           setCurrentFilter('top');
           setIsLeaderboardModalOpen(true);
@@ -217,6 +220,14 @@ export const App: React.FC = () => {
         isOpen={isWheelModalOpen}
         onClose={() => setIsWheelModalOpen(false)}
         students={students}
+        onApplyBonusScore={updateScore}
+      />
+
+      <GameshowLuckyWheelModal
+        isOpen={isGameshowWheelOpen}
+        onClose={() => setIsGameshowWheelOpen(false)}
+        students={students}
+        className={currentClass.name}
         onApplyBonusScore={updateScore}
       />
 

@@ -72,3 +72,22 @@ export const DEFAULT_CLASSES: ClassItem[] = [
 ];
 
 export const STUDENT_RESULTS_DRIVE_URL = 'https://drive.google.com/drive/folders/12P6BqxX0BeqLGhFwCeaHMWEu-mcex-ba?usp=drive_link';
+
+export interface SecretQuestionItem {
+  id: string;
+  category: 'knowledge' | 'fun' | 'challenge' | 'gift';
+  question: string;
+  bonusPoints: number;
+  icon: string;
+}
+
+export const DEFAULT_GAMESHOW_QUESTIONS: SecretQuestionItem[] = [
+  { id: 'q1', category: 'knowledge', question: 'Em hãy nêu lại 1 kiến thức hoặc định nghĩa quan trọng trong bài học hôm nay!', bonusPoints: 2, icon: '💡' },
+  { id: 'q2', category: 'knowledge', question: 'Giải nhanh bài tập hoặc câu hỏi ngắn của Thầy/Cô đưa ra!', bonusPoints: 2, icon: '🎯' },
+  { id: 'q3', category: 'fun', question: 'Hát 1 bài hát ngắn hoặc kể 1 câu đố vui cho cả lớp cùng cười!', bonusPoints: 2, icon: '🎤' },
+  { id: 'q4', category: 'gift', question: 'May mắn trúng thưởng! Nhận ngay 1 phần quà bí mật từ Thầy/Cô!', bonusPoints: 2, icon: '🎁' },
+  { id: 'q5', category: 'knowledge', question: 'Kể tên 3 thao tác hoặc phím tắt hữu ích em vừa được học!', bonusPoints: 2, icon: '💻' },
+  { id: 'q6', category: 'challenge', question: 'Lên bảng trực tiếp thực hành thao tác mẫu cho cả lớp xem!', bonusPoints: 3, icon: '🏆' },
+  { id: 'q7', category: 'gift', question: 'Nhận ngay +2 Điểm thưởng xuất sắc cộng thẳng vào sổ điểm!', bonusPoints: 2, icon: '🌟' },
+  { id: 'q8', category: 'fun', question: 'Gửi 1 lời chúc thật ý nghĩa hoặc 1 lời cảm ơn đến bạn cùng bàn!', bonusPoints: 1, icon: '❤️' },
+];
