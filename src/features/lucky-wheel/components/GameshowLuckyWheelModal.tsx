@@ -93,6 +93,9 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
     setShowCelebration(false);
     setIsSpinning(true);
 
+    // Kích hoạt ngay tiếng tick đầu tiên để đánh thức AudioContext
+    audioService.play('wheelTick', 120);
+
     const numSlices = activeCandidates.length;
     const sliceAngle = (2 * Math.PI) / numSlices;
 
@@ -119,36 +122,37 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
     const totalDelta = fullSpins * 2 * Math.PI + diff;
     const finalRot = startRot + totalDelta;
 
-    const duration = 6000; // 6.0 giây chuẩn Gameshow
+    const duration = 6200; // 6.2 giây chuẩn Gameshow
     const startTime = performance.now();
 
-    // Reset chỉ số slice gần nhất
-    const initialNormalized = ((-Math.PI / 2 - startRot) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-    lastSliceIdxRef.current = Math.floor(initialNormalized / sliceAngle);
-
+    // Theo dõi số lượng nan quạt (chốt) đã quét qua kim chỉ 12h theo tích lũy
+    let lastPinCount = 0;
     let currentNeedle = 0;
 
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / duration);
 
-      // Quartic Ease-Out: 1 - (1 - t)^4
+      // Easing mượt mà: Quartic Ease-Out 1 - (1 - t)^4
       const ease = 1 - Math.pow(1 - progress, 4);
       const currentRot = startRot + totalDelta * ease;
+      const deltaAngle = currentRot - startRot;
 
-      // Tính toán nan quạt đang đi qua kim chỉ 12h để phát âm thanh cơ học tick tick
-      const normalizedAngle = ((-Math.PI / 2 - currentRot) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-      const curSliceIdx = Math.floor(normalizedAngle / sliceAngle);
+      // Đếm số lượng chốt nan quạt đã vượt qua kim chỉ 12h
+      const currentPinCount = Math.floor(deltaAngle / sliceAngle);
 
-      if (curSliceIdx !== lastSliceIdxRef.current) {
-        lastSliceIdxRef.current = curSliceIdx;
-        const pitchVar = (1 - progress) * 120;
+      if (currentPinCount > lastPinCount) {
+        lastPinCount = currentPinCount;
+        // Biến thiên cao độ theo tốc độ quay (nhanh thì thanh cao, chậm thì trầm ấm cơ học)
+        const speedFactor = 1 - progress;
+        const pitchVar = speedFactor * 150 - 30;
         audioService.play('wheelTick', pitchVar);
-        currentNeedle = -0.32;
+        // Kim chỉ bị gạt rung nảy
+        currentNeedle = -0.36;
       }
 
-      // Kim chỉ đàn hồi dần về 0
-      currentNeedle *= 0.82;
+      // Kim chỉ đàn hồi dần về vị trí cân bằng
+      currentNeedle *= 0.8;
 
       setRotation(currentRot);
       setNeedleAngle(currentNeedle);

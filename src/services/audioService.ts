@@ -43,22 +43,39 @@ class AudioService {
       const now = ctx.currentTime;
 
       if (type === 'wheelTick' || type === 'tick') {
-        // High-fidelity mechanical wheel ticker click
+        // Âm thanh cơ học sắc nét (High-Definition Mechanical Ratchet Click)
+        // 1. Âm thanh đập cơ học (Wood/Metal Peg Hit)
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        const baseFreq = 950 + freqOffset;
+        const baseFreq = Math.max(400, Math.min(2200, 1350 + freqOffset));
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(baseFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(180, now + 0.025);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.022);
 
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
 
         osc.start(now);
-        osc.stop(now + 0.025);
+        osc.stop(now + 0.022);
+
+        // 2. Tiếng snap gạt kim chỉ (Needle Snap Transient)
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        snapOsc.connect(snapGain);
+        snapGain.connect(ctx.destination);
+
+        snapOsc.type = 'square';
+        snapOsc.frequency.setValueAtTime(2400, now);
+        snapOsc.frequency.exponentialRampToValueAtTime(400, now + 0.008);
+
+        snapGain.gain.setValueAtTime(0.08, now);
+        snapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
+
+        snapOsc.start(now);
+        snapOsc.stop(now + 0.008);
       } else if (type === 'plus') {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
