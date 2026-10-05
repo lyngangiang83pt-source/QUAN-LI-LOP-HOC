@@ -85,13 +85,13 @@ export const StudentCard: React.FC<StudentCardProps> = ({
       {/* Top Banner Tag if Qualified */}
       {isQualified && (
         <div
-          className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all ${
+          className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all flex items-center gap-1 ${
             isMilestoneReached
               ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
-              : 'bg-gradient-to-l from-emerald-600 to-teal-600 text-white'
+              : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
           }`}
         >
-          {isMilestoneReached ? '👑 HOÀN THÀNH ĐIỂM SỐ! 🎉' : '✨ Hoàn thành điểm số'}
+          {isMilestoneReached ? '👑 HOÀN THÀNH! 🎉' : '✨ Hoàn thành'}
         </div>
       )}
 

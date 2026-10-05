@@ -106,7 +106,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                   honorBadge = <span className="bg-orange-500 text-white font-black px-2 py-0.5 rounded-full text-[10px]">⭐ Top 3 Giỏi</span>;
                   rowBg = 'bg-orange-50/40 hover:bg-orange-50/70';
                 } else if ((s.points || 0) >= minWheelPoints) {
-                  honorBadge = <span className="bg-purple-100 text-purple-800 font-black px-2 py-0.5 rounded-full text-[10px]">✨ Hoàn thành điểm số</span>;
+                  honorBadge = <span className="bg-purple-100 text-purple-800 font-black px-2 py-0.5 rounded-full text-[10px]">✨ Hoàn thành</span>;
                 }
 
                 const attStatus =

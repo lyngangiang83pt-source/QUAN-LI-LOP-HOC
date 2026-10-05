@@ -233,7 +233,7 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                   </span>
                   {activeStudent.points >= minWheelPoints && (
                     <span className="bg-amber-400/20 text-amber-200 border border-amber-300/30 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-0.5">
-                      <Sparkles size={10} /> Hoàn thành điểm số
+                      <Sparkles size={10} /> Hoàn thành
                     </span>
                   )}
                 </div>
