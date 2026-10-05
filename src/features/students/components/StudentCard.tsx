@@ -16,7 +16,7 @@ interface StudentCardProps {
 
 export const StudentCard: React.FC<StudentCardProps> = ({
   student,
-  minWheelPoints = 18,
+  minWheelPoints = 20,
   animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,
@@ -88,10 +88,10 @@ export const StudentCard: React.FC<StudentCardProps> = ({
           className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all ${
             isMilestoneReached
               ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
-              : 'bg-gradient-to-l from-purple-600 to-pink-600 text-white'
+              : 'bg-gradient-to-l from-emerald-600 to-teal-600 text-white'
           }`}
         >
-          {isMilestoneReached ? '👑 ĐỦ ĐK QUAY! 🎉' : '🎡 Đủ đk quay'}
+          {isMilestoneReached ? '👑 HOÀN THÀNH ĐIỂM SỐ! 🎉' : '✨ Hoàn thành điểm số'}
         </div>
       )}
 

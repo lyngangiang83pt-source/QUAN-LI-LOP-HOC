@@ -6,7 +6,7 @@ interface StatsGridProps {
   minWheelPoints?: number;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({ students, minWheelPoints = 18 }) => {
+export const StatsGrid: React.FC<StatsGridProps> = ({ students, minWheelPoints = 20 }) => {
   const total = students.length;
   const presentCount = students.filter((s) => s.attendance === 'present').length;
   const qualifiedCount = students.filter((s) => (s.points || 0) >= minWheelPoints).length;
@@ -28,7 +28,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ students, minWheelPoints =
 
       {/* Stat 3 */}
       <div className="bg-white/15 backdrop-blur-md rounded-xl p-3.5 border border-white/25 shadow-sm">
-        <div className="text-xs uppercase tracking-wider font-bold text-sky-100">Đủ đk quay (≥{minWheelPoints}đ)</div>
+        <div className="text-xs uppercase tracking-wider font-bold text-sky-100">Hoàn thành điểm số (≥{minWheelPoints}đ)</div>
         <div className="text-2xl font-extrabold text-pink-200 mt-1">{qualifiedCount} em</div>
       </div>
 

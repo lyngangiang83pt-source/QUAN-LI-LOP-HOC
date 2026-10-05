@@ -117,7 +117,7 @@ export const App: React.FC = () => {
         currentClass={currentClass}
         students={students}
         syncStatus={syncStatus}
-        minWheelPoints={18}
+        minWheelPoints={20}
         animationsEnabled={animationsEnabled}
         onToggleAnimations={toggleAnimations}
         onSelectClass={(id) => switchClass(id, false)}
@@ -146,7 +146,7 @@ export const App: React.FC = () => {
       <ControlsBar
         currentFilter={currentFilter}
         searchQuery={searchQuery}
-        minWheelPoints={18}
+        minWheelPoints={20}
         onSetFilter={setCurrentFilter}
         onSearchChange={setSearchQuery}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
@@ -169,7 +169,7 @@ export const App: React.FC = () => {
         students={students}
         currentFilter={currentFilter}
         searchQuery={searchQuery}
-        minWheelPoints={18}
+        minWheelPoints={20}
         animationsEnabled={animationsEnabled}
         onToggleAttendance={toggleAttendance}
         onOpenScoreModal={handleOpenScoreModal}
@@ -185,7 +185,7 @@ export const App: React.FC = () => {
         onClose={() => setIsFindCodeModalOpen(false)}
         students={students}
         className={currentClass.name}
-        minWheelPoints={18}
+        minWheelPoints={20}
         onToggleAttendance={toggleAttendance}
         onApplyScore={updateScore}
         onResetScore={resetStudentScore}
@@ -236,7 +236,7 @@ export const App: React.FC = () => {
         onClose={() => setIsLeaderboardModalOpen(false)}
         students={students}
         className={currentClass.name}
-        minWheelPoints={18}
+        minWheelPoints={20}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
       />
 

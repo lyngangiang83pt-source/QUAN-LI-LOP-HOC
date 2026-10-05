@@ -41,7 +41,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   currentClass,
   students,
   syncStatus,
-  minWheelPoints = 18,
+  minWheelPoints = 20,
   animationsEnabled = true,
   onToggleAnimations,
   onSelectClass,

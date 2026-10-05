@@ -21,7 +21,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   students,
   currentFilter,
   searchQuery,
-  minWheelPoints = 18,
+  minWheelPoints = 20,
   animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,

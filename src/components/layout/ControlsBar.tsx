@@ -18,7 +18,7 @@ interface ControlsBarProps {
 export const ControlsBar: React.FC<ControlsBarProps> = ({
   currentFilter,
   searchQuery,
-  minWheelPoints = 18,
+  minWheelPoints = 20,
   onSetFilter,
   onSearchChange,
   onOpenWheelModal,
@@ -89,7 +89,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
           }`}
         >
           <Sparkles size={13} />
-          <span>Đạt ≥ {minWheelPoints}đ</span>
+          <span>Hoàn thành ≥ {minWheelPoints}đ</span>
         </button>
 
         <button
