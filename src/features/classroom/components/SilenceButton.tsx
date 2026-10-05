@@ -6,6 +6,8 @@ interface SilenceButtonProps {
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
+const OFFICIAL_SILENCE_AUDIO_PATH = '/silence-order.mp3';
+
 export const SilenceButton: React.FC<SilenceButtonProps> = ({ onShowToast }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,7 +29,7 @@ export const SilenceButton: React.FC<SilenceButtonProps> = ({ onShowToast }) => 
     setIsPlaying(false);
   };
 
-  const playSilenceSound = () => {
+  const playSilenceSound = async () => {
     if (isPlaying) {
       stopSound();
       return;
@@ -36,14 +38,20 @@ export const SilenceButton: React.FC<SilenceButtonProps> = ({ onShowToast }) => 
     setIsPlaying(true);
 
     if (onShowToast) {
-      onShowToast('🤫 YÊU CẦU CẢ LỚP GIỮ TRẬT TỰ! Thầy/Cô đang có hiệu lệnh quan trọng 📢✨', 'danger');
+      onShowToast('🤫 YÊU CẦU CẢ LỚP GIỮ TRẬT TỰ! Lưng thẳng - Tay khoanh - Mắt nhìn - Miệng im lặng 📢✨', 'danger');
     }
 
-    // Phát tiếng gõ búa / thước gỗ hiệu lệnh dứt khoát: CỐC! CỐC! CỐC!
-    audioService.play('silenceGavel');
-    ringTimeoutRef.current = setTimeout(() => {
+    // Phát trực tiếp file âm thanh hiệu lệnh Trật tự chính thức (/silence-order.mp3)
+    const success = await audioService.playCustomAudio(OFFICIAL_SILENCE_AUDIO_PATH, () => {
       setIsPlaying(false);
-    }, 1500);
+    });
+
+    if (!success) {
+      // Fallback nếu trình duyệt chưa sẵn sàng
+      ringTimeoutRef.current = setTimeout(() => {
+        setIsPlaying(false);
+      }, 7000);
+    }
   };
 
   return (
@@ -55,12 +63,12 @@ export const SilenceButton: React.FC<SilenceButtonProps> = ({ onShowToast }) => 
           ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white border-white shadow-rose-500/40 animate-pulse'
           : 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white border-white/40 shadow-rose-500/30 hover:scale-105'
       }`}
-      title={isPlaying ? 'Bấm để dừng âm thanh' : 'Phát hiệu lệnh yêu cầu cả lớp Giữ trật tự (Gõ búa Cốc! Cốc! Cốc!)'}
+      title={isPlaying ? 'Bấm để dừng âm thanh ngay' : 'Phát hiệu lệnh Trật tự (Lưng - Tay - Mắt - Miệng)'}
     >
       {isPlaying ? (
         <>
           <Megaphone size={16} className="text-white animate-bounce" />
-          <span>Yêu cầu trật tự! 🤫</span>
+          <span>Đang phát hiệu lệnh! 🤫</span>
         </>
       ) : (
         <>
