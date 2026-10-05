@@ -2,6 +2,8 @@ import React from 'react';
 import { ClassItem, Student, SyncStatus } from '../../types';
 import { ClassPicker } from '../../features/classroom/components/ClassPicker';
 import { StatsGrid } from '../../features/classroom/components/StatsGrid';
+import { SchoolBellButton } from '../../features/classroom/components/SchoolBellButton';
+import { SilenceButton } from '../../features/classroom/components/SilenceButton';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
 import { Sparkles, Trophy, CheckCircle, Zap, MinusCircle, Download, FileSpreadsheet, Gauge, Crown } from 'lucide-react';
 
@@ -90,6 +92,12 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
 
         {/* Action Buttons Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Nút Chuông Vào Lớp */}
+          <SchoolBellButton onShowToast={onShowToast} />
+
+          {/* Nút Hiệu lệnh Trật tự */}
+          <SilenceButton onShowToast={onShowToast} />
+
           {/* Nút Vòng quay may mắn Gameshow chuyên nghiệp */}
           {onOpenGameshowWheelModal && (
             <button
