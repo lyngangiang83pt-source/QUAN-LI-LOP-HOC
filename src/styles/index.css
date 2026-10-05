@@ -311,5 +311,22 @@
   animation: floatMvpCrown 2.5s ease-in-out infinite;
 }
 
+/* --- Completed Student Card Gentle Radiant Aura Glow --- */
+@keyframes completedCardAura {
+  0%, 100% {
+    box-shadow: 0 0 14px 2px rgba(236, 72, 153, 0.22), 0 4px 14px rgba(168, 85, 247, 0.1);
+    border-color: rgba(244, 114, 182, 0.65);
+  }
+  50% {
+    box-shadow: 0 0 24px 5px rgba(236, 72, 153, 0.38), 0 6px 20px rgba(168, 85, 247, 0.22);
+    border-color: rgba(192, 132, 252, 0.95);
+  }
+}
+
+.completed-card-aura {
+  animation: completedCardAura 3.2s ease-in-out infinite;
+  background: linear-gradient(180deg, #ffffff 0%, #fdf4ff 100%);
+}
+
 
 

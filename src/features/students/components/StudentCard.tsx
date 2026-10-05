@@ -64,12 +64,16 @@ export const StudentCard: React.FC<StudentCardProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
+      className={`rounded-2xl border transition-all duration-300 p-4 flex flex-col justify-between relative group overflow-visible ${
         isMilestoneReached && animationsEnabled
-          ? 'animate-milestoneCrownCardGlow ring-4 ring-amber-400 border-amber-400 shadow-2xl scale-[1.04] z-30'
+          ? 'bg-white animate-milestoneCrownCardGlow ring-4 ring-amber-400 border-amber-400 shadow-2xl scale-[1.04] z-30'
           : isGlowing && animationsEnabled
-          ? 'animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
-          : 'border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
+          ? 'bg-white animate-goldCardGlow ring-2 ring-amber-400 border-amber-300 shadow-lg scale-[1.02] z-20'
+          : isQualified
+          ? animationsEnabled
+            ? 'completed-card-aura border-pink-300 hover:scale-[1.01]'
+            : 'bg-gradient-to-b from-white to-pink-50/30 border-pink-300 shadow-[0_0_15px_rgba(236,72,153,0.22)]'
+          : 'bg-white border-slate-200/80 shadow-soft-sm hover:shadow-soft-md'
       }`}
     >
       {/* Flying Gold Stars & Milestone Giant Golden Crown Celebration Effect Layer */}
