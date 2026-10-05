@@ -17,7 +17,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-export type BellSoundMode = 'westminster' | 'drum' | 'electric' | 'custom';
+export type BellSoundMode = 'uploaded' | 'westminster' | 'drum' | 'electric' | 'custom';
 
 interface SchoolBellButtonProps {
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
@@ -27,12 +27,13 @@ const STORAGE_KEY_BELL_MODE = 'APP_CLASS_BELL_MODE';
 const STORAGE_KEY_CUSTOM_AUDIO = 'APP_CLASS_BELL_CUSTOM_AUDIO';
 const STORAGE_KEY_CUSTOM_URL = 'APP_CLASS_BELL_CUSTOM_URL';
 const DEFAULT_DRIVE_URL = 'https://drive.google.com/file/d/19-msS4V57yzs8t4HAmLUABxBEtPl-uNI/view?usp=drive_link';
+const OFFICIAL_BELL_AUDIO_PATH = '/bell-class.mp3';
 
 export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast }) => {
   const [isRinging, setIsRinging] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [bellMode, setBellMode] = useState<BellSoundMode>(() => {
-    return (localStorage.getItem(STORAGE_KEY_BELL_MODE) as BellSoundMode) || 'westminster';
+    return (localStorage.getItem(STORAGE_KEY_BELL_MODE) as BellSoundMode) || 'uploaded';
   });
   const [customAudioData, setCustomAudioData] = useState<string>(() => {
     return localStorage.getItem(STORAGE_KEY_CUSTOM_AUDIO) || '';
@@ -88,13 +89,24 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
       onShowToast('🔔 ĐÃ RUNG CHUÔNG VÀO LỚP! Chúc Thầy/Cô và các em học sinh có một tiết học tuyệt vời! 🎒✨', 'info');
     }
 
-    // Nếu chọn âm thanh tùy chỉnh (file đã tải lên hoặc link)
-    if (bellMode === 'custom' && customAudioData) {
+    // 1. Chế độ mặc định: Phát file âm thanh chính thức Thầy/Cô tải lên (/bell-class.mp3)
+    if (bellMode === 'uploaded') {
+      const success = await audioService.playCustomAudio(OFFICIAL_BELL_AUDIO_PATH, () => {
+        setIsRinging(false);
+      });
+      if (!success) {
+        // Fallback dự phòng sang chuông trường tổng hợp nếu trình duyệt chặn load file
+        audioService.play('schoolBell');
+        ringTimeoutRef.current = setTimeout(() => {
+          setIsRinging(false);
+        }, 6500);
+      }
+    } else if (bellMode === 'custom' && customAudioData) {
+      // 2. Chế độ âm thanh tự nạp thêm từ máy
       const success = await audioService.playCustomAudio(customAudioData, () => {
         setIsRinging(false);
       });
       if (!success) {
-        // Fallback sang chuông trường tổng hợp nếu file lỗi
         audioService.play('schoolBell');
         ringTimeoutRef.current = setTimeout(() => {
           setIsRinging(false);
@@ -111,7 +123,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
         setIsRinging(false);
       }, 3800);
     } else {
-      // Mặc định: Chuông trường Ting-Toong Westminster ngân vang
+      // Chuông trường Ting-Toong Westminster ngân vang
       audioService.play('schoolBell');
       ringTimeoutRef.current = setTimeout(() => {
         setIsRinging(false);
@@ -151,7 +163,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white border-white shadow-lg animate-pulse'
               : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 border-white/60'
           }`}
-          title={isRinging ? 'Bấm để dừng chuông ngay' : 'Rung chuông Vào lớp (Bấm để phát âm thanh chuông)'}
+          title={isRinging ? 'Bấm để dừng chuông ngay' : 'Rung chuông Vào lớp (Phát âm thanh chuông Thầy/Cô tải lên)'}
         >
           {isRinging ? (
             <>
@@ -175,7 +187,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               ? 'bg-red-700 text-white border-white'
               : 'bg-amber-500 hover:bg-amber-600 text-slate-950 border-white/60'
           }`}
-          title="Tùy chọn kiểu chuông hoặc tải file âm thanh"
+          title="Tùy chọn kiểu chuông hoặc nạp file âm thanh"
         >
           <ChevronDown size={14} className={`transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`} />
         </button>
@@ -203,7 +215,44 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
           <div className="space-y-2 mb-4 text-xs">
             <div className="text-[11px] font-bold text-slate-400 uppercase">Chọn kiểu âm thanh:</div>
 
-            {/* 1. Chuông trường Ting-Toong */}
+            {/* 1. Âm thanh chuông chính thức tải lên */}
+            <label
+              className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
+                bellMode === 'uploaded'
+                  ? 'bg-amber-500/20 border-amber-400/60 text-white'
+                  : 'bg-slate-800/60 border-white/10 text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="radio"
+                  name="bellMode"
+                  checked={bellMode === 'uploaded'}
+                  onChange={() => setBellMode('uploaded')}
+                  className="accent-amber-400"
+                />
+                <div>
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>🎵 Chuông tải lên (bell-class.mp3)</span>
+                    <span className="text-[10px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded">Mặc định</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">File âm thanh chuông Thầy/Cô vừa cung cấp</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  audioService.playCustomAudio(OFFICIAL_BELL_AUDIO_PATH);
+                }}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-amber-300"
+                title="Nghe thử"
+              >
+                <Play size={13} />
+              </button>
+            </label>
+
+            {/* 2. Chuông trường Ting-Toong */}
             <label
               className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                 bellMode === 'westminster'
@@ -220,10 +269,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
                   className="accent-amber-400"
                 />
                 <div>
-                  <div className="font-bold flex items-center gap-1.5">
-                    <span>🔔 Chuông Ting-Toong</span>
-                    <span className="text-[10px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded">Mặc định</span>
-                  </div>
+                  <div className="font-bold">🔔 Chuông Ting-Toong (Westminster)</div>
                   <div className="text-[10px] text-slate-400">Giai điệu chuông trường học ngân vang</div>
                 </div>
               </div>
@@ -240,7 +286,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               </button>
             </label>
 
-            {/* 2. Hồi trống trường */}
+            {/* 3. Hồi trống trường */}
             <label
               className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                 bellMode === 'drum'
@@ -274,7 +320,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               </button>
             </label>
 
-            {/* 3. Chuông điện trường học */}
+            {/* 4. Chuông điện trường học */}
             <label
               className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                 bellMode === 'electric'
@@ -308,7 +354,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               </button>
             </label>
 
-            {/* 4. Âm thanh tùy chỉnh (Tải file từ máy hoặc link Drive) */}
+            {/* 5. Âm thanh tùy chỉnh khác */}
             <label
               className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
                 bellMode === 'custom'
@@ -327,10 +373,10 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
                 <div>
                   <div className="font-bold flex items-center gap-1.5">
                     <Music size={13} className="text-pink-400" />
-                    <span>File âm thanh tùy chỉnh</span>
+                    <span>File âm thanh khác</span>
                   </div>
                   <div className="text-[10px] text-slate-400">
-                    {customAudioData ? 'Đã nạp file âm thanh riêng' : 'Tải file MP3 từ máy tính'}
+                    {customAudioData ? 'Đã nạp file riêng' : 'Tải file MP3 khác từ máy tính'}
                   </div>
                 </div>
               </div>
@@ -354,7 +400,7 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
           {/* Phần tải file MP3 từ máy tính (Offline 100%) */}
           <div className="bg-slate-800/80 p-3 rounded-xl border border-white/10 text-xs">
             <div className="font-bold text-amber-300 mb-1.5 flex items-center justify-between">
-              <span>Tải file âm thanh chuông riêng:</span>
+              <span>Tải file âm thanh chuông khác:</span>
               <span className="text-[10px] text-slate-400 font-normal">MP3, WAV, M4A</span>
             </div>
 
@@ -374,10 +420,6 @@ export const SchoolBellButton: React.FC<SchoolBellButtonProps> = ({ onShowToast 
               <Upload size={14} />
               <span>{fileName ? `Đã chọn: ${fileName}` : 'Chọn file âm thanh từ máy tính...'}</span>
             </button>
-
-            <div className="mt-2 text-[10px] text-slate-400 leading-relaxed">
-              💡 Thầy/Cô có thể tải file âm thanh từ link Google Drive về máy rồi bấm nút trên để nạp vào lớp học.
-            </div>
           </div>
         </div>
       )}
