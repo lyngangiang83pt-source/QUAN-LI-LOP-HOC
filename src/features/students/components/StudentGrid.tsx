@@ -40,6 +40,8 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
       list = list.filter((s) => s.attendance === 'present');
     } else if (currentFilter === 'qualified') {
       list = list.filter((s) => (s.points || 0) >= minWheelPoints);
+    } else if (currentFilter === 'uncompleted') {
+      list = list.filter((s) => (s.points || 0) < minWheelPoints);
     } else if (currentFilter === 'absent') {
       list = list.filter((s) => s.attendance === 'absent');
     }

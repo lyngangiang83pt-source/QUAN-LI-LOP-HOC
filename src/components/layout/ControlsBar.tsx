@@ -1,6 +1,6 @@
 import React from 'react';
 import { FilterType } from '../../types';
-import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash } from 'lucide-react';
+import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash, Hourglass } from 'lucide-react';
 
 
 interface ControlsBarProps {
@@ -90,6 +90,19 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
         >
           <Sparkles size={13} />
           <span>Hoàn thành ≥ {minWheelPoints}đ</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSetFilter('uncompleted')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1 ${
+            currentFilter === 'uncompleted'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
+          }`}
+        >
+          <Hourglass size={13} />
+          <span>{`Chưa hoàn thành (<${minWheelPoints}đ)`}</span>
         </button>
 
         <button

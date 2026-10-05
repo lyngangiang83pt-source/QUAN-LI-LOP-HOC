@@ -24,7 +24,7 @@ export interface Criteria {
   pts: number;
 }
 
-export type FilterType = 'all' | 'top' | 'qualified' | 'present' | 'absent';
+export type FilterType = 'all' | 'top' | 'qualified' | 'uncompleted' | 'present' | 'absent';
 
 export interface ToastItem {
   id: string;
