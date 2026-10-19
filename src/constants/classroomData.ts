@@ -4,9 +4,10 @@ export const BONUS_CRITERIA: Criteria[] = [
   { icon: '🙋‍♂️', label: 'Phát biểu đúng', pts: 1 },
   { icon: '🌟', label: 'Ý tưởng sáng tạo', pts: 2 },
   { icon: '🏆', label: 'Làm bài xuất sắc', pts: 3 },
-  { icon: '🤝', label: 'Giúp đỡ bạn bè', pts: 1 },
   { icon: '🎯', label: 'Lên bảng giải bài', pts: 2 },
+  { icon: '🤝', label: 'Giúp đỡ bạn bè', pts: 1 },
   { icon: '🧹', label: 'Trực nhật tốt', pts: 1 },
+  { icon: '📦', label: 'Thực hiện Sản phẩm Đạt', pts: 10 },
 ];
 
 export const PENALTY_CRITERIA: Criteria[] = [

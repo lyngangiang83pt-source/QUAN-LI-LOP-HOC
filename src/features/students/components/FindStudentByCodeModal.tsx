@@ -326,11 +326,12 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                     <Plus size={13} />
                     <span>Cộng điểm thưởng</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-4 gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleQuickAddScore(1, 'Hăng hái phát biểu')}
                       className="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      title="Hăng hái phát biểu (+1đ)"
                     >
                       +1 ⭐
                     </button>
@@ -338,15 +339,25 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                       type="button"
                       onClick={() => handleQuickAddScore(2, 'Làm bài xuất sắc')}
                       className="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      title="Làm bài xuất sắc (+2đ)"
                     >
                       +2 🌟
                     </button>
                     <button
                       type="button"
                       onClick={() => handleQuickAddScore(5, 'Thành tích nổi bật')}
-                      className="py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      className="py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      title="Thành tích nổi bật (+5đ)"
                     >
                       +5 🎯
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAddScore(10, 'Thực hiện Sản phẩm Đạt')}
+                      className="py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs ring-1 ring-emerald-300"
+                      title="Thực hiện Sản phẩm Đạt (+10đ)"
+                    >
+                      +10 📦
                     </button>
                   </div>
                   <button

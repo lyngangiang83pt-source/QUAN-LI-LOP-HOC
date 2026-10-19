@@ -63,28 +63,36 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
 
       {/* Fast Criteria List */}
       <div className="grid grid-cols-2 gap-2 mb-5">
-        {criteriaList.map((c, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => handleSelectCriteria(c.pts, c.label)}
-            className={`p-3 rounded-xl border text-left font-bold text-xs transition-all active:scale-95 flex items-center justify-between shadow-2xs ${
-              mode === 'plus'
-                ? 'bg-emerald-50/60 hover:bg-emerald-100/80 border-emerald-200 text-emerald-900'
-                : 'bg-rose-50/60 hover:bg-rose-100/80 border-rose-200 text-rose-900'
-            }`}
-          >
-            <div className="flex items-center gap-2 truncate">
-              <span className="text-base">{c.icon}</span>
-              <span className="truncate">{c.label}</span>
-            </div>
-            <span className={`text-xs px-1.5 py-0.5 rounded-md font-extrabold ${
-              mode === 'plus' ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
-            }`}>
-              {c.pts > 0 ? `+${c.pts}` : c.pts}đ
-            </span>
-          </button>
-        ))}
+        {criteriaList.map((c, idx) => {
+          const isHighlight = Math.abs(c.pts) >= 10;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSelectCriteria(c.pts, c.label)}
+              title={`${c.label} (${c.pts > 0 ? `+${c.pts}` : c.pts}đ)`}
+              className={`p-3 rounded-xl border text-left font-bold text-xs transition-all active:scale-95 flex items-center justify-between shadow-2xs ${
+                isHighlight
+                  ? 'col-span-2 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-100 hover:to-teal-100 border-emerald-300 text-emerald-950 ring-1 ring-emerald-200'
+                  : mode === 'plus'
+                  ? 'bg-emerald-50/60 hover:bg-emerald-100/80 border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50/60 hover:bg-rose-100/80 border-rose-200 text-rose-900'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                <span className="text-base shrink-0">{c.icon}</span>
+                <span className="truncate">{c.label}</span>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-md font-extrabold shrink-0 ${
+                isHighlight
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : mode === 'plus' ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
+              }`}>
+                {c.pts > 0 ? `+${c.pts}` : c.pts}đ
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Custom Point Input */}
@@ -103,7 +111,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
           <input
             type="number"
             min="1"
-            max="10"
+            max="50"
             value={customPoints}
             onChange={(e) => setCustomPoints(Number(e.target.value))}
             className="w-16 px-2 py-2 rounded-xl border border-slate-300 focus:border-sky-500 text-xs font-bold text-center outline-none"
