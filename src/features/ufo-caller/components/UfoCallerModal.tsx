@@ -577,21 +577,48 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     }
   }, [allStudents, allowRepeat, isCalling, playSound, showToast, createSingleUFO]);
 
-  // Spacebar shortcut to call
+  // Keyboard shortcuts (Space & Enter) to call continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
   useEffect(() => {
     if (!isOpen || screen !== 'game') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+      // Ignore if user is currently typing in an input or textarea
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const isCallKey =
+        e.code === 'Space' ||
+        e.key === ' ' ||
+        e.code === 'Enter' ||
+        e.key === 'Enter' ||
+        e.code === 'NumpadEnter';
+
+      if (isCallKey) {
+        // Prevent default scrolling, form submit or button clicking
         e.preventDefault();
+        e.stopPropagation();
+
+        // STRICT: Dedicated to calling students only.
+        // Blur any focused element (buttons, links) so Space/Enter never triggers other buttons
+        if (document.activeElement && document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+
         handleCallStudent();
       } else if (e.code === 'Escape') {
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, screen, handleCallStudent, onClose]);
 
   // Reset list and clear called history
@@ -994,7 +1021,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
               {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 GỌI TÊN!'}
             </button>
             <p className="text-center text-white/90 text-[11px] font-bold mt-2 drop-shadow-md">
-              (Phím tắt: Nhấn <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-white/50 text-[10px]">Space</kbd> để Gọi tên)
+              (Phím tắt: Nhấn <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-white/50 text-[10px]">Space</kbd> hoặc <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-white/50 text-[10px]">Enter</kbd> để Gọi tên liên tục)
             </p>
           </div>
         </div>
