@@ -35,7 +35,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   onClose,
   students = [],
   className,
-  onApplyBonusScore,
 }) => {
   // Screens: 'preview' (Setup) | 'game' (3D in-game)
   const [screen, setScreen] = useState<'preview' | 'game'>('preview');
@@ -577,7 +576,8 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     }
   }, [allStudents, allowRepeat, isCalling, playSound, showToast, createSingleUFO]);
 
-  // Keyboard shortcuts (Space & Enter) to call continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
+  // Keyboard shortcuts (Space & Enter) and Mouse shortcuts (Right-click & Middle-click)
+  // to call "Bạn tiếp theo" continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
   useEffect(() => {
     if (!isOpen || screen !== 'game') return;
 
@@ -617,8 +617,37 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       }
     };
 
+    // Right-click: trigger "Bạn tiếp theo" and block browser context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (document.activeElement && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      handleCallStudent();
+    };
+
+    // Middle-click (scroll wheel click, e.button === 1): trigger "Bạn tiếp theo" and block autoscroll
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (document.activeElement && document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        handleCallStudent();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('contextmenu', handleContextMenu, true);
+    window.addEventListener('mousedown', handleMouseDown, true);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('contextmenu', handleContextMenu, true);
+      window.removeEventListener('mousedown', handleMouseDown, true);
+    };
   }, [isOpen, screen, handleCallStudent, onClose]);
 
   // Reset list and clear called history
@@ -635,13 +664,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       selectedUfoRef.current = null;
     }
   };
-
-  // Matched student from the classroom list
-  const matchedStudent = useMemo(() => {
-    if (!calledStudentName) return null;
-    const clean = calledStudentName.trim().toLowerCase();
-    return students.find((s) => s.name.trim().toLowerCase() === clean) || null;
-  }, [calledStudentName, students]);
 
   if (!isOpen) return null;
 
@@ -954,55 +976,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                   <span className="text-3xl md:text-5xl animate-bounce">⭐</span>
                 </div>
               </div>
-
-              {/* Quick Bonus Bar when student is in the current classroom */}
-              {matchedStudent && onApplyBonusScore && (
-                <div className="bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-xl border-2 border-amber-300 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black text-slate-800">
-                    Thưởng điểm cho <strong className="text-rose-600">{matchedStudent.name}</strong>:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApplyBonusScore(matchedStudent.id, 1, 'Gọi tên UFO phát biểu đúng');
-                      showToast(`Đã cộng +1đ cho ${matchedStudent.name}! ⭐`, 'success');
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
-                  >
-                    +1 ⭐
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApplyBonusScore(matchedStudent.id, 2, 'Gọi tên UFO xuất sắc');
-                      showToast(`Đã cộng +2đ cho ${matchedStudent.name}! 🌟`, 'success');
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
-                  >
-                    +2 🌟
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApplyBonusScore(matchedStudent.id, 5, 'Gọi tên UFO giải bài xuất sắc');
-                      showToast(`Đã cộng +5đ cho ${matchedStudent.name}! 🎯`, 'success');
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
-                  >
-                    +5 🎯
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onApplyBonusScore(matchedStudent.id, 10, 'Thực hiện Sản phẩm Đạt');
-                      showToast(`Đã cộng +10đ Thực hiện Sản phẩm Đạt cho ${matchedStudent.name}! 📦`, 'success');
-                    }}
-                    className="px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black transition-transform active:scale-95 ring-1 ring-emerald-300 shadow-2xs"
-                  >
-                    +10 📦
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -1018,10 +991,18 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                   : 'hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse'
               }`}
             >
-              {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 GỌI TÊN!'}
+              {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 BẠN TIẾP THEO'}
             </button>
-            <p className="text-center text-white/90 text-[11px] font-bold mt-2 drop-shadow-md">
-              (Phím tắt: Nhấn <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-white/50 text-[10px]">Space</kbd> hoặc <kbd className="px-1.5 py-0.5 bg-black/40 rounded border border-white/50 text-[10px]">Enter</kbd> để Gọi tên liên tục)
+            <p className="text-center text-white/95 text-[11px] font-bold mt-2.5 drop-shadow-md flex items-center justify-center gap-1.5 flex-wrap">
+              <span>(Gọi:</span>
+              <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Space</kbd>
+              <span>/</span>
+              <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Enter</kbd>
+              <span>/</span>
+              <span className="font-extrabold text-amber-300">Chuột phải</span>
+              <span>/</span>
+              <span className="font-extrabold text-cyan-300">Chuột giữa</span>
+              <span>)</span>
             </p>
           </div>
         </div>
