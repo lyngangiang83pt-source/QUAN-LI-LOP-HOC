@@ -408,6 +408,8 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     }
 
     setIsCalling(true);
+    // Ẩn tên học sinh cũ ngay khi bấm Gọi tiếp (giống vòng quay may mắn)
+    setCalledStudentName('');
 
     // 1. Pick next student randomly from uncalled candidates
     const rIndex = Math.floor(Math.random() * candidatePool.length);
@@ -421,7 +423,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
     const startNextCall = () => {
       playSound('call');
-      setCalledStudentName(selectedName);
 
       const scene = sceneRef.current;
       const activeUFOs = ufosRef.current.filter((u) => u.userData.isActive);
@@ -455,6 +456,8 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
           // FAST BANNER DROP: 320ms
           drop3DBanner(targetUFO, selectedName, () => {
             playSound('tada');
+            // UFO đã đáp xuống đất -> CHỈ XUẤT HIỆN TÊN HỌC SINH (giống vòng quay may mắn)
+            setCalledStudentName(selectedName);
             confetti({
               particleCount: 160,
               spread: 95,
@@ -751,22 +754,15 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
           </div>
         </div>
 
-        {/* SPOTLIGHT HUD CARD: HIỆN TÊN HỌC SINH SIÊU NHANH & NỔI BẬT */}
+        {/* SPOTLIGHT HUD CARD: CHỈ HIỆN DUY NHẤT TÊN HỌC SINH ĐƯỢC GỌI (GIỐNG VÒNG QUAY MAY MẮN) */}
         {calledStudentName && (
-          <div className="pointer-events-auto self-center flex flex-col items-center gap-3 animate-scaleUp">
+          <div className="pointer-events-auto self-center flex flex-col items-center animate-scaleUp">
             {/* Giant Name Ribbon Banner Card */}
-            <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1 rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.7)] border-4 border-yellow-300">
-              <div className="bg-slate-950/85 backdrop-blur-md px-8 md:px-14 py-3 md:py-4 rounded-[22px] flex items-center gap-4 text-center">
-                <span className="text-3xl md:text-5xl animate-bounce">🛸</span>
-                <div>
-                  <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-amber-300">
-                    HỌC SINH ĐƯỢC CHỌN (KHÔNG TRÙNG LẶP):
-                  </div>
-                  <div className="text-2xl md:text-5xl font-black text-white tracking-wide drop-shadow-[0_4px_16px_rgba(255,255,255,0.9)] mt-0.5">
-                    {calledStudentName}
-                  </div>
-                </div>
-                <span className="text-3xl md:text-5xl animate-bounce">⭐</span>
+            <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1.5 rounded-3xl shadow-[0_12px_45px_rgba(225,29,72,0.75)] border-4 border-yellow-300">
+              <div className="bg-slate-950/90 backdrop-blur-md px-10 md:px-20 py-4 md:py-6 rounded-[22px] flex items-center justify-center text-center">
+                <span className="text-3xl md:text-6xl font-black text-white tracking-wide drop-shadow-[0_4px_24px_rgba(255,255,255,0.95)]">
+                  {calledStudentName}
+                </span>
               </div>
             </div>
           </div>
@@ -779,7 +775,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
             onClick={handleCallStudent}
             className="bg-gradient-to-b from-emerald-400 to-emerald-600 text-white text-3xl md:text-5xl font-black py-4 md:py-5 px-12 md:px-20 rounded-full shadow-[0_12px_30px_rgba(16,185,129,0.55)] border-4 border-white transition-all select-none hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse"
           >
-            🛸 GỌI TIẾP
+            {calledStudentName || calledNames.length > 0 ? '🛸 GỌI TIẾP' : '🛸 GỌI TÊN'}
           </button>
           <p className="text-center text-white/95 text-[11px] font-bold mt-2.5 drop-shadow-md flex items-center justify-center gap-1.5 flex-wrap">
             <span>(Gọi tiếp:</span>
