@@ -64,6 +64,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   const animFrameIdRef = useRef<number | null>(null);
   const ufosRef = useRef<THREE.Group[]>([]);
   const selectedUfoRef = useRef<THREE.Group | null>(null);
+  const lastCallTimeRef = useRef<number>(0);
 
   // Đồng bộ danh sách học sinh theo sĩ số lớp khi mở modal
   useEffect(() => {
@@ -392,7 +393,9 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
   // Main Call Student Logic (ULTRA-FAST & 100% NON-REPEAT)
   const handleCallStudent = useCallback(() => {
-    if (isCalling) return;
+    const now = Date.now();
+    if (now - lastCallTimeRef.current < 260) return; // Chống spam phím nhanh dưới 0.26s
+    lastCallTimeRef.current = now;
 
     // Strict non-repeat check from synchronous Ref
     const candidatePool = allowRepeat
@@ -439,17 +442,17 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       const currentRotY = targetUFO.rotation.y;
       const targetRotY = Math.ceil(currentRotY / (Math.PI * 2)) * (Math.PI * 2) + Math.PI * 4;
 
-      // FAST SWOOP: 550ms
+      // FAST SWOOP: 500ms
       new TWEEN.Tween(targetUFO.rotation)
-        .to({ y: targetRotY, x: 0, z: 0 }, 550)
+        .to({ y: targetRotY, x: 0, z: 0 }, 500)
         .easing(TWEEN.Easing.Quadratic.Out)
         .start();
 
       new TWEEN.Tween(targetUFO.position)
-        .to(targetPos, 550)
+        .to(targetPos, 500)
         .easing(TWEEN.Easing.Cubic.Out)
         .onComplete(() => {
-          // FAST BANNER DROP: 350ms
+          // FAST BANNER DROP: 320ms
           drop3DBanner(targetUFO, selectedName, () => {
             playSound('tada');
             confetti({
@@ -465,15 +468,17 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         .start();
     };
 
-    // Fast dismiss of previous UFO in parallel
+    // Fast dismiss of previous UFO in parallel (instant exit)
     const curUFO = selectedUfoRef.current;
-    if (curUFO && curUFO.userData.currentBanner) {
-      curUFO.remove(curUFO.userData.currentBanner);
-      curUFO.userData.currentBanner = null;
+    if (curUFO) {
+      if (curUFO.userData.currentBanner) {
+        curUFO.remove(curUFO.userData.currentBanner);
+        curUFO.userData.currentBanner = null;
+      }
 
       if (!allowRepeat) {
         new TWEEN.Tween(curUFO.position)
-          .to({ y: 50, x: (Math.random() - 0.5) * 30, z: -50 }, 400)
+          .to({ y: 50, x: (Math.random() - 0.5) * 30, z: -50 }, 350)
           .easing(TWEEN.Easing.Back.In)
           .onComplete(() => {
             sceneRef.current?.remove(curUFO);
@@ -487,7 +492,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     } else {
       startNextCall();
     }
-  }, [allStudents, allowRepeat, isCalling, playSound, showToast, createSingleUFO]);
+  }, [allStudents, allowRepeat, playSound, showToast, createSingleUFO]);
 
   // Keyboard shortcuts (Space & Enter) and Mouse shortcuts (Right-click & Middle-click)
   // to call "Bạn tiếp theo" continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
@@ -771,18 +776,13 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         <div className="pointer-events-auto self-center mb-6">
           <button
             type="button"
-            disabled={isCalling}
             onClick={handleCallStudent}
-            className={`bg-gradient-to-b from-emerald-400 to-emerald-600 text-white text-3xl md:text-5xl font-black py-4 md:py-5 px-12 md:px-20 rounded-full shadow-[0_12px_30px_rgba(16,185,129,0.55)] border-4 border-white transition-all select-none ${
-              isCalling
-                ? 'opacity-60 scale-95 cursor-not-allowed'
-                : 'hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse'
-            }`}
+            className="bg-gradient-to-b from-emerald-400 to-emerald-600 text-white text-3xl md:text-5xl font-black py-4 md:py-5 px-12 md:px-20 rounded-full shadow-[0_12px_30px_rgba(16,185,129,0.55)] border-4 border-white transition-all select-none hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse"
           >
-            {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 BẠN TIẾP THEO'}
+            🛸 GỌI TIẾP
           </button>
           <p className="text-center text-white/95 text-[11px] font-bold mt-2.5 drop-shadow-md flex items-center justify-center gap-1.5 flex-wrap">
-            <span>(Gọi:</span>
+            <span>(Gọi tiếp:</span>
             <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Space</kbd>
             <span>/</span>
             <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Enter</kbd>
