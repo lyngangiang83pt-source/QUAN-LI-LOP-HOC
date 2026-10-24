@@ -9,14 +9,11 @@ import {
   RotateCcw,
   Settings,
   Sparkles,
-  Upload,
-  Image as ImageIcon,
-  Check,
   Volume2,
   VolumeX,
-  Play,
-  Award,
   Users,
+  CheckCircle2,
+  Award,
 } from 'lucide-react';
 
 interface UfoCallerModalProps {
@@ -40,13 +37,15 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   className,
   onApplyBonusScore,
 }) => {
-  // Screens: 'preview' (Setup screen) | 'game' (3D in-game screen)
+  // Screens: 'preview' (Setup) | 'game' (3D in-game)
   const [screen, setScreen] = useState<'preview' | 'game'>('preview');
 
   // Student list state
   const [sourceMode, setSourceMode] = useState<'class_present' | 'class_all' | 'custom_file'>('class_present');
   const [allStudents, setAllStudents] = useState<string[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<string[]>([]);
+  const [calledNames, setCalledNames] = useState<string[]>([]);
+  const calledNamesRef = useRef<Set<string>>(new Set());
+
   const [allowRepeat, setAllowRepeat] = useState<boolean>(false);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
 
@@ -91,59 +90,68 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
       if (type === 'call') {
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(400, now);
-        oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.5);
-        gainNode.gain.setValueAtTime(0.3, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        oscillator.frequency.setValueAtTime(450, now);
+        oscillator.frequency.exponentialRampToValueAtTime(950, now + 0.35);
+        gainNode.gain.setValueAtTime(0.35, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
         oscillator.start();
-        oscillator.stop(now + 0.5);
+        oscillator.stop(now + 0.35);
       } else if (type === 'drop') {
         oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(800, now);
-        oscillator.frequency.linearRampToValueAtTime(300, now + 0.3);
+        oscillator.frequency.setValueAtTime(900, now);
+        oscillator.frequency.linearRampToValueAtTime(350, now + 0.2);
         gainNode.gain.setValueAtTime(0.5, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
         oscillator.start();
-        oscillator.stop(now + 0.3);
+        oscillator.stop(now + 0.2);
       } else if (type === 'tada') {
         oscillator.type = 'square';
         oscillator.frequency.setValueAtTime(523.25, now);
-        oscillator.frequency.setValueAtTime(659.25, now + 0.1);
-        oscillator.frequency.setValueAtTime(783.99, now + 0.2);
+        oscillator.frequency.setValueAtTime(659.25, now + 0.08);
+        oscillator.frequency.setValueAtTime(783.99, now + 0.16);
+        oscillator.frequency.setValueAtTime(1046.50, now + 0.24);
         gainNode.gain.setValueAtTime(0.3, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
         oscillator.start();
-        oscillator.stop(now + 1);
+        oscillator.stop(now + 0.8);
       } else if (type === 'fly') {
         oscillator.type = 'sawtooth';
         oscillator.frequency.setValueAtTime(300, now);
-        oscillator.frequency.linearRampToValueAtTime(1500, now + 1);
+        oscillator.frequency.linearRampToValueAtTime(1600, now + 0.4);
         gainNode.gain.setValueAtTime(0.2, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
         oscillator.start();
-        oscillator.stop(now + 1);
+        oscillator.stop(now + 0.4);
       }
     } catch {
       // AudioContext fallback
     }
   }, [soundMuted]);
 
-  // Synchronize student list when modal opens or source changes
+  // Synchronize student master list when modal opens or source changes
+  // IMPORTANT: Keep calledNamesRef intact so giving points or re-renders NEVER resets called students!
   useEffect(() => {
     if (!isOpen) return;
 
     if (sourceMode === 'class_present') {
       const presentNames = students
         .filter((s) => s.attendance !== 'absent')
-        .map((s) => s.name.trim());
+        .map((s) => s.name.trim())
+        .filter((n) => n.length > 0);
       setAllStudents(presentNames);
-      setAvailableStudents(presentNames);
     } else if (sourceMode === 'class_all') {
-      const allNames = students.map((s) => s.name.trim());
+      const allNames = students
+        .map((s) => s.name.trim())
+        .filter((n) => n.length > 0);
       setAllStudents(allNames);
-      setAvailableStudents(allNames);
     }
   }, [isOpen, sourceMode, students]);
+
+  // Available students (Strict Anti-Duplicate list)
+  const availableStudents = useMemo(() => {
+    if (allowRepeat) return allStudents;
+    return allStudents.filter((name) => !calledNames.includes(name));
+  }, [allStudents, calledNames, allowRepeat]);
 
   // Handle Excel, CSV, TXT file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +199,9 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         if (names.length > 0) {
           setSourceMode('custom_file');
           setAllStudents(names);
-          setAvailableStudents(names);
+          calledNamesRef.current.clear();
+          setCalledNames([]);
+          setCalledStudentName('');
           showToast(`Đã tải lên ${names.length} học sinh thành công!`, 'success');
         } else {
           showToast('Không tìm thấy tên nào trong file. Vui lòng kiểm tra lại.', 'error');
@@ -325,7 +335,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     ctx.font = '900 96px "Baloo 2", "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowColor = 'rgba(0,0,0,0.75)';
     ctx.shadowBlur = 18;
     ctx.shadowOffsetX = 5;
     ctx.shadowOffsetY = 5;
@@ -339,7 +349,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     return texture;
   };
 
-  // Drop 3D Banner with Bounce
+  // Drop 3D Banner with Fast Snappy Bounce (350ms instead of 1000ms!)
   const drop3DBanner = (ufo: THREE.Group, name: string, callback?: () => void) => {
     const texture = createBannerTexture(name);
     const geo = new THREE.PlaneGeometry(10, 2.5);
@@ -357,8 +367,8 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
     playSound('drop');
     new TWEEN.Tween(pivot.scale)
-      .to({ y: 1 }, 1000)
-      .easing(TWEEN.Easing.Bounce.Out)
+      .to({ y: 1 }, 350)
+      .easing(TWEEN.Easing.Back.Out)
       .onComplete(() => {
         if (callback) callback();
       })
@@ -419,7 +429,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     scene.add(dirLight);
 
     // 4. Initial UFOs
-    populateUFOs(availableStudents.length || 15);
+    populateUFOs(allStudents.length || 15);
 
     // 5. Animation Loop
     const animate = (time: number) => {
@@ -466,33 +476,37 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       renderer.dispose();
       if (container) container.innerHTML = '';
     };
-  }, [isOpen, availableStudents.length, populateUFOs]);
+  }, [isOpen, allStudents.length, populateUFOs]);
 
-  // Main Call Student Logic
+  // Main Call Student Logic (ULTRA-FAST & 100% NON-REPEAT)
   const handleCallStudent = useCallback(() => {
     if (isCalling) return;
 
-    const pool = allowRepeat ? allStudents : availableStudents;
-    if (pool.length === 0) {
-      showToast("Đã gọi hết danh sách! Nhấn 'Khôi phục' để chơi tiếp.", 'error');
+    // Strict non-repeat check from synchronous Ref
+    const candidatePool = allowRepeat
+      ? allStudents
+      : allStudents.filter((name) => !calledNamesRef.current.has(name));
+
+    if (candidatePool.length === 0) {
+      showToast('Đã gọi hết tất cả học sinh! Nhấn "Khôi phục DS" để chơi lượt mới.', 'error');
       return;
     }
 
     setIsCalling(true);
 
+    // 1. Pick next student randomly from uncalled candidates
+    const rIndex = Math.floor(Math.random() * candidatePool.length);
+    const selectedName = candidatePool[rIndex];
+
+    // Immediately record to called set to eliminate ANY chance of repeat
+    if (!allowRepeat) {
+      calledNamesRef.current.add(selectedName);
+      setCalledNames(Array.from(calledNamesRef.current));
+    }
+
     const startNextCall = () => {
       playSound('call');
-      const rIndex = Math.floor(Math.random() * pool.length);
-      const selectedName = pool[rIndex];
       setCalledStudentName(selectedName);
-
-      if (!allowRepeat) {
-        setAvailableStudents((prev) => {
-          const next = [...prev];
-          next.splice(rIndex, 1);
-          return next;
-        });
-      }
 
       const scene = sceneRef.current;
       const activeUFOs = ufosRef.current.filter((u) => u.userData.isActive);
@@ -513,20 +527,22 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       const currentRotY = targetUFO.rotation.y;
       const targetRotY = Math.ceil(currentRotY / (Math.PI * 2)) * (Math.PI * 2) + Math.PI * 4;
 
+      // FAST SWOOP: 550ms (was 1500ms)
       new TWEEN.Tween(targetUFO.rotation)
-        .to({ y: targetRotY, x: 0, z: 0 }, 1500)
+        .to({ y: targetRotY, x: 0, z: 0 }, 550)
         .easing(TWEEN.Easing.Quadratic.Out)
         .start();
 
       new TWEEN.Tween(targetUFO.position)
-        .to(targetPos, 1500)
+        .to(targetPos, 550)
         .easing(TWEEN.Easing.Cubic.Out)
         .onComplete(() => {
+          // FAST BANNER DROP: 350ms (was 1000ms)
           drop3DBanner(targetUFO, selectedName, () => {
             playSound('tada');
             confetti({
               particleCount: 160,
-              spread: 90,
+              spread: 95,
               origin: { y: 0.75 },
               colors: ['#ff1744', '#ffea00', '#00e676', '#2979ff', '#d500f9', '#00e5ff'],
               zIndex: 9999,
@@ -537,48 +553,29 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         .start();
     };
 
+    // Fast dismiss of previous UFO in parallel (no waiting 1200ms!)
     const curUFO = selectedUfoRef.current;
     if (curUFO && curUFO.userData.currentBanner) {
-      new TWEEN.Tween(curUFO.userData.currentBanner.scale)
-        .to({ y: 0.001 }, 400)
-        .easing(TWEEN.Easing.Quadratic.In)
-        .onComplete(() => {
-          curUFO.remove(curUFO.userData.currentBanner!);
-          curUFO.userData.currentBanner = null;
+      curUFO.remove(curUFO.userData.currentBanner);
+      curUFO.userData.currentBanner = null;
 
-          playSound('fly');
-          if (!allowRepeat) {
-            new TWEEN.Tween(curUFO.position)
-              .to({ y: 50, x: (Math.random() - 0.5) * 20, z: -50 }, 800)
-              .easing(TWEEN.Easing.Back.In)
-              .onComplete(() => {
-                sceneRef.current?.remove(curUFO);
-                ufosRef.current = ufosRef.current.filter((u) => u !== curUFO);
-                startNextCall();
-              })
-              .start();
-          } else {
-            const futureTime = Date.now() + 800;
-            const ud = curUFO.userData;
-            const targetX = ud.baseX + Math.sin(futureTime * ud.orbitSpeedX + ud.hoverOffset) * ud.orbitRadiusX;
-            const targetY = ud.baseY + Math.sin(futureTime * ud.orbitSpeedY + ud.hoverOffset) * ud.orbitRadiusY;
-            const targetZ = ud.baseZ + Math.cos(futureTime * ud.orbitSpeedZ + ud.hoverOffset) * ud.orbitRadiusZ;
-
-            new TWEEN.Tween(curUFO.position)
-              .to({ x: targetX, y: targetY, z: targetZ }, 800)
-              .easing(TWEEN.Easing.Cubic.InOut)
-              .onComplete(() => {
-                curUFO.userData.isActive = true;
-                startNextCall();
-              })
-              .start();
-          }
-        })
-        .start();
+      if (!allowRepeat) {
+        new TWEEN.Tween(curUFO.position)
+          .to({ y: 50, x: (Math.random() - 0.5) * 30, z: -50 }, 400)
+          .easing(TWEEN.Easing.Back.In)
+          .onComplete(() => {
+            sceneRef.current?.remove(curUFO);
+            ufosRef.current = ufosRef.current.filter((u) => u !== curUFO);
+          })
+          .start();
+      } else {
+        curUFO.userData.isActive = true;
+      }
+      startNextCall();
     } else {
       startNextCall();
     }
-  }, [allStudents, availableStudents, allowRepeat, isCalling, playSound, showToast, createSingleUFO]);
+  }, [allStudents, allowRepeat, isCalling, playSound, showToast, createSingleUFO]);
 
   // Spacebar shortcut to call
   useEffect(() => {
@@ -597,12 +594,13 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, screen, handleCallStudent, onClose]);
 
-  // Reset available students
+  // Reset list and clear called history
   const handleResetList = () => {
-    setAvailableStudents([...allStudents]);
-    populateUFOs(allStudents.length);
+    calledNamesRef.current.clear();
+    setCalledNames([]);
     setCalledStudentName('');
-    showToast('Đã khôi phục toàn bộ danh sách!', 'success');
+    populateUFOs(allStudents.length);
+    showToast('Đã khôi phục toàn bộ danh sách học sinh!', 'success');
 
     if (selectedUfoRef.current && sceneRef.current) {
       sceneRef.current.remove(selectedUfoRef.current);
@@ -683,7 +681,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                 <span>🛸</span>
               </h1>
               <p className="text-slate-500 text-xs md:text-sm font-bold mt-1">
-                Phi thuyền ngoài không gian hạ cánh chọn ngẫu nhiên học sinh • Hỗ trợ Excel
+                Hiện tên siêu nhanh • Chống trùng lặp tuyệt đối • Hỗ trợ Excel
               </p>
             </div>
 
@@ -698,7 +696,11 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <button
                       type="button"
-                      onClick={() => setSourceMode('class_present')}
+                      onClick={() => {
+                        setSourceMode('class_present');
+                        calledNamesRef.current.clear();
+                        setCalledNames([]);
+                      }}
                       className={`p-2 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
                         sourceMode === 'class_present'
                           ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
@@ -710,7 +712,11 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSourceMode('class_all')}
+                      onClick={() => {
+                        setSourceMode('class_all');
+                        calledNamesRef.current.clear();
+                        setCalledNames([]);
+                      }}
                       className={`p-2 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
                         sourceMode === 'class_all'
                           ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
@@ -771,7 +777,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                   />
                 </div>
 
-                {/* 3. Luật chơi */}
+                {/* 3. Luật chơi: Chống trùng lặp */}
                 <div className="bg-purple-50/80 p-4 rounded-2xl border border-purple-100 shadow-xs">
                   <label className="block text-sm font-extrabold text-purple-900 mb-2">
                     3. Quy tắc lượt gọi:
@@ -783,9 +789,14 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                       onChange={(e) => setAllowRepeat(e.target.checked)}
                       className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
                     />
-                    <span className="text-slate-800 font-extrabold text-xs">
-                      Cho phép gọi lại tên đã gọi (Lặp lại)
-                    </span>
+                    <div className="text-xs">
+                      <span className="text-slate-800 font-extrabold block">
+                        Cho phép gọi lặp lại
+                      </span>
+                      <span className="text-slate-500 text-[11px] font-medium">
+                        (Mặc định: TẮT để không gọi trùng tên học sinh)
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
@@ -805,17 +816,31 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                       Danh sách trống. Vui lòng chọn lớp hoặc tải file.
                     </div>
                   ) : (
-                    allStudents.map((name, index) => (
-                      <div
-                        key={index}
-                        className="bg-slate-50 hover:bg-blue-50/60 px-3 py-1.5 rounded-lg text-slate-700 font-bold text-xs flex items-center gap-2 border border-slate-100 transition-colors"
-                      >
-                        <span className="w-5 h-5 bg-white text-blue-600 rounded-full flex items-center justify-center text-[10px] font-black shadow-xs shrink-0">
-                          {index + 1}
-                        </span>
-                        <span className="truncate">{name}</span>
-                      </div>
-                    ))
+                    allStudents.map((name, index) => {
+                      const isCalled = calledNames.includes(name);
+                      return (
+                        <div
+                          key={index}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center justify-between border transition-colors ${
+                            isCalled
+                              ? 'bg-slate-100 text-slate-400 line-through border-slate-200'
+                              : 'bg-slate-50 hover:bg-blue-50/60 text-slate-700 border-slate-100'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="w-5 h-5 bg-white text-blue-600 rounded-full flex items-center justify-center text-[10px] font-black shadow-xs shrink-0">
+                              {index + 1}
+                            </span>
+                            <span className="truncate">{name}</span>
+                          </div>
+                          {isCalled && (
+                            <span className="text-[10px] text-emerald-600 font-bold shrink-0">
+                              ✓ Đã gọi
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -830,7 +855,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                     showToast('Danh sách trống! Vui lòng chọn lớp hoặc tải file.', 'error');
                     return;
                   }
-                  setAvailableStudents([...allStudents]);
                   populateUFOs(allStudents.length);
                   setScreen('game');
                 }}
@@ -852,11 +876,15 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
           {/* Top In-Game Bar */}
           <div className="flex items-start justify-between">
             {/* Left Control Card */}
-            <div className="pointer-events-auto bg-white/95 p-4 rounded-2xl shadow-2xl backdrop-blur-md border-2 border-blue-200 w-auto min-w-[180px]">
-              <div className="flex items-center gap-3 mb-2.5">
+            <div className="pointer-events-auto bg-white/95 p-4 rounded-2xl shadow-2xl backdrop-blur-md border-2 border-blue-200 w-auto min-w-[200px]">
+              <div className="flex items-center gap-3 mb-1">
                 <span className="text-xs font-bold text-slate-600">Còn lại:</span>
                 <span className="text-2xl font-black text-blue-600">{availableStudents.length}</span>
                 <span className="text-xs text-slate-400">/ {allStudents.length}</span>
+              </div>
+              <div className="text-[11px] font-extrabold text-emerald-600 mb-2.5 flex items-center gap-1">
+                <CheckCircle2 size={13} />
+                <span>Đã gọi: {calledNames.length} em (Không trùng)</span>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -864,9 +892,10 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
                   type="button"
                   onClick={handleResetList}
                   className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold px-3 py-1.5 rounded-xl transition-all active:scale-95 text-xs flex items-center justify-center gap-1.5"
+                  title="Xóa danh sách đã gọi để tất cả các em đều được quay lại"
                 >
                   <RotateCcw size={13} />
-                  <span>Khôi phục DS</span>
+                  <span>Khôi phục DS ({calledNames.length} đã gọi)</span>
                 </button>
                 <button
                   type="button"
@@ -880,52 +909,73 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
             </div>
           </div>
 
-          {/* Quick Bonus Bar when student is called */}
-          {calledStudentName && !isCalling && matchedStudent && onApplyBonusScore && (
-            <div className="pointer-events-auto self-center mb-4 bg-white/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border-2 border-amber-300 flex flex-wrap items-center gap-2 animate-bounce">
-              <span className="text-xs font-black text-slate-800">
-                Thưởng điểm cho <strong className="text-rose-600">{matchedStudent.name}</strong>:
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  onApplyBonusScore(matchedStudent.id, 1, 'Gọi tên UFO phát biểu đúng');
-                  showToast(`Đã cộng +1đ cho ${matchedStudent.name}! ⭐`, 'success');
-                }}
-                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95"
-              >
-                +1 ⭐
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onApplyBonusScore(matchedStudent.id, 2, 'Gọi tên UFO xuất sắc');
-                  showToast(`Đã cộng +2đ cho ${matchedStudent.name}! 🌟`, 'success');
-                }}
-                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95"
-              >
-                +2 🌟
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onApplyBonusScore(matchedStudent.id, 5, 'Gọi tên UFO giải bài xuất sắc');
-                  showToast(`Đã cộng +5đ cho ${matchedStudent.name}! 🎯`, 'success');
-                }}
-                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95"
-              >
-                +5 🎯
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onApplyBonusScore(matchedStudent.id, 10, 'Thực hiện Sản phẩm Đạt');
-                  showToast(`Đã cộng +10đ Thực hiện Sản phẩm Đạt cho ${matchedStudent.name}! 📦`, 'success');
-                }}
-                className="px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black transition-transform active:scale-95 ring-1 ring-emerald-300"
-              >
-                +10 📦
-              </button>
+          {/* SPOTLIGHT HUD CARD: HIỆN TÊN HỌC SINH SIÊU NHANH & NỔI BẬT */}
+          {calledStudentName && (
+            <div className="pointer-events-auto self-center flex flex-col items-center gap-3 animate-scaleUp">
+              {/* Giant Name Ribbon Banner Card */}
+              <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1 rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.7)] border-4 border-yellow-300">
+                <div className="bg-slate-950/85 backdrop-blur-md px-8 md:px-14 py-3 md:py-4 rounded-[22px] flex items-center gap-4 text-center">
+                  <span className="text-3xl md:text-5xl animate-bounce">🛸</span>
+                  <div>
+                    <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-amber-300">
+                      HỌC SINH ĐƯỢC CHỌN (KHÔNG TRÙNG LẶP):
+                    </div>
+                    <div className="text-2xl md:text-5xl font-black text-white tracking-wide drop-shadow-[0_4px_16px_rgba(255,255,255,0.9)] mt-0.5">
+                      {calledStudentName}
+                    </div>
+                  </div>
+                  <span className="text-3xl md:text-5xl animate-bounce">⭐</span>
+                </div>
+              </div>
+
+              {/* Quick Bonus Bar when student is in the current classroom */}
+              {matchedStudent && onApplyBonusScore && (
+                <div className="bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-xl border-2 border-amber-300 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-black text-slate-800">
+                    Thưởng điểm cho <strong className="text-rose-600">{matchedStudent.name}</strong>:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApplyBonusScore(matchedStudent.id, 1, 'Gọi tên UFO phát biểu đúng');
+                      showToast(`Đã cộng +1đ cho ${matchedStudent.name}! ⭐`, 'success');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
+                  >
+                    +1 ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApplyBonusScore(matchedStudent.id, 2, 'Gọi tên UFO xuất sắc');
+                      showToast(`Đã cộng +2đ cho ${matchedStudent.name}! 🌟`, 'success');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
+                  >
+                    +2 🌟
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApplyBonusScore(matchedStudent.id, 5, 'Gọi tên UFO giải bài xuất sắc');
+                      showToast(`Đã cộng +5đ cho ${matchedStudent.name}! 🎯`, 'success');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-transform active:scale-95 shadow-2xs"
+                  >
+                    +5 🎯
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onApplyBonusScore(matchedStudent.id, 10, 'Thực hiện Sản phẩm Đạt');
+                      showToast(`Đã cộng +10đ Thực hiện Sản phẩm Đạt cho ${matchedStudent.name}! 📦`, 'success');
+                    }}
+                    className="px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black transition-transform active:scale-95 ring-1 ring-emerald-300 shadow-2xs"
+                  >
+                    +10 📦
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
