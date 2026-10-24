@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
-import * as XLSX from 'xlsx';
 import confetti from 'canvas-confetti';
 import { Student } from '../../../types';
 import {
   X,
   RotateCcw,
-  Settings,
-  Sparkles,
   Volume2,
   VolumeX,
   Users,
   CheckCircle2,
-  Award,
+  Palette,
 } from 'lucide-react';
 
-interface UfoCallerModalProps {
+export interface UfoCallerModalProps {
   isOpen: boolean;
   onClose: () => void;
   students: Student[];
@@ -36,19 +33,21 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   students = [],
   className,
 }) => {
-  // Screens: 'preview' (Setup) | 'game' (3D in-game)
-  const [screen, setScreen] = useState<'preview' | 'game'>('preview');
+  // Lấy trực tiếp danh sách học sinh theo sĩ số lớp dạy (ưu tiên học sinh có mặt/đi muộn nếu có điểm danh)
+  const classStudentNames = useMemo(() => {
+    const present = students.filter((s) => s.attendance !== 'absent');
+    const targetPool = present.length > 0 ? present : students;
+    return targetPool.map((s) => s.name.trim()).filter((n) => n.length > 0);
+  }, [students]);
 
-  // Student list state
-  const [sourceMode, setSourceMode] = useState<'class_present' | 'class_all' | 'custom_file'>('class_present');
   const [allStudents, setAllStudents] = useState<string[]>([]);
   const [calledNames, setCalledNames] = useState<string[]>([]);
   const calledNamesRef = useRef<Set<string>>(new Set());
 
   const [allowRepeat, setAllowRepeat] = useState<boolean>(false);
-  const [fileLoading, setFileLoading] = useState<boolean>(false);
+  const [showBgMenu, setShowBgMenu] = useState<boolean>(false);
 
-  // Background state
+  // Background & Sound state
   const [bgImage, setBgImage] = useState<string>('');
   const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
@@ -65,6 +64,18 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   const animFrameIdRef = useRef<number | null>(null);
   const ufosRef = useRef<THREE.Group[]>([]);
   const selectedUfoRef = useRef<THREE.Group | null>(null);
+
+  // Đồng bộ danh sách học sinh theo sĩ số lớp khi mở modal
+  useEffect(() => {
+    if (!isOpen) return;
+    setAllStudents(classStudentNames);
+  }, [isOpen, classStudentNames]);
+
+  // Danh sách học sinh chưa gọi (Chống trùng lặp tuyệt đối)
+  const availableStudents = useMemo(() => {
+    if (allowRepeat) return allStudents;
+    return allStudents.filter((name) => !calledNames.includes(name));
+  }, [allStudents, calledNames, allowRepeat]);
 
   // Show Toast notification
   const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -126,99 +137,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       // AudioContext fallback
     }
   }, [soundMuted]);
-
-  // Synchronize student master list when modal opens or source changes
-  // IMPORTANT: Keep calledNamesRef intact so giving points or re-renders NEVER resets called students!
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (sourceMode === 'class_present') {
-      const presentNames = students
-        .filter((s) => s.attendance !== 'absent')
-        .map((s) => s.name.trim())
-        .filter((n) => n.length > 0);
-      setAllStudents(presentNames);
-    } else if (sourceMode === 'class_all') {
-      const allNames = students
-        .map((s) => s.name.trim())
-        .filter((n) => n.length > 0);
-      setAllStudents(allNames);
-    }
-  }, [isOpen, sourceMode, students]);
-
-  // Available students (Strict Anti-Duplicate list)
-  const availableStudents = useMemo(() => {
-    if (allowRepeat) return allStudents;
-    return allStudents.filter((name) => !calledNames.includes(name));
-  }, [allStudents, calledNames, allowRepeat]);
-
-  // Handle Excel, CSV, TXT file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setFileLoading(true);
-    const fileName = file.name.toLowerCase();
-    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
-    const reader = new FileReader();
-
-    reader.onload = (event) => {
-      try {
-        let names: string[] = [];
-        if (isExcel) {
-          const data = new Uint8Array(event.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1 });
-          const ignoreWords = ['stt', 'họ và tên', 'họ tên', 'tên', 'ngày sinh', 'ghi chú', 'lớp', 'mã hs'];
-
-          json.forEach((row) => {
-            if (Array.isArray(row)) {
-              const potentialName = row.find((cell) => {
-                if (typeof cell === 'string') {
-                  const str = cell.trim();
-                  return str.length > 1 && isNaN(Number(str));
-                }
-                return false;
-              });
-
-              if (potentialName && typeof potentialName === 'string') {
-                const cleanName = potentialName.trim();
-                if (!ignoreWords.includes(cleanName.toLowerCase())) {
-                  names.push(cleanName);
-                }
-              }
-            }
-          });
-        } else {
-          const text = event.target?.result as string;
-          names = text.split(/[\n,]+/).map((n) => n.trim()).filter((n) => n.length > 0);
-        }
-
-        if (names.length > 0) {
-          setSourceMode('custom_file');
-          setAllStudents(names);
-          calledNamesRef.current.clear();
-          setCalledNames([]);
-          setCalledStudentName('');
-          showToast(`Đã tải lên ${names.length} học sinh thành công!`, 'success');
-        } else {
-          showToast('Không tìm thấy tên nào trong file. Vui lòng kiểm tra lại.', 'error');
-        }
-      } catch {
-        showToast('Lỗi khi đọc file. Vui lòng thử lại.', 'error');
-      } finally {
-        setFileLoading(false);
-        e.target.value = '';
-      }
-    };
-
-    if (isExcel) {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file);
-    }
-  };
 
   // Handle custom background image upload
   const handleBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -348,7 +266,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     return texture;
   };
 
-  // Drop 3D Banner with Fast Snappy Bounce (350ms instead of 1000ms!)
+  // Drop 3D Banner with Fast Snappy Bounce (350ms)
   const drop3DBanner = (ufo: THREE.Group, name: string, callback?: () => void) => {
     const texture = createBannerTexture(name);
     const geo = new THREE.PlaneGeometry(10, 2.5);
@@ -451,10 +369,9 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
       renderer.render(scene, camera);
     };
-
     animFrameIdRef.current = requestAnimationFrame(animate);
 
-    // 6. Resize listener
+    // 6. Responsive Resize
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current) return;
       const w = window.innerWidth;
@@ -467,13 +384,9 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
-      }
-      ufosRef.current.forEach((ufo) => scene.remove(ufo));
-      ufosRef.current = [];
+      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       renderer.dispose();
-      if (container) container.innerHTML = '';
+      container.innerHTML = '';
     };
   }, [isOpen, allStudents.length, populateUFOs]);
 
@@ -526,7 +439,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       const currentRotY = targetUFO.rotation.y;
       const targetRotY = Math.ceil(currentRotY / (Math.PI * 2)) * (Math.PI * 2) + Math.PI * 4;
 
-      // FAST SWOOP: 550ms (was 1500ms)
+      // FAST SWOOP: 550ms
       new TWEEN.Tween(targetUFO.rotation)
         .to({ y: targetRotY, x: 0, z: 0 }, 550)
         .easing(TWEEN.Easing.Quadratic.Out)
@@ -536,7 +449,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         .to(targetPos, 550)
         .easing(TWEEN.Easing.Cubic.Out)
         .onComplete(() => {
-          // FAST BANNER DROP: 350ms (was 1000ms)
+          // FAST BANNER DROP: 350ms
           drop3DBanner(targetUFO, selectedName, () => {
             playSound('tada');
             confetti({
@@ -552,7 +465,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         .start();
     };
 
-    // Fast dismiss of previous UFO in parallel (no waiting 1200ms!)
+    // Fast dismiss of previous UFO in parallel
     const curUFO = selectedUfoRef.current;
     if (curUFO && curUFO.userData.currentBanner) {
       curUFO.remove(curUFO.userData.currentBanner);
@@ -579,7 +492,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   // Keyboard shortcuts (Space & Enter) and Mouse shortcuts (Right-click & Middle-click)
   // to call "Bạn tiếp theo" continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
   useEffect(() => {
-    if (!isOpen || screen !== 'game') return;
+    if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is currently typing in an input or textarea
@@ -619,6 +532,9 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
     // Right-click: trigger "Bạn tiếp theo" and block browser context menu
     const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('#bg-menu-container')) return;
+
       e.preventDefault();
       e.stopPropagation();
       if (document.activeElement && document.activeElement instanceof HTMLElement) {
@@ -648,7 +564,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       window.removeEventListener('contextmenu', handleContextMenu, true);
       window.removeEventListener('mousedown', handleMouseDown, true);
     };
-  }, [isOpen, screen, handleCallStudent, onClose]);
+  }, [isOpen, handleCallStudent, onClose]);
 
   // Reset list and clear called history
   const handleResetList = () => {
@@ -683,22 +599,81 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
 
       {/* Top Header Controls (Always accessible) */}
       <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+        {/* Nút đổi phông nền nhanh (nhỏ gọn, không làm gián đoạn game) */}
+        <div id="bg-menu-container" className="relative">
+          <button
+            type="button"
+            onClick={() => setShowBgMenu(!showBgMenu)}
+            className="p-2.5 rounded-full bg-white/85 hover:bg-white text-slate-800 shadow-lg backdrop-blur-md transition-all active:scale-95 flex items-center gap-1.5 px-3.5"
+            title="Đổi phông nền không gian"
+          >
+            <Palette size={18} className="text-emerald-600" />
+            <span className="text-xs font-black hidden md:inline">Phông nền</span>
+          </button>
+
+          {showBgMenu && (
+            <div className="absolute right-0 top-12 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 p-3.5 z-50 animate-scaleUp">
+              <div className="flex justify-between items-center mb-2.5">
+                <span className="text-xs font-extrabold text-slate-800">Chọn phông nền</span>
+                <button
+                  type="button"
+                  onClick={() => setShowBgMenu(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-1.5 mb-2.5">
+                {PRESET_BACKGROUNDS.map((bg) => (
+                  <button
+                    key={bg.id}
+                    type="button"
+                    onClick={() => {
+                      setBgImage(bg.url);
+                      setShowBgMenu(false);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold text-left transition-all border ${
+                      bgImage === bg.url
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200'
+                    }`}
+                  >
+                    {bg.label}
+                  </button>
+                ))}
+              </div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                Hoặc tải ảnh từ máy tính:
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  handleBgUpload(e);
+                  setShowBgMenu(false);
+                }}
+                className="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer bg-slate-50 rounded-full p-1 border border-slate-200"
+              />
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={() => setSoundMuted(!soundMuted)}
-          className="p-2.5 rounded-full bg-white/80 hover:bg-white text-slate-800 shadow-lg backdrop-blur-md transition-all active:scale-95"
+          className="p-2.5 rounded-full bg-white/85 hover:bg-white text-slate-800 shadow-lg backdrop-blur-md transition-all active:scale-95"
           title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
         >
-          {soundMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          {soundMuted ? <VolumeX size={19} /> : <Volume2 size={19} />}
         </button>
 
         <button
           type="button"
           onClick={onClose}
-          className="p-2.5 rounded-full bg-white/80 hover:bg-rose-500 hover:text-white text-slate-800 shadow-lg backdrop-blur-md transition-all active:scale-95"
+          className="p-2.5 rounded-full bg-white/85 hover:bg-rose-500 hover:text-white text-slate-800 shadow-lg backdrop-blur-md transition-all active:scale-95"
           title="Đóng trò chơi UFO (Esc)"
         >
-          <X size={20} />
+          <X size={19} />
         </button>
       </div>
 
@@ -716,297 +691,109 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* 1. PREVIEW / SETUP SCREEN                                 */}
-      {/* ======================================================== */}
-      {screen === 'preview' && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-blue-950/60 backdrop-blur-md p-4 transition-all">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-4xl w-full mx-4 shadow-2xl flex flex-col max-h-[92vh] border border-blue-100">
-            {/* Title */}
-            <div className="text-center mb-5">
-              <h1 className="text-3xl md:text-5xl font-black text-blue-600 drop-shadow-sm flex items-center justify-center gap-2">
-                <span>🛸</span>
-                <span>GỌI TÊN BẰNG UFO</span>
-                <span>🛸</span>
-              </h1>
-              <p className="text-slate-500 text-xs md:text-sm font-bold mt-1">
-                Hiện tên siêu nhanh • Chống trùng lặp tuyệt đối • Hỗ trợ Excel
-              </p>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-5 flex-1 min-h-0 overflow-hidden">
-              {/* Cột trái: Cài đặt */}
-              <div className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1">
-                {/* 1. Chọn nguồn danh sách */}
-                <div className="bg-blue-50/80 p-4 rounded-2xl border border-blue-100 shadow-xs relative">
-                  <label className="block text-sm font-extrabold text-blue-900 mb-2">
-                    1. Nguồn danh sách học sinh:
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSourceMode('class_present');
-                        calledNamesRef.current.clear();
-                        setCalledNames([]);
-                      }}
-                      className={`p-2 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
-                        sourceMode === 'class_present'
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'
-                      }`}
-                    >
-                      <Users size={14} />
-                      <span>{className} (Có mặt)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSourceMode('class_all');
-                        calledNamesRef.current.clear();
-                        setCalledNames([]);
-                      }}
-                      className={`p-2 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
-                        sourceMode === 'class_all'
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'
-                      }`}
-                    >
-                      <Users size={14} />
-                      <span>{className} (Tất cả)</span>
-                    </button>
-                  </div>
-
-                  {/* Upload File Excel / CSV / TXT */}
-                  <div className="pt-2 border-t border-blue-200/60">
-                    <span className="block text-[11px] font-bold text-slate-600 mb-1.5">
-                      Hoặc tải file từ máy tính (.xlsx, .xls, .csv, .txt):
-                    </span>
-                    <input
-                      type="file"
-                      accept=".txt,.csv,.xlsx,.xls"
-                      onChange={handleFileUpload}
-                      className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer bg-white rounded-full p-1 border border-slate-200"
-                    />
-                  </div>
-
-                  {fileLoading && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center rounded-2xl z-10">
-                      <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Phông nền */}
-                <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-100 shadow-xs">
-                  <label className="block text-sm font-extrabold text-emerald-900 mb-2">
-                    2. Phông nền không gian:
-                  </label>
-                  <div className="flex flex-wrap gap-1.5 mb-2.5">
-                    {PRESET_BACKGROUNDS.map((bg) => (
-                      <button
-                        key={bg.id}
-                        type="button"
-                        onClick={() => setBgImage(bg.url)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                          bgImage === bg.url
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                            : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'
-                        }`}
-                      >
-                        {bg.label}
-                      </button>
-                    ))}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBgUpload}
-                    className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer bg-white rounded-full p-1 border border-slate-200"
-                  />
-                </div>
-
-                {/* 3. Luật chơi: Chống trùng lặp */}
-                <div className="bg-purple-50/80 p-4 rounded-2xl border border-purple-100 shadow-xs">
-                  <label className="block text-sm font-extrabold text-purple-900 mb-2">
-                    3. Quy tắc lượt gọi:
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer p-2.5 bg-white rounded-xl hover:bg-purple-50 transition-colors border border-purple-200">
-                    <input
-                      type="checkbox"
-                      checked={allowRepeat}
-                      onChange={(e) => setAllowRepeat(e.target.checked)}
-                      className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
-                    />
-                    <div className="text-xs">
-                      <span className="text-slate-800 font-extrabold block">
-                        Cho phép gọi lặp lại
-                      </span>
-                      <span className="text-slate-500 text-[11px] font-medium">
-                        (Mặc định: TẮT để không gọi trùng tên học sinh)
-                      </span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Cột phải: Xem trước danh sách */}
-              <div className="flex-1 flex flex-col bg-slate-50 rounded-2xl border border-slate-200 p-4 shadow-inner min-h-[220px]">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm font-extrabold text-slate-800">Danh sách học sinh sẵn sàng</span>
-                  <span className="bg-blue-100 text-blue-900 text-xs font-black px-2.5 py-1 rounded-full">
-                    Sĩ số: {allStudents.length} em
-                  </span>
-                </div>
-
-                <div className="flex-1 overflow-y-auto bg-white rounded-xl border border-slate-200 p-3 space-y-1.5 max-h-[300px] scrollbar-thin">
-                  {allStudents.length === 0 ? (
-                    <div className="text-slate-400 text-xs italic text-center py-8">
-                      Danh sách trống. Vui lòng chọn lớp hoặc tải file.
-                    </div>
-                  ) : (
-                    allStudents.map((name, index) => {
-                      const isCalled = calledNames.includes(name);
-                      return (
-                        <div
-                          key={index}
-                          className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center justify-between border transition-colors ${
-                            isCalled
-                              ? 'bg-slate-100 text-slate-400 line-through border-slate-200'
-                              : 'bg-slate-50 hover:bg-blue-50/60 text-slate-700 border-slate-100'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <span className="w-5 h-5 bg-white text-blue-600 rounded-full flex items-center justify-center text-[10px] font-black shadow-xs shrink-0">
-                              {index + 1}
-                            </span>
-                            <span className="truncate">{name}</span>
-                          </div>
-                          {isCalled && (
-                            <span className="text-[10px] text-emerald-600 font-bold shrink-0">
-                              ✓ Đã gọi
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
+      {/* MAIN IN-GAME UI LAYER (DIRECT ENTRY - NO INTERMEDIATE SETUP SCREEN) */}
+      <div className="absolute inset-0 z-20 pointer-events-none p-4 md:p-6 flex flex-col justify-between">
+        {/* Top In-Game Bar */}
+        <div className="flex items-start justify-between">
+          {/* Left Control Card: Class Info & Call Stats */}
+          <div className="pointer-events-auto bg-white/95 p-4 rounded-2xl shadow-2xl backdrop-blur-md border-2 border-blue-200 w-auto min-w-[210px]">
+            <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-200">
+              <Users size={16} className="text-blue-600 shrink-0" />
+              <div>
+                <span className="text-xs font-black text-slate-900 block truncate max-w-[170px]">
+                  {className || 'Lớp học'}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500">
+                  Sĩ số lớp: <strong className="text-blue-600">{allStudents.length}</strong> em
+                </span>
               </div>
             </div>
 
-            {/* Nút Bắt đầu */}
-            <div className="mt-5 flex justify-center shrink-0">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-xs font-bold text-slate-600">Còn lại:</span>
+              <span className="text-2xl font-black text-blue-600">{availableStudents.length}</span>
+              <span className="text-xs text-slate-400">/ {allStudents.length}</span>
+            </div>
+
+            <div className="text-[11px] font-extrabold text-emerald-600 mb-2.5 flex items-center gap-1">
+              <CheckCircle2 size={13} />
+              <span>Đã gọi: {calledNames.length} em (Không trùng)</span>
+            </div>
+
+            <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  if (allStudents.length === 0) {
-                    showToast('Danh sách trống! Vui lòng chọn lớp hoặc tải file.', 'error');
-                    return;
-                  }
-                  populateUFOs(allStudents.length);
-                  setScreen('game');
-                }}
-                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xl md:text-2xl font-black py-3.5 px-12 rounded-full shadow-xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                onClick={handleResetList}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold px-3 py-1.5 rounded-xl transition-all active:scale-95 text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                title="Khôi phục để tất cả học sinh đều được gọi lại"
               >
-                <span>BẮT ĐẦU CHƠI</span>
-                <span>🚀</span>
+                <RotateCcw size={13} />
+                <span>Khôi phục DS ({calledNames.length} đã gọi)</span>
               </button>
+
+              <label className="flex items-center gap-2 cursor-pointer p-1.5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={allowRepeat}
+                  onChange={(e) => setAllowRepeat(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
+                />
+                <span className="text-[11px] text-slate-700 font-extrabold">
+                  Cho phép gọi lặp lại
+                </span>
+              </label>
             </div>
           </div>
         </div>
-      )}
 
-      {/* ======================================================== */}
-      {/* 2. MAIN IN-GAME UI LAYER                                 */}
-      {/* ======================================================== */}
-      {screen === 'game' && (
-        <div className="absolute inset-0 z-20 pointer-events-none p-4 md:p-6 flex flex-col justify-between">
-          {/* Top In-Game Bar */}
-          <div className="flex items-start justify-between">
-            {/* Left Control Card */}
-            <div className="pointer-events-auto bg-white/95 p-4 rounded-2xl shadow-2xl backdrop-blur-md border-2 border-blue-200 w-auto min-w-[200px]">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-xs font-bold text-slate-600">Còn lại:</span>
-                <span className="text-2xl font-black text-blue-600">{availableStudents.length}</span>
-                <span className="text-xs text-slate-400">/ {allStudents.length}</span>
-              </div>
-              <div className="text-[11px] font-extrabold text-emerald-600 mb-2.5 flex items-center gap-1">
-                <CheckCircle2 size={13} />
-                <span>Đã gọi: {calledNames.length} em (Không trùng)</span>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleResetList}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold px-3 py-1.5 rounded-xl transition-all active:scale-95 text-xs flex items-center justify-center gap-1.5"
-                  title="Xóa danh sách đã gọi để tất cả các em đều được quay lại"
-                >
-                  <RotateCcw size={13} />
-                  <span>Khôi phục DS ({calledNames.length} đã gọi)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScreen('preview')}
-                  className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold px-3 py-1.5 rounded-xl transition-all active:scale-95 text-xs flex items-center justify-center gap-1.5"
-                >
-                  <Settings size={13} />
-                  <span>Cài đặt lại</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* SPOTLIGHT HUD CARD: HIỆN TÊN HỌC SINH SIÊU NHANH & NỔI BẬT */}
-          {calledStudentName && (
-            <div className="pointer-events-auto self-center flex flex-col items-center gap-3 animate-scaleUp">
-              {/* Giant Name Ribbon Banner Card */}
-              <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1 rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.7)] border-4 border-yellow-300">
-                <div className="bg-slate-950/85 backdrop-blur-md px-8 md:px-14 py-3 md:py-4 rounded-[22px] flex items-center gap-4 text-center">
-                  <span className="text-3xl md:text-5xl animate-bounce">🛸</span>
-                  <div>
-                    <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-amber-300">
-                      HỌC SINH ĐƯỢC CHỌN (KHÔNG TRÙNG LẶP):
-                    </div>
-                    <div className="text-2xl md:text-5xl font-black text-white tracking-wide drop-shadow-[0_4px_16px_rgba(255,255,255,0.9)] mt-0.5">
-                      {calledStudentName}
-                    </div>
+        {/* SPOTLIGHT HUD CARD: HIỆN TÊN HỌC SINH SIÊU NHANH & NỔI BẬT */}
+        {calledStudentName && (
+          <div className="pointer-events-auto self-center flex flex-col items-center gap-3 animate-scaleUp">
+            {/* Giant Name Ribbon Banner Card */}
+            <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1 rounded-3xl shadow-[0_12px_40px_rgba(225,29,72,0.7)] border-4 border-yellow-300">
+              <div className="bg-slate-950/85 backdrop-blur-md px-8 md:px-14 py-3 md:py-4 rounded-[22px] flex items-center gap-4 text-center">
+                <span className="text-3xl md:text-5xl animate-bounce">🛸</span>
+                <div>
+                  <div className="text-[10px] md:text-xs font-black uppercase tracking-widest text-amber-300">
+                    HỌC SINH ĐƯỢC CHỌN (KHÔNG TRÙNG LẶP):
                   </div>
-                  <span className="text-3xl md:text-5xl animate-bounce">⭐</span>
+                  <div className="text-2xl md:text-5xl font-black text-white tracking-wide drop-shadow-[0_4px_16px_rgba(255,255,255,0.9)] mt-0.5">
+                    {calledStudentName}
+                  </div>
                 </div>
+                <span className="text-3xl md:text-5xl animate-bounce">⭐</span>
               </div>
             </div>
-          )}
-
-          {/* Bottom Big Calling Button */}
-          <div className="pointer-events-auto self-center mb-6">
-            <button
-              type="button"
-              disabled={isCalling}
-              onClick={handleCallStudent}
-              className={`bg-gradient-to-b from-emerald-400 to-emerald-600 text-white text-3xl md:text-5xl font-black py-4 md:py-5 px-12 md:px-20 rounded-full shadow-[0_12px_30px_rgba(16,185,129,0.55)] border-4 border-white transition-all select-none ${
-                isCalling
-                  ? 'opacity-60 scale-95 cursor-not-allowed'
-                  : 'hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse'
-              }`}
-            >
-              {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 BẠN TIẾP THEO'}
-            </button>
-            <p className="text-center text-white/95 text-[11px] font-bold mt-2.5 drop-shadow-md flex items-center justify-center gap-1.5 flex-wrap">
-              <span>(Gọi:</span>
-              <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Space</kbd>
-              <span>/</span>
-              <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Enter</kbd>
-              <span>/</span>
-              <span className="font-extrabold text-amber-300">Chuột phải</span>
-              <span>/</span>
-              <span className="font-extrabold text-cyan-300">Chuột giữa</span>
-              <span>)</span>
-            </p>
           </div>
+        )}
+
+        {/* Bottom Big Calling Button */}
+        <div className="pointer-events-auto self-center mb-6">
+          <button
+            type="button"
+            disabled={isCalling}
+            onClick={handleCallStudent}
+            className={`bg-gradient-to-b from-emerald-400 to-emerald-600 text-white text-3xl md:text-5xl font-black py-4 md:py-5 px-12 md:px-20 rounded-full shadow-[0_12px_30px_rgba(16,185,129,0.55)] border-4 border-white transition-all select-none ${
+              isCalling
+                ? 'opacity-60 scale-95 cursor-not-allowed'
+                : 'hover:scale-105 hover:shadow-[0_18px_40px_rgba(16,185,129,0.7)] active:scale-95 animate-pulse'
+            }`}
+          >
+            {isCalling ? 'ĐANG ĐÁP XUỐNG...' : '🛸 BẠN TIẾP THEO'}
+          </button>
+          <p className="text-center text-white/95 text-[11px] font-bold mt-2.5 drop-shadow-md flex items-center justify-center gap-1.5 flex-wrap">
+            <span>(Gọi:</span>
+            <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Space</kbd>
+            <span>/</span>
+            <kbd className="px-1.5 py-0.5 bg-black/50 rounded border border-white/60 text-[10px]">Enter</kbd>
+            <span>/</span>
+            <span className="font-extrabold text-amber-300">Chuột phải</span>
+            <span>/</span>
+            <span className="font-extrabold text-cyan-300">Chuột giữa</span>
+            <span>)</span>
+          </p>
         </div>
-      )}
+      </div>
     </div>
   );
 };
