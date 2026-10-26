@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import * as THREE from 'three';
-import * as TWEEN from '@tweenjs/tween.js';
 import confetti from 'canvas-confetti';
 import { Student } from '../../../types';
 import {
@@ -11,6 +9,7 @@ import {
   Users,
   CheckCircle2,
   Palette,
+  Sparkles,
 } from 'lucide-react';
 
 export interface UfoCallerModalProps {
@@ -51,19 +50,11 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
   const [bgImage, setBgImage] = useState<string>('');
   const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
-  // In-Game calling states
+  // 2D In-Game calling states
   const [isCalling, setIsCalling] = useState<boolean>(false);
+  const [ufoState, setUfoState] = useState<'idle' | 'swooping' | 'landed'>('idle');
   const [calledStudentName, setCalledStudentName] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
-
-  // Three.js Refs
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const animFrameIdRef = useRef<number | null>(null);
-  const ufosRef = useRef<THREE.Group[]>([]);
-  const selectedUfoRef = useRef<THREE.Group | null>(null);
   const lastCallTimeRef = useRef<number>(0);
 
   // Đồng bộ danh sách học sinh theo sĩ số lớp khi mở modal
@@ -148,253 +139,10 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     showToast('Đã cập nhật phông nền mới!', 'success');
   };
 
-  // Create single 3D UFO Group
-  const createSingleUFO = useCallback((index: number) => {
-    const group = new THREE.Group();
-    const colors = [0xff5722, 0xffeb3b, 0x4caf50, 0x2196f3, 0x9c27b0, 0xe91e63, 0x00bcd4, 0xff9800];
-    const randomColor = colors[index % colors.length];
-
-    // 1. UFO Base Hull
-    const baseGeo = new THREE.SphereGeometry(2, 32, 16);
-    baseGeo.scale(1, 0.25, 1);
-    const baseMat = new THREE.MeshPhongMaterial({ color: randomColor, shininess: 100 });
-    const base = new THREE.Mesh(baseGeo, baseMat);
-    base.castShadow = true;
-    group.add(base);
-
-    // 2. Glass Cockpit Dome
-    const domeGeo = new THREE.SphereGeometry(1.1, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const domeMat = new THREE.MeshPhongMaterial({
-      color: 0x88ccff,
-      transparent: true,
-      opacity: 0.65,
-      shininess: 200,
-      side: THREE.DoubleSide,
-    });
-    const dome = new THREE.Mesh(domeGeo, domeMat);
-    dome.position.y = 0.1;
-    group.add(dome);
-
-    // 3. Cute Alien Head
-    const alienGroup = new THREE.Group();
-    const alienGeo = new THREE.SphereGeometry(0.5, 16, 16);
-    const alienMat = new THREE.MeshPhongMaterial({ color: 0x8bc34a });
-    const alien = new THREE.Mesh(alienGeo, alienMat);
-    alienGroup.add(alien);
-
-    // Alien Eyes
-    const eyeGeo = new THREE.SphereGeometry(0.12, 16, 16);
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeL.position.set(-0.2, 0.15, 0.4);
-    const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeR.position.set(0.2, 0.15, 0.4);
-    alienGroup.add(eyeL, eyeR);
-    alienGroup.position.y = 0.4;
-    group.add(alienGroup);
-
-    // 4. White Glowing Edge Torus Ring
-    const ringGeo = new THREE.TorusGeometry(2.05, 0.1, 8, 24);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    group.add(ring);
-
-    // Physics & Orbit Metadata
-    group.userData = {
-      baseX: (Math.random() - 0.5) * 60,
-      baseY: (Math.random() - 0.5) * 20 + 10,
-      baseZ: (Math.random() - 0.5) * 30 - 10,
-      hoverSpeed: Math.random() * 0.002 + 0.001,
-      hoverOffset: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.02,
-      isActive: true,
-      currentBanner: null as THREE.Group | null,
-      orbitRadiusX: Math.random() * 15 + 5,
-      orbitRadiusY: Math.random() * 8 + 3,
-      orbitRadiusZ: Math.random() * 10 + 5,
-      orbitSpeedX: (Math.random() * 0.0008 + 0.0004) * (Math.random() > 0.5 ? 1 : -1),
-      orbitSpeedY: (Math.random() * 0.0008 + 0.0004) * (Math.random() > 0.5 ? 1 : -1),
-      orbitSpeedZ: (Math.random() * 0.0008 + 0.0004) * (Math.random() > 0.5 ? 1 : -1),
-    };
-
-    group.position.set(group.userData.baseX, group.userData.baseY, group.userData.baseZ);
-    return group;
-  }, []);
-
-  // Create High-Res Banner Texture
-  const createBannerTexture = (text: string) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return new THREE.CanvasTexture(canvas);
-
-    // Red gradient background
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    grad.addColorStop(0, '#e11d48');
-    grad.addColorStop(0.5, '#f43f5e');
-    grad.addColorStop(1, '#be123c');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Outer gold border
-    ctx.strokeStyle = '#ffea00';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(14, 14, canvas.width - 28, canvas.height - 28);
-
-    // Inner white border
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(26, 26, canvas.width - 52, canvas.height - 52);
-
-    // Student name text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 96px "Baloo 2", "Plus Jakarta Sans", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.75)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetX = 5;
-    ctx.shadowOffsetY = 5;
-
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 6);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    if (rendererRef.current) {
-      texture.anisotropy = rendererRef.current.capabilities.getMaxAnisotropy();
-    }
-    return texture;
-  };
-
-  // Drop 3D Banner with Fast Snappy Bounce (350ms)
-  const drop3DBanner = (ufo: THREE.Group, name: string, callback?: () => void) => {
-    const texture = createBannerTexture(name);
-    const geo = new THREE.PlaneGeometry(10, 2.5);
-    const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
-    const banner = new THREE.Mesh(geo, mat);
-
-    const pivot = new THREE.Group();
-    pivot.position.y = -0.3;
-    banner.position.y = -1.25;
-    pivot.add(banner);
-    pivot.scale.y = 0.001;
-
-    ufo.add(pivot);
-    ufo.userData.currentBanner = pivot;
-
-    playSound('drop');
-    new TWEEN.Tween(pivot.scale)
-      .to({ y: 1 }, 350)
-      .easing(TWEEN.Easing.Back.Out)
-      .onComplete(() => {
-        if (callback) callback();
-      })
-      .start();
-  };
-
-  // Populate UFOs in Scene
-  const populateUFOs = useCallback((count: number) => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-
-    ufosRef.current.forEach((ufo) => scene.remove(ufo));
-    ufosRef.current = [];
-
-    const visualCount = Math.min(Math.max(count, 8), 35);
-    for (let i = 0; i < visualCount; i++) {
-      const ufo = createSingleUFO(i);
-      scene.add(ufo);
-      ufosRef.current.push(ufo);
-    }
-  }, [createSingleUFO]);
-
-  // Setup Three.js Scene Lifecycle
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const container = canvasContainerRef.current;
-    if (!container) return;
-
-    // 1. Scene & Camera
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.set(0, 5, 25);
-    cameraRef.current = camera;
-
-    // 2. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    rendererRef.current = renderer;
-
-    container.innerHTML = '';
-    container.appendChild(renderer.domElement);
-
-    // 3. Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-    dirLight.position.set(10, 20, 10);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-
-    // 4. Initial UFOs
-    populateUFOs(allStudents.length || 15);
-
-    // 5. Animation Loop
-    const animate = (time: number) => {
-      animFrameIdRef.current = requestAnimationFrame(animate);
-      TWEEN.update(time);
-
-      const t = Date.now();
-      ufosRef.current.forEach((ufo) => {
-        if (ufo.userData.isActive) {
-          const ud = ufo.userData;
-          ufo.position.x = ud.baseX + Math.sin(t * ud.orbitSpeedX + ud.hoverOffset) * ud.orbitRadiusX;
-          ufo.position.y = ud.baseY + Math.sin(t * ud.orbitSpeedY + ud.hoverOffset) * ud.orbitRadiusY;
-          ufo.position.z = ud.baseZ + Math.cos(t * ud.orbitSpeedZ + ud.hoverOffset) * ud.orbitRadiusZ;
-
-          ufo.rotation.y += ud.rotSpeed;
-          ufo.rotation.z = Math.sin(t * ud.hoverSpeed * 0.5 + ud.hoverOffset) * 0.15;
-          ufo.rotation.x = Math.cos(t * ud.hoverSpeed * 0.5 + ud.hoverOffset) * 0.15;
-        }
-      });
-
-      renderer.render(scene, camera);
-    };
-    animFrameIdRef.current = requestAnimationFrame(animate);
-
-    // 6. Responsive Resize
-    const handleResize = () => {
-      if (!cameraRef.current || !rendererRef.current) return;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      cameraRef.current.aspect = w / h;
-      cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(w, h);
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-      renderer.dispose();
-      container.innerHTML = '';
-    };
-  }, [isOpen, allStudents.length, populateUFOs]);
-
-  // Main Call Student Logic (ULTRA-FAST & 100% NON-REPEAT)
+  // Main Call Student Logic (SIÊU NHẸ 2D & CHỐNG TRÙNG LẶP TUYỆT ĐỐI)
   const handleCallStudent = useCallback(() => {
     const now = Date.now();
-    if (now - lastCallTimeRef.current < 260) return; // Chống spam phím nhanh dưới 0.26s
+    if (now - lastCallTimeRef.current < 260) return; // Chống spam phím
     lastCallTimeRef.current = now;
 
     // Strict non-repeat check from synchronous Ref
@@ -408,8 +156,10 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     }
 
     setIsCalling(true);
-    // Ẩn tên học sinh cũ ngay khi bấm Gọi tiếp (giống vòng quay may mắn)
+    // Ẩn ngay tên cũ để học sinh hồi hộp chờ đĩa bay đáp xuống (chuẩn vòng quay may mắn)
     setCalledStudentName('');
+    setUfoState('swooping');
+    playSound('call');
 
     // 1. Pick next student randomly from uncalled candidates
     const rIndex = Math.floor(Math.random() * candidatePool.length);
@@ -421,84 +171,28 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       setCalledNames(Array.from(calledNamesRef.current));
     }
 
-    const startNextCall = () => {
-      playSound('call');
+    // 2D animation timing: 420ms lượn xuống, phát tia sáng và BÙM xuất hiện tên học sinh!
+    setTimeout(() => {
+      setUfoState('landed');
+      playSound('drop');
 
-      const scene = sceneRef.current;
-      const activeUFOs = ufosRef.current.filter((u) => u.userData.isActive);
-      let targetUFO: THREE.Group;
-
-      if (activeUFOs.length === 0) {
-        targetUFO = createSingleUFO(Math.floor(Math.random() * 10));
-        scene?.add(targetUFO);
-        ufosRef.current.push(targetUFO);
-      } else {
-        targetUFO = activeUFOs[Math.floor(Math.random() * activeUFOs.length)];
-      }
-
-      selectedUfoRef.current = targetUFO;
-      targetUFO.userData.isActive = false;
-
-      const targetPos = { x: 0, y: 7, z: 12 };
-      const currentRotY = targetUFO.rotation.y;
-      const targetRotY = Math.ceil(currentRotY / (Math.PI * 2)) * (Math.PI * 2) + Math.PI * 4;
-
-      // FAST SWOOP: 500ms
-      new TWEEN.Tween(targetUFO.rotation)
-        .to({ y: targetRotY, x: 0, z: 0 }, 500)
-        .easing(TWEEN.Easing.Quadratic.Out)
-        .start();
-
-      new TWEEN.Tween(targetUFO.position)
-        .to(targetPos, 500)
-        .easing(TWEEN.Easing.Cubic.Out)
-        .onComplete(() => {
-          // FAST BANNER DROP: 320ms
-          drop3DBanner(targetUFO, selectedName, () => {
-            playSound('tada');
-            // UFO đã đáp xuống đất -> CHỈ XUẤT HIỆN TÊN HỌC SINH (giống vòng quay may mắn)
-            setCalledStudentName(selectedName);
-            confetti({
-              particleCount: 160,
-              spread: 95,
-              origin: { y: 0.75 },
-              colors: ['#ff1744', '#ffea00', '#00e676', '#2979ff', '#d500f9', '#00e5ff'],
-              zIndex: 9999,
-            });
-            setIsCalling(false);
-          });
-        })
-        .start();
-    };
-
-    // Fast dismiss of previous UFO in parallel (instant exit)
-    const curUFO = selectedUfoRef.current;
-    if (curUFO) {
-      if (curUFO.userData.currentBanner) {
-        curUFO.remove(curUFO.userData.currentBanner);
-        curUFO.userData.currentBanner = null;
-      }
-
-      if (!allowRepeat) {
-        new TWEEN.Tween(curUFO.position)
-          .to({ y: 50, x: (Math.random() - 0.5) * 30, z: -50 }, 350)
-          .easing(TWEEN.Easing.Back.In)
-          .onComplete(() => {
-            sceneRef.current?.remove(curUFO);
-            ufosRef.current = ufosRef.current.filter((u) => u !== curUFO);
-          })
-          .start();
-      } else {
-        curUFO.userData.isActive = true;
-      }
-      startNextCall();
-    } else {
-      startNextCall();
-    }
-  }, [allStudents, allowRepeat, playSound, showToast, createSingleUFO]);
+      setTimeout(() => {
+        setCalledStudentName(selectedName);
+        playSound('tada');
+        confetti({
+          particleCount: 150,
+          spread: 95,
+          origin: { y: 0.65 },
+          colors: ['#ff1744', '#ffea00', '#00e676', '#2979ff', '#d500f9', '#00e5ff'],
+          zIndex: 9999,
+        });
+        setIsCalling(false);
+      }, 150);
+    }, 420);
+  }, [allStudents, allowRepeat, playSound, showToast]);
 
   // Keyboard shortcuts (Space & Enter) and Mouse shortcuts (Right-click & Middle-click)
-  // to call "Bạn tiếp theo" continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
+  // to call "Gọi tiếp" continuously (STRICTLY DEDICATED TO CALLING STUDENTS ONLY)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -527,7 +221,6 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         e.stopPropagation();
 
         // STRICT: Dedicated to calling students only.
-        // Blur any focused element (buttons, links) so Space/Enter never triggers other buttons
         if (document.activeElement && document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
@@ -538,7 +231,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       }
     };
 
-    // Right-click: trigger "Bạn tiếp theo" and block browser context menu
+    // Right-click: trigger "Gọi tiếp" and block browser context menu
     const handleContextMenu = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && target.closest('#bg-menu-container')) return;
@@ -551,7 +244,7 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
       handleCallStudent();
     };
 
-    // Middle-click (scroll wheel click, e.button === 1): trigger "Bạn tiếp theo" and block autoscroll
+    // Middle-click (scroll wheel click, e.button === 1): trigger "Gọi tiếp" and block autoscroll
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button === 1) {
         e.preventDefault();
@@ -579,35 +272,73 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
     calledNamesRef.current.clear();
     setCalledNames([]);
     setCalledStudentName('');
-    populateUFOs(allStudents.length);
+    setUfoState('idle');
     showToast('Đã khôi phục toàn bộ danh sách học sinh!', 'success');
-
-    if (selectedUfoRef.current && sceneRef.current) {
-      sceneRef.current.remove(selectedUfoRef.current);
-      ufosRef.current = ufosRef.current.filter((u) => u !== selectedUfoRef.current);
-      selectedUfoRef.current = null;
-    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black select-none font-sans">
-      {/* 3D Canvas Background Container */}
+    <div className="fixed inset-0 z-50 overflow-hidden select-none font-sans bg-slate-950">
+      {/* 2D Keyframe Styles for Butter-Smooth 60fps Animations */}
+      <style>{`
+        @keyframes ufoHover {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-14px) rotate(2deg); }
+        }
+        @keyframes ufoMiniHover {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-10px) translateX(10px); }
+        }
+        @keyframes beamGlow {
+          0%, 100% { opacity: 0.85; transform: scaleX(1); }
+          50% { opacity: 1; transform: scaleX(1.05); }
+        }
+      `}</style>
+
+      {/* 2D Background Canvas / Layer (Siêu nhẹ, 0% CPU khi tĩnh) */}
       <div
-        ref={canvasContainerRef}
-        className="absolute inset-0 z-0 bg-[#87CEEB] transition-all duration-700"
+        className="absolute inset-0 z-0 bg-[#87CEEB] transition-all duration-700 overflow-hidden"
         style={{
-          backgroundImage: bgImage ? `url('${bgImage}')` : undefined,
+          backgroundImage: bgImage
+            ? `url('${bgImage}')`
+            : 'radial-gradient(ellipse at top, #1e3a8a 0%, #090a1a 100%)',
           backgroundSize: '100% 100%',
-          backgroundPosition: 'bottom center',
+          backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
-      />
+      >
+        {/* Sao lấp lánh và mây 2D chuyển động nhẹ nhàng */}
+        <div className="absolute inset-0 pointer-events-none opacity-60">
+          <div className="absolute top-[10%] left-[15%] w-1.5 h-1.5 bg-yellow-200 rounded-full animate-ping duration-1000" />
+          <div className="absolute top-[25%] right-[20%] w-2 h-2 bg-cyan-200 rounded-full animate-pulse duration-700" />
+          <div className="absolute top-[18%] left-[65%] w-1.5 h-1.5 bg-pink-200 rounded-full animate-ping duration-1000 delay-300" />
+          <div className="absolute top-[40%] left-[8%] w-2 h-2 bg-white rounded-full animate-pulse duration-1000 delay-500" />
+          <div className="absolute top-[35%] right-[10%] w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping duration-700 delay-200" />
+          <div className="absolute bottom-[20%] left-[25%] w-2 h-2 bg-emerald-200 rounded-full animate-pulse duration-1000" />
+          <div className="absolute bottom-[25%] right-[30%] w-1.5 h-1.5 bg-amber-200 rounded-full animate-ping duration-1000 delay-400" />
+        </div>
 
-      {/* Top Header Controls (Always accessible) */}
+        {/* Các đĩa bay mini 2D lượn lờ ở hậu cảnh tạo không gian sinh động */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40">
+          <div className="absolute top-16 left-[10%] scale-50" style={{ animation: 'ufoMiniHover 5.5s ease-in-out infinite' }}>
+            <MiniUfo2D color="#ec4899" />
+          </div>
+          <div className="absolute top-24 right-[12%] scale-60" style={{ animation: 'ufoMiniHover 6.5s ease-in-out infinite 1s' }}>
+            <MiniUfo2D color="#3b82f6" />
+          </div>
+          <div className="absolute top-44 left-[28%] scale-40" style={{ animation: 'ufoMiniHover 7s ease-in-out infinite 2s' }}>
+            <MiniUfo2D color="#10b981" />
+          </div>
+          <div className="absolute top-36 right-[26%] scale-45" style={{ animation: 'ufoMiniHover 6s ease-in-out infinite 1.5s' }}>
+            <MiniUfo2D color="#f59e0b" />
+          </div>
+        </div>
+      </div>
+
+      {/* Top Header Controls */}
       <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
-        {/* Nút đổi phông nền nhanh (nhỏ gọn, không làm gián đoạn game) */}
+        {/* Nút đổi phông nền nhanh (nhỏ gọn) */}
         <div id="bg-menu-container" className="relative">
           <button
             type="button"
@@ -699,11 +430,10 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         </div>
       )}
 
-      {/* MAIN IN-GAME UI LAYER (DIRECT ENTRY - NO INTERMEDIATE SETUP SCREEN) */}
+      {/* MAIN 2D IN-GAME UI LAYER */}
       <div className="absolute inset-0 z-20 pointer-events-none p-4 md:p-6 flex flex-col justify-between">
-        {/* Top In-Game Bar */}
+        {/* Top In-Game Bar: Class Info & Call Stats */}
         <div className="flex items-start justify-between">
-          {/* Left Control Card: Class Info & Call Stats */}
           <div className="pointer-events-auto bg-white/95 p-4 rounded-2xl shadow-2xl backdrop-blur-md border-2 border-blue-200 w-auto min-w-[210px]">
             <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-200">
               <Users size={16} className="text-blue-600 shrink-0" />
@@ -754,19 +484,66 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
           </div>
         </div>
 
-        {/* SPOTLIGHT HUD CARD: CHỈ HIỆN DUY NHẤT TÊN HỌC SINH ĐƯỢC GỌI (GIỐNG VÒNG QUAY MAY MẮN) */}
-        {calledStudentName && (
-          <div className="pointer-events-auto self-center flex flex-col items-center animate-scaleUp">
-            {/* Giant Name Ribbon Banner Card */}
-            <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-1.5 rounded-3xl shadow-[0_12px_45px_rgba(225,29,72,0.75)] border-4 border-yellow-300">
-              <div className="bg-slate-950/90 backdrop-blur-md px-10 md:px-20 py-4 md:py-6 rounded-[22px] flex items-center justify-center text-center">
-                <span className="text-3xl md:text-6xl font-black text-white tracking-wide drop-shadow-[0_4px_24px_rgba(255,255,255,0.95)]">
-                  {calledStudentName}
-                </span>
+        {/* 2D UFO STAGE (MÔ HÌNH ĐĨA BAY 2D SIÊU MƯỢT & TIA SÁNG CHÓP NÓN) */}
+        <div className="flex-1 flex flex-col items-center justify-center -mt-8 relative pointer-events-none">
+          {/* ĐĨA BAY 2D CHÍNH */}
+          <div
+            className={`transition-all duration-400 ease-out transform ${
+              ufoState === 'swooping'
+                ? 'scale-110 -translate-y-6 rotate-2'
+                : 'scale-100 translate-y-0'
+            }`}
+            style={{
+              animation: ufoState === 'swooping' ? undefined : 'ufoHover 3.6s ease-in-out infinite',
+            }}
+          >
+            <MainUfo2D isCalling={isCalling || ufoState === 'swooping'} />
+          </div>
+
+          {/* CHÙM TIA SÁNG CHIẾU TỪ UFO XUỐNG KHI ĐÁP HOẶC CÓ TÊN (TRACTOR BEAM) */}
+          <div
+            className={`transition-all duration-500 origin-top overflow-hidden flex flex-col items-center -mt-2 ${
+              calledStudentName || ufoState === 'landed' || ufoState === 'swooping'
+                ? 'opacity-100 max-h-[320px] scale-y-100'
+                : 'opacity-0 max-h-0 scale-y-0'
+            }`}
+            style={{
+              animation:
+                calledStudentName || ufoState === 'landed'
+                  ? 'beamGlow 2s ease-in-out infinite'
+                  : undefined,
+            }}
+          >
+            {/* Tia sáng hình nón 2D phát quang rực rỡ */}
+            <svg
+              className="w-[280px] md:w-[460px] h-[90px] md:h-[130px]"
+              viewBox="0 0 400 120"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="beamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fef08a" stopOpacity="0.85" />
+                  <stop offset="40%" stopColor="#38bdf8" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+              <polygon points="170,0 230,0 395,120 5,120" fill="url(#beamGrad)" />
+            </svg>
+          </div>
+
+          {/* KHUNG TÊN HỌC SINH 2D: CHỈ HIỆN DUY NHẤT TÊN KHI ĐÁP XUỐNG (CHUẨN VÒNG QUAY MAY MẮN) */}
+          {calledStudentName && (
+            <div className="pointer-events-auto flex flex-col items-center animate-[scaleUp_0.35s_cubic-bezier(0.175,0.885,0.32,1.275)] -mt-6 z-30">
+              <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 p-1.5 md:p-2 rounded-3xl shadow-[0_12px_50px_rgba(244,63,94,0.85)] border-4 border-yellow-300">
+                <div className="bg-slate-950/90 backdrop-blur-md px-10 md:px-24 py-4 md:py-6 rounded-[20px] flex items-center justify-center text-center">
+                  <span className="text-3xl md:text-6xl font-black text-white tracking-wide drop-shadow-[0_4px_24px_rgba(255,255,255,0.95)]">
+                    {calledStudentName}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Bottom Big Calling Button */}
         <div className="pointer-events-auto self-center mb-6">
@@ -791,5 +568,132 @@ export const UfoCallerModal: React.FC<UfoCallerModalProps> = ({
         </div>
       </div>
     </div>
+  );
+};
+
+// -------------------------------------------------------------
+// COMPONENT ĐĨA BAY 2D CHÍNH (VECTOR SVG SIÊU SẮC NÉT & CỰC NHẸ)
+// -------------------------------------------------------------
+const MainUfo2D: React.FC<{ isCalling: boolean }> = ({ isCalling }) => {
+  return (
+    <div className="relative w-56 md:w-80 h-32 md:h-44 drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
+      <svg viewBox="0 0 320 180" className="w-full h-full overflow-visible">
+        <defs>
+          {/* Ánh kim đĩa bay */}
+          <linearGradient id="hullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="35%" stopColor="#94a3b8" />
+            <stop offset="70%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Vành đĩa bay màu neon */}
+          <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ec4899" />
+            <stop offset="30%" stopColor="#8b5cf6" />
+            <stop offset="70%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+
+          {/* Buồng lái vòm kính */}
+          <linearGradient id="cockpitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.85" />
+          </linearGradient>
+
+          {/* Đèn gầm UFO */}
+          <radialGradient id="thrusterGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef08a" />
+            <stop offset="60%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#ea580c" />
+          </radialGradient>
+        </defs>
+
+        {/* 1. Đèn đẩy động cơ dưới đáy */}
+        <ellipse
+          cx="160"
+          cy="148"
+          rx="50"
+          ry="12"
+          fill="url(#thrusterGrad)"
+          className={isCalling ? 'animate-ping duration-300' : 'animate-pulse'}
+        />
+
+        {/* 2. Thân đĩa bay đáy */}
+        <ellipse cx="160" cy="130" rx="145" ry="32" fill="#1e293b" />
+
+        {/* 3. Vành đĩa bay chính (Metallic Saucer Body) */}
+        <ellipse cx="160" cy="120" rx="150" ry="35" fill="url(#hullGrad)" stroke="#f8fafc" strokeWidth="2.5" />
+
+        {/* 4. Dải đèn viền màu rực rỡ */}
+        <ellipse cx="160" cy="124" rx="138" ry="18" fill="none" stroke="url(#rimGrad)" strokeWidth="6" />
+
+        {/* Các bóng đèn LED phát sáng nhấp nháy trên vành đĩa bay */}
+        {[35, 75, 120, 160, 200, 245, 285].map((x, i) => (
+          <circle
+            key={i}
+            cx={x}
+            cy={123 + Math.sin((i / 6) * Math.PI) * 4}
+            r="5"
+            fill={i % 2 === 0 ? '#fde047' : '#38bdf8'}
+            className="animate-pulse"
+            style={{ animationDelay: `${i * 120}ms` }}
+          />
+        ))}
+
+        {/* 5. Buồng lái vòm kính trong suốt */}
+        <path
+          d="M 90,105 C 90,30 230,30 230,105 Z"
+          fill="url(#cockpitGrad)"
+          stroke="#ffffff"
+          strokeWidth="3"
+        />
+
+        {/* Ánh phản chiếu trên vòm kính */}
+        <path
+          d="M 115,85 C 115,50 150,45 165,45"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="4"
+          strokeLinecap="round"
+          opacity="0.8"
+        />
+
+        {/* 6. Chú Người Ngoài Hành Tinh (Cute Alien) bên trong buồng lái */}
+        <g transform="translate(130, 48)">
+          {/* Đầu Alien màu xanh lá */}
+          <ellipse cx="30" cy="35" rx="20" ry="18" fill="#84cc16" stroke="#4d7c0f" strokeWidth="1.5" />
+
+          {/* Ăng-ten */}
+          <line x1="30" y1="18" x2="30" y2="6" stroke="#84cc16" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="30" cy="4" r="4.5" fill="#facc15" className="animate-ping" />
+
+          {/* Mắt to màu đen có đốm sáng */}
+          <ellipse cx="22" cy="34" rx="6" ry="8" fill="#0f172a" />
+          <circle cx="20" cy="32" r="2" fill="#ffffff" />
+
+          <ellipse cx="38" cy="34" rx="6" ry="8" fill="#0f172a" />
+          <circle cx="36" cy="32" r="2" fill="#ffffff" />
+
+          {/* Nụ cười thân thiện */}
+          <path d="M 25,44 Q 30,48 35,44" fill="none" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
+// -------------------------------------------------------------
+// COMPONENT ĐĨA BAY MINI HẬU CẢNH 2D (TẠO KHÔNG GIAN BẦU TRỜI)
+// -------------------------------------------------------------
+const MiniUfo2D: React.FC<{ color: string }> = ({ color }) => {
+  return (
+    <svg width="100" height="50" viewBox="0 0 100 50">
+      <ellipse cx="50" cy="30" rx="45" ry="12" fill={color} opacity="0.8" />
+      <ellipse cx="50" cy="27" rx="48" ry="10" fill="#cbd5e1" />
+      <path d="M 32,25 C 32,5 68,5 68,25 Z" fill="#7dd3fc" opacity="0.8" />
+      <circle cx="50" cy="18" r="4" fill="#a3e635" />
+    </svg>
   );
 };
