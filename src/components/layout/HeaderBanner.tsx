@@ -21,7 +21,6 @@ interface HeaderBannerProps {
   onEditClassInfo: () => void;
   onOpenWheelModal: () => void;
   onOpenGameshowWheelModal?: () => void;
-  onOpenUfoCallerModal?: () => void;
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
   onOpenFindCodeModal?: () => void;
@@ -50,7 +49,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onEditClassInfo,
   onOpenWheelModal,
   onOpenGameshowWheelModal,
-  onOpenUfoCallerModal,
   onOpenLeaderboardModal,
   onOpenSpotlightModal,
   onOpenFindCodeModal,
@@ -110,19 +108,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             >
               <span className="text-base">🎡</span>
               <span>Vòng quay may mắn</span>
-            </button>
-          )}
-
-          {/* Nút Trò chơi Gọi tên học sinh UFO */}
-          {onOpenUfoCallerModal && (
-            <button
-              type="button"
-              onClick={onOpenUfoCallerModal}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-600 hover:from-cyan-300 hover:to-indigo-500 text-white font-black text-xs md:text-sm border-2 border-white shadow-xl shadow-cyan-500/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              title="Trò chơi Gọi Tên Bằng UFO 3D ngoài không gian cực kỳ hấp dẫn"
-            >
-              <span className="text-base">🛸</span>
-              <span>Gọi tên UFO</span>
             </button>
           )}
 

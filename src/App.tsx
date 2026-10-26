@@ -10,7 +10,6 @@ import { ClassManagerModal } from './features/classroom/components/ClassManagerM
 import { ClassPenaltyModal } from './features/classroom/components/ClassPenaltyModal';
 import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { GameshowLuckyWheelModal } from './features/lucky-wheel/components/GameshowLuckyWheelModal';
-import { UfoCallerModal } from './features/ufo-caller/components/UfoCallerModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
 import { SpotlightCeremonyModal } from './features/leaderboard/components/SpotlightCeremonyModal';
 import { ImportModal } from './features/import-export/components/ImportModal';
@@ -64,7 +63,6 @@ export const App: React.FC = () => {
   const [isClassPenaltyModalOpen, setIsClassPenaltyModalOpen] = useState(false);
   const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
   const [isGameshowWheelOpen, setIsGameshowWheelOpen] = useState(false);
-  const [isUfoCallerOpen, setIsUfoCallerOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isSpotlightModalOpen, setIsSpotlightModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -127,7 +125,6 @@ export const App: React.FC = () => {
         onEditClassInfo={handleEditClassInfo}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
         onOpenGameshowWheelModal={() => setIsGameshowWheelOpen(true)}
-        onOpenUfoCallerModal={() => setIsUfoCallerOpen(true)}
         onOpenLeaderboardModal={() => {
           setCurrentFilter('top');
           setIsLeaderboardModalOpen(true);
@@ -229,14 +226,6 @@ export const App: React.FC = () => {
       <GameshowLuckyWheelModal
         isOpen={isGameshowWheelOpen}
         onClose={() => setIsGameshowWheelOpen(false)}
-        students={students}
-        className={currentClass.name}
-        onApplyBonusScore={updateScore}
-      />
-
-      <UfoCallerModal
-        isOpen={isUfoCallerOpen}
-        onClose={() => setIsUfoCallerOpen(false)}
         students={students}
         className={currentClass.name}
         onApplyBonusScore={updateScore}
