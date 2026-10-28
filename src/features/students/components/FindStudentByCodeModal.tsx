@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student, AttendanceStatus } from '../../../types';
+import { hasPenaltyNote } from '../../../constants/classroomData';
 import { 
   Hash, 
   Search, 
@@ -100,6 +101,8 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
   const activeStudent = useMemo(() => {
     return students.find((s) => s.id === selectedStudentId) || matchedStudents[0] || null;
   }, [students, selectedStudentId, matchedStudents]);
+
+  const isPenalized = activeStudent ? hasPenaltyNote(activeStudent.lastNote) : false;
 
   if (!isOpen) return null;
 
@@ -313,6 +316,29 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Special: Cơ hội sửa sai (Gỡ điểm phạt) */}
+            {isPenalized && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border-2 border-emerald-400 shadow-sm flex items-center justify-between gap-3 animate-in fade-in duration-200">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                    <span className="text-base">🌱</span>
+                    <span>CƠ HỘI SỬA SAI (GỠ ĐIỂM PHẠT)</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-800 font-semibold truncate mt-0.5">
+                    Lỗi gần nhất: <span className="text-rose-600 font-bold">"{activeStudent.lastNote}"</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleQuickAddScore(2, 'Cơ hội sửa sai (Đã gỡ lỗi)')}
+                  className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md transition-all active:scale-95 flex items-center gap-1"
+                  title="Cho học sinh cơ hội sửa sai: Cộng lại 2 điểm và gỡ vi phạm"
+                >
+                  <span>Gỡ lỗi (+2đ) ✨</span>
+                </button>
+              </div>
+            )}
 
             {/* Action Group 2: Quick Score + Detailed Score */}
             <div>

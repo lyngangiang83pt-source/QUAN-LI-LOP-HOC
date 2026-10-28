@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
-import { BONUS_CRITERIA, PENALTY_CRITERIA } from '../../../constants/classroomData';
+import { BONUS_CRITERIA, PENALTY_CRITERIA, hasPenaltyNote } from '../../../constants/classroomData';
 import { PlusCircle, MinusCircle, RotateCcw } from 'lucide-react';
 
 interface ScoreModalProps {
@@ -26,6 +26,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
 
   if (!student) return null;
 
+  const isPenalized = hasPenaltyNote(student.lastNote);
   const criteriaList = mode === 'plus' ? BONUS_CRITERIA : PENALTY_CRITERIA;
 
   const handleSelectCriteria = (pts: number, label: string) => {
@@ -61,10 +62,35 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
         <span className="text-rose-600 font-extrabold">(Mã: {student.id})</span>
       </div>
 
+      {/* Special: Cơ hội sửa sai (Gỡ điểm phạt ngay trong tiết) */}
+      {isPenalized && (
+        <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border-2 border-emerald-400 shadow-sm flex items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+              <span className="text-base">🌱</span>
+              <span>CƠ HỘI SỬA SAI (GỠ ĐIỂM PHẠT)</span>
+            </div>
+            <div className="text-[11px] text-emerald-800 font-semibold truncate mt-0.5">
+              Lỗi gần nhất: <span className="text-rose-600 font-bold">"{student.lastNote}"</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleSelectCriteria(2, 'Cơ hội sửa sai (Đã gỡ lỗi)')}
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md transition-all active:scale-95 flex items-center gap-1"
+            title="Trao cơ hội sửa sai: Hoàn lại 2 điểm và xóa vi phạm cho học sinh"
+          >
+            <span>Gỡ lỗi (+2đ) ✨</span>
+          </button>
+        </div>
+      )}
+
       {/* Fast Criteria List */}
       <div className="grid grid-cols-2 gap-2 mb-5">
         {criteriaList.map((c, idx) => {
           const isHighlight = Math.abs(c.pts) >= 10;
+          const isOpportunity = c.label.includes('Cơ hội sửa sai');
+          const isFullWidth = isHighlight || isOpportunity;
           return (
             <button
               key={idx}
@@ -72,7 +98,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
               onClick={() => handleSelectCriteria(c.pts, c.label)}
               title={`${c.label} (${c.pts > 0 ? `+${c.pts}` : c.pts}đ)`}
               className={`p-3 rounded-xl border text-left font-bold text-xs transition-all active:scale-95 flex items-center justify-between shadow-2xs ${
-                isHighlight
+                isFullWidth
                   ? 'col-span-2 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-100 hover:to-teal-100 border-emerald-300 text-emerald-950 ring-1 ring-emerald-200'
                   : mode === 'plus'
                   ? 'bg-emerald-50/60 hover:bg-emerald-100/80 border-emerald-200 text-emerald-900'
@@ -84,7 +110,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
                 <span className="truncate">{c.label}</span>
               </div>
               <span className={`text-xs px-2 py-0.5 rounded-md font-extrabold shrink-0 ${
-                isHighlight
+                isFullWidth
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : mode === 'plus' ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
               }`}>

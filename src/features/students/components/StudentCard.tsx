@@ -3,6 +3,7 @@ import { Student, AttendanceStatus } from '../../../types';
 import { Plus, Minus, Trash2, RotateCcw } from 'lucide-react';
 import { FloatingStarsEffect } from './FloatingStarsEffect';
 import { audioService } from '../../../services/audioService';
+import { hasPenaltyNote } from '../../../constants/classroomData';
 
 interface StudentCardProps {
   student: Student;
@@ -10,6 +11,7 @@ interface StudentCardProps {
   animationsEnabled?: boolean;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
+  onApplyScore?: (studentId: string, pointDiff: number, reason: string) => void;
   onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
 }
@@ -20,10 +22,12 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,
+  onApplyScore,
   onResetStudentScore,
   onDeleteStudent,
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
+  const isPenalized = hasPenaltyNote(student.lastNote);
 
   const [starAnimKey, setStarAnimKey] = useState<number>(0);
   const [pointDiff, setPointDiff] = useState<number>(0);
@@ -211,10 +215,28 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         </div>
       </div>
 
-      {/* Last Note / Reason */}
+      {/* Last Note / Reason & Quick Cơ hội sửa sai button */}
       {student.lastNote && (
-        <div className="text-[11px] text-slate-500 font-medium truncate mt-1.5" title={student.lastNote}>
-          📝 {student.lastNote}
+        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px]">
+          <div
+            className={`truncate font-medium flex-1 ${
+              isPenalized ? 'text-rose-600 font-bold' : 'text-slate-500'
+            }`}
+            title={student.lastNote}
+          >
+            {isPenalized ? '⚠️ ' : '📝 '}
+            {student.lastNote}
+          </div>
+          {isPenalized && onApplyScore && (
+            <button
+              type="button"
+              onClick={() => onApplyScore(student.id, 2, 'Cơ hội sửa sai (Đã gỡ lỗi)')}
+              className="shrink-0 px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 font-black text-[10px] transition-all active:scale-95 shadow-2xs flex items-center gap-1"
+              title="Cho học sinh cơ hội sửa sai: Hoàn lại +2đ và xóa vi phạm"
+            >
+              <span>🌱 Gỡ lỗi (+2đ)</span>
+            </button>
+          )}
         </div>
       )}
     </div>

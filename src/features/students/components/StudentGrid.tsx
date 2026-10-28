@@ -11,6 +11,7 @@ interface StudentGridProps {
   animationsEnabled?: boolean;
   onToggleAttendance: (id: string, status: AttendanceStatus) => void;
   onOpenScoreModal: (student: Student, type: 'plus' | 'minus') => void;
+  onApplyScore?: (studentId: string, pointDiff: number, reason: string) => void;
   onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
   onOpenImportModal: () => void;
@@ -25,6 +26,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   animationsEnabled = true,
   onToggleAttendance,
   onOpenScoreModal,
+  onApplyScore,
   onResetStudentScore,
   onDeleteStudent,
   onOpenImportModal,
@@ -100,6 +102,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
           animationsEnabled={animationsEnabled}
           onToggleAttendance={onToggleAttendance}
           onOpenScoreModal={onOpenScoreModal}
+          onApplyScore={onApplyScore}
           onResetStudentScore={onResetStudentScore}
           onDeleteStudent={onDeleteStudent}
         />

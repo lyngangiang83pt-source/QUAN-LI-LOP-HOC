@@ -1,6 +1,7 @@
 import { ClassItem, Criteria, PrizeItem } from '../types';
 
 export const BONUS_CRITERIA: Criteria[] = [
+  { icon: '🌱', label: 'Cơ hội sửa sai (Gỡ lỗi)', pts: 2 },
   { icon: '🙋‍♂️', label: 'Phát biểu đúng', pts: 1 },
   { icon: '🌟', label: 'Ý tưởng sáng tạo', pts: 2 },
   { icon: '🏆', label: 'Làm bài xuất sắc', pts: 3 },
@@ -9,6 +10,11 @@ export const BONUS_CRITERIA: Criteria[] = [
   { icon: '🧹', label: 'Trực nhật tốt', pts: 1 },
   { icon: '📦', label: 'Thực hiện Sản phẩm Đạt', pts: 10 },
 ];
+
+export const hasPenaltyNote = (note?: string): boolean => {
+  if (!note) return false;
+  return note.includes('(-') || note.includes('vi phạm') || note.includes('phạt') || note.includes('Trừ');
+};
 
 export const PENALTY_CRITERIA: Criteria[] = [
   { icon: '⏰', label: 'Đi muộn', pts: -2 },

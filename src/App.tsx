@@ -173,6 +173,7 @@ export const App: React.FC = () => {
         animationsEnabled={animationsEnabled}
         onToggleAttendance={toggleAttendance}
         onOpenScoreModal={handleOpenScoreModal}
+        onApplyScore={updateScore}
         onResetStudentScore={resetStudentScore}
         onDeleteStudent={deleteStudent}
         onOpenImportModal={() => setIsImportModalOpen(true)}
