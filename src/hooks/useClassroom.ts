@@ -433,7 +433,7 @@ export const useClassroom = () => {
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const deductAllClassPenalty = useCallback((
-    penaltyPts: number = 1,
+    penaltyPts: number = 2,
     reason: string = 'Nhắc nhở cả lớp',
     targetStudentIds?: string[],
     scopeName?: string

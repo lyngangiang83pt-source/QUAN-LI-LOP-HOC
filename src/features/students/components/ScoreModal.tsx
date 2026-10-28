@@ -22,7 +22,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
   onResetScore,
 }) => {
   const [customReason, setCustomReason] = useState('');
-  const [customPoints, setCustomPoints] = useState(1);
+  const [customPoints, setCustomPoints] = useState(mode === 'minus' ? 2 : 1);
 
   if (!student) return null;
 
@@ -39,7 +39,7 @@ export const ScoreModal: React.FC<ScoreModalProps> = ({
     const pts = mode === 'plus' ? Math.abs(customPoints) : -Math.abs(customPoints);
     onApplyScore(student.id, pts, reason);
     setCustomReason('');
-    setCustomPoints(1);
+    setCustomPoints(mode === 'minus' ? 2 : 1);
     onClose();
   };
 

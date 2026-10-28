@@ -134,7 +134,7 @@ export const App: React.FC = () => {
         onOpenImportScoreModal={() => setIsImportScoreModalOpen(true)}
         onMarkAllPresent={markAllPresent}
         onAddAllClassBonus={() => addAllClassBonus(2, 'Thưởng cả lớp')}
-        onDeductAllClassPenalty={() => deductAllClassPenalty(1, 'Nhắc nhở cả lớp')}
+        onDeductAllClassPenalty={() => deductAllClassPenalty(2, 'Nhắc nhở cả lớp')}
         onOpenClassPenaltyModal={() => setIsClassPenaltyModalOpen(true)}
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}

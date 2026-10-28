@@ -381,17 +381,19 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                   <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleQuickAddScore(-1, 'Mất trật tự')}
+                      onClick={() => handleQuickAddScore(-2, 'Mất trật tự')}
                       className="py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      title="Mất trật tự (-2đ)"
                     >
-                      -1 ⚠️
+                      -2 ⚠️
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleQuickAddScore(-2, 'Không làm bài')}
+                      onClick={() => handleQuickAddScore(-2, 'Quên bài tập')}
                       className="py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition-transform active:scale-95 shadow-2xs"
+                      title="Quên bài tập (-2đ)"
                     >
-                      -2 ❌
+                      -2 📝
                     </button>
                   </div>
                   <button

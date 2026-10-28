@@ -11,10 +11,12 @@ export const BONUS_CRITERIA: Criteria[] = [
 ];
 
 export const PENALTY_CRITERIA: Criteria[] = [
-  { icon: '⏰', label: 'Đi muộn', pts: -1 },
-  { icon: '📢', label: 'Mất trật tự', pts: -1 },
+  { icon: '⏰', label: 'Đi muộn', pts: -2 },
+  { icon: '📢', label: 'Mất trật tự', pts: -2 },
   { icon: '📝', label: 'Quên bài tập', pts: -2 },
-  { icon: '📱', label: 'Làm việc riêng', pts: -1 },
+  { icon: '📱', label: 'Làm việc riêng', pts: -2 },
+  { icon: '🔇', label: 'Không tập trung', pts: -2 },
+  { icon: '🧹', label: 'Chưa trực nhật', pts: -2 },
 ];
 
 export const DEFAULT_PRIZE_SLICES: PrizeItem[] = [

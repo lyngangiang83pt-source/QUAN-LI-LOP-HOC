@@ -45,12 +45,12 @@ const SCOPE_OPTIONS: ScopeOption[] = [
 ];
 
 const DEFAULT_PENALTY_REASONS = [
-  { icon: '📢', label: 'Mất trật tự', defaultPts: 1 },
-  { icon: '📝', label: 'Chưa làm bài tập', defaultPts: 1 },
-  { icon: '🔇', label: 'Không tập trung nghe giảng', defaultPts: 1 },
-  { icon: '⏰', label: 'Vào tiết muộn', defaultPts: 1 },
-  { icon: '📱', label: 'Làm việc riêng trong giờ', defaultPts: 1 },
-  { icon: '🧹', label: 'Chưa trực nhật / vệ sinh lớp', defaultPts: 1 },
+  { icon: '📢', label: 'Mất trật tự', defaultPts: 2 },
+  { icon: '📝', label: 'Chưa làm bài tập', defaultPts: 2 },
+  { icon: '🔇', label: 'Không tập trung nghe giảng', defaultPts: 2 },
+  { icon: '⏰', label: 'Vào tiết muộn', defaultPts: 2 },
+  { icon: '📱', label: 'Làm việc riêng trong giờ', defaultPts: 2 },
+  { icon: '🧹', label: 'Chưa trực nhật / vệ sinh lớp', defaultPts: 2 },
 ];
 
 export const ClassPenaltyModal: React.FC<ClassPenaltyModalProps> = ({
@@ -63,7 +63,7 @@ export const ClassPenaltyModal: React.FC<ClassPenaltyModalProps> = ({
   const [selectedScope, setSelectedScope] = useState<ScopeType>('all');
   const [customSelectedIds, setCustomSelectedIds] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState('');
-  const [customPoints, setCustomPoints] = useState(1);
+  const [customPoints, setCustomPoints] = useState(2);
 
   // Divide class into 4 Tổ based on student count
   const groups = useMemo(() => {
@@ -156,10 +156,10 @@ export const ClassPenaltyModal: React.FC<ClassPenaltyModalProps> = ({
   const handleApplyCustomForm = (e: React.FormEvent) => {
     e.preventDefault();
     const reason = customReason.trim() || 'Nhắc nhở học tập';
-    const pts = Math.max(1, Math.min(10, customPoints || 1));
+    const pts = Math.max(1, Math.min(10, customPoints || 2));
     executePenalty(reason, pts);
     setCustomReason('');
-    setCustomPoints(1);
+    setCustomPoints(2);
   };
 
   return (
