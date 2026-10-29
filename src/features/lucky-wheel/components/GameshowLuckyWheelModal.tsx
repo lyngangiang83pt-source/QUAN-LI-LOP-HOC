@@ -27,8 +27,9 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
   students = [],
   className,
 }) => {
-  // --- TÙY CHỌN DANH SÁCH HỌC SINH (CHỐNG TRÙNG LẶP) ---
+  // --- TÙY CHỌN DANH SÁCH HỌC SINH (CHỐNG TRÙNG LẶP / LẶP LẠI) ---
   const [filterMode, setFilterMode] = useState<'all' | 'present_only'>('present_only');
+  const [allowRepeatSpun, setAllowRepeatSpun] = useState<boolean>(false);
   const [spunStudentIds, setSpunStudentIds] = useState<string[]>([]);
   const [soundMuted, setSoundMuted] = useState<boolean>(audioService.isMuted());
 
@@ -51,17 +52,26 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
     rotationRef.current = rotation;
   }, [rotation]);
 
-  // Lọc danh sách học sinh tham gia vòng quay (Đã loại trừ học sinh trúng thưởng trước đó)
+  // Lọc chỉ các học sinh có điểm dưới 20 (< 20đ) theo yêu cầu sư phạm
+  const under20Students = useMemo(() => {
+    return students.filter((s) => (s.points || 0) < 20);
+  }, [students]);
+
+  // Lọc danh sách học sinh tham gia vòng quay (Đã lọc < 20đ và theo chuyên cần)
   const poolStudents = useMemo(() => {
     if (filterMode === 'present_only') {
-      return students.filter((s) => s.attendance !== 'absent');
+      return under20Students.filter((s) => s.attendance !== 'absent');
     }
-    return students;
-  }, [students, filterMode]);
+    return under20Students;
+  }, [under20Students, filterMode]);
 
+  // Danh sách các ứng viên thực tế trên vòng quay (Hỗ trợ tùy chọn Cho phép lặp lại học sinh)
   const activeCandidates = useMemo(() => {
+    if (allowRepeatSpun) {
+      return poolStudents;
+    }
     return poolStudents.filter((s) => !spunStudentIds.includes(s.id));
-  }, [poolStudents, spunStudentIds]);
+  }, [poolStudents, spunStudentIds, allowRepeatSpun]);
 
   const spunStudentsList = useMemo(() => {
     return spunStudentIds
@@ -229,7 +239,7 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                 </span>
               </h2>
               <p className="text-xs text-slate-300">
-                Lấy trực tiếp danh sách học sinh • Chống trùng lặp lượt quay
+                Chỉ quay học sinh dưới 20 điểm (&lt; 20đ) • {allowRepeatSpun ? 'Cho phép lặp lại học sinh' : 'Chống trùng lặp lượt quay'}
               </p>
             </div>
           </div>
@@ -269,7 +279,7 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-center">
           <div className="w-full flex flex-col items-center">
             
-            {/* Thanh lọc chế độ tham gia */}
+            {/* Thanh lọc chế độ tham gia & Tùy chọn lặp lại */}
             <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
               <div className="bg-slate-800/80 p-1 rounded-2xl border border-white/15 flex items-center gap-1 text-xs">
                 <button
@@ -282,7 +292,7 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                   }`}
                 >
                   <Users size={14} />
-                  <span>Chỉ có mặt & đi muộn ({students.filter((s) => s.attendance !== 'absent').length} em)</span>
+                  <span>Có mặt & đi muộn ({under20Students.filter((s) => s.attendance !== 'absent').length} em &lt; 20đ)</span>
                 </button>
 
                 <button
@@ -294,9 +304,23 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                       : 'text-slate-300 hover:text-white'
                   }`}
                 >
-                  <span>Toàn bộ danh sách ({students.length} em)</span>
+                  <span>Toàn bộ danh sách ({under20Students.length} em &lt; 20đ)</span>
                 </button>
               </div>
+
+              {/* Nút tích chọn: Lặp lại học sinh đã quay */}
+              <label className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-amber-400/30 hover:border-amber-400/60 cursor-pointer text-xs select-none transition-all shadow-sm">
+                <input
+                  type="checkbox"
+                  checked={allowRepeatSpun}
+                  onChange={(e) => setAllowRepeatSpun(e.target.checked)}
+                  disabled={isSpinning}
+                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 focus:ring-offset-slate-900 accent-amber-400 cursor-pointer"
+                />
+                <span className="font-bold text-amber-300 flex items-center gap-1">
+                  <span>🔁 Lặp lại học sinh đã quay</span>
+                </span>
+              </label>
 
               {/* Nút Chơi lại (Reset) */}
               <button
@@ -314,11 +338,11 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
             {/* Thông số lượt quay */}
             <div className="text-center mb-1 flex items-center gap-3 text-xs text-slate-300">
               <span className="font-semibold">
-                🎯 Còn lại trên vòng quay:{' '}
+                🎯 Trên vòng quay:{' '}
                 <strong className="text-amber-300 font-extrabold text-sm">
                   {activeCandidates.length}
                 </strong>{' '}
-                học sinh
+                học sinh &lt; 20đ {allowRepeatSpun ? '(chế độ lặp lại)' : '(chống trùng lặp)'}
               </span>
               <span>•</span>
               <span className="text-slate-400">
@@ -326,71 +350,95 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
               </span>
             </div>
 
-            {/* BÁNH XE GAMESHOW HTML5 CANVAS */}
-            <div className="relative">
-              <GameshowWheelCanvas
-                candidates={activeCandidates}
-                rotation={rotation}
-                needleAngle={needleAngle}
-                isSpinning={isSpinning}
-                onCenterClick={handleStartSpin}
-              />
-            </div>
-
-            {/* NÚT BẤM QUAY LỚN NỔI BẬT DƯỚI BÁNH XE */}
-            <div className="mt-4 flex flex-col items-center gap-2">
-              {activeCandidates.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={handleStartSpin}
-                  disabled={isSpinning}
-                  className={`group relative px-8 py-3.5 rounded-full font-black text-sm md:text-base tracking-wider uppercase transition-all duration-300 flex items-center gap-2 shadow-2xl ${
-                    isSpinning
-                      ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600'
-                      : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-slate-950 hover:from-amber-300 hover:to-orange-400 hover:scale-105 active:scale-95 shadow-amber-500/40 border-2 border-white'
-                  }`}
-                >
-                  {isSpinning ? (
-                    <>
-                      <Sparkles className="w-5 h-5 animate-spin text-amber-300" />
-                      <span>Đang quay hồi hộp... ✨</span>
-                    </>
-                  ) : (
-                    <>
-                      <Flame className="w-5 h-5 text-amber-950 animate-bounce" />
-                      <span>QUAY NGAY BÂY GIỜ</span>
-                      <Sparkles className="w-5 h-5 text-amber-950" />
-                    </>
-                  )}
-                </button>
-              ) : (
-                <div className="p-4 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-center animate-scaleUp">
-                  <p className="text-amber-200 font-bold text-sm mb-2">
-                    🎉 Tất cả học sinh trong danh sách đã được quay trúng!
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleResetSpun}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 mx-auto"
-                  >
-                    <RotateCcw size={16} />
-                    <span>Bấm vào đây để Chơi lại vòng mới</span>
-                  </button>
+            {/* CẢNH BÁO NẾU CẢ LỚP ĐỀU ĐÃ ĐẠT TRÊN 20 ĐIỂM */}
+            {under20Students.length === 0 ? (
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-2 border-amber-400/50 text-center max-w-lg mx-auto my-6 animate-scaleUp">
+                <div className="text-4xl mb-2">🎉👑✨</div>
+                <h3 className="text-amber-300 font-black text-lg mb-1">
+                  CẢ LỚP ĐỀU ĐÃ ĐẠT TỪ 20 ĐIỂM TRỞ LÊN!
+                </h3>
+                <p className="text-xs text-slate-200">
+                  Tất cả các bạn học sinh trong danh sách đều đã hoàn thành mục tiêu điểm số. Không còn học sinh nào dưới 20 điểm để quay.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* BÁNH XE GAMESHOW HTML5 CANVAS */}
+                <div className="relative">
+                  <GameshowWheelCanvas
+                    candidates={activeCandidates}
+                    rotation={rotation}
+                    needleAngle={needleAngle}
+                    isSpinning={isSpinning}
+                    onCenterClick={handleStartSpin}
+                  />
                 </div>
-              )}
-            </div>
 
-            {/* LỊCH SỬ CÁC HỌC SINH ĐÃ ĐƯỢC CHỌN (CHỐNG TRÙNG) */}
+                {/* NÚT BẤM QUAY LỚN NỔI BẬT DƯỚI BÁNH XE */}
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  {activeCandidates.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={handleStartSpin}
+                      disabled={isSpinning}
+                      className={`group relative px-8 py-3.5 rounded-full font-black text-sm md:text-base tracking-wider uppercase transition-all duration-300 flex items-center gap-2 shadow-2xl ${
+                        isSpinning
+                          ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600'
+                          : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-slate-950 hover:from-amber-300 hover:to-orange-400 hover:scale-105 active:scale-95 shadow-amber-500/40 border-2 border-white'
+                      }`}
+                    >
+                      {isSpinning ? (
+                        <>
+                          <Sparkles className="w-5 h-5 animate-spin text-amber-300" />
+                          <span>Đang quay hồi hộp... ✨</span>
+                        </>
+                      ) : (
+                        <>
+                          <Flame className="w-5 h-5 text-amber-950 animate-bounce" />
+                          <span>QUAY NGAY BÂY GIỜ</span>
+                          <Sparkles className="w-5 h-5 text-amber-950" />
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-center animate-scaleUp">
+                      <p className="text-amber-200 font-bold text-sm mb-2">
+                        🎉 Tất cả học sinh dưới 20 điểm trong danh sách đã được quay trúng!
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleResetSpun}
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2"
+                        >
+                          <RotateCcw size={16} />
+                          <span>Bấm vào đây để Chơi lại vòng mới</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAllowRepeatSpun(true)}
+                          className="px-4 py-2.5 rounded-xl bg-amber-500/30 hover:bg-amber-500/40 text-amber-200 border border-amber-400/30 font-bold text-xs transition-all flex items-center gap-1.5"
+                        >
+                          <span>🔁 Bật lặp lại học sinh</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* LỊCH SỬ CÁC HỌC SINH ĐÃ ĐƯỢC CHỌN */}
             {spunStudentsList.length > 0 && (
               <div className="w-full mt-5 pt-4 border-t border-white/10">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <CheckCircle2 size={14} className="text-emerald-400" />
-                  <span>Học sinh đã được gọi hôm nay ({spunStudentsList.length} em):</span>
+                  <span>Học sinh đã được gọi hôm nay ({spunStudentsList.length} lượt):</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                   {spunStudentsList.map((stu, index) => (
                     <span
-                      key={stu.id}
+                      key={`${stu.id}-${index}`}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-white/10 text-xs font-semibold text-slate-200 shadow-sm"
                     >
                       <span className="w-4 h-4 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold flex items-center justify-center">

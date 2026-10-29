@@ -23,7 +23,8 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
 }) => {
   // Chế độ quay: 'prize' (Quay phần thưởng) hoặc 'student' (Quay gọi tên học sinh)
   const [wheelMode, setWheelMode] = useState<WheelMode>('prize');
-  const [threshold, setThreshold] = useState<number>(20);
+  const [threshold, setThreshold] = useState<number | 'under20'>('under20');
+  const [allowRepeat, setAllowRepeat] = useState<boolean>(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [rotation, setRotation] = useState<number>(0);
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
@@ -40,15 +41,19 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
   // Danh sách các ô phần thưởng
   const prizeSlices = useMemo(() => DEFAULT_PRIZE_SLICES, []);
 
-  // Danh sách học sinh đủ điều kiện (Điểm ≥ threshold)
+  // Danh sách học sinh đủ điều kiện (Điểm < 20 hoặc ≥ threshold)
   const eligibleStudents = useMemo(() => {
+    if (threshold === 'under20') {
+      return students.filter((s) => (s.points || 0) < 20);
+    }
     return students.filter((s) => (s.points || 0) >= threshold);
   }, [students, threshold]);
 
-  // Danh sách học sinh đủ điều kiện chưa quay
+  // Danh sách học sinh đủ điều kiện chưa quay (hoặc toàn bộ nếu cho phép lặp lại)
   const unspunEligible = useMemo(() => {
+    if (allowRepeat) return eligibleStudents;
     return eligibleStudents.filter((s) => !spunRecords[s.id]);
-  }, [eligibleStudents, spunRecords]);
+  }, [eligibleStudents, spunRecords, allowRepeat]);
 
   // Tự động chọn học sinh đầu tiên chưa quay khi đổi threshold
   useEffect(() => {
@@ -245,31 +250,49 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
         </button>
       </div>
 
-      {/* 2. Bộ lọc điều kiện điểm (Threshold Selector) */}
+      {/* 2. Bộ lọc điều kiện điểm (Threshold Selector) & Tùy chọn lặp lại */}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200 mb-3">
         <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-700">
           <Award size={16} className="text-amber-500" />
-          <span>Điều kiện đủ điểm quay:</span>
+          <span>Điều kiện điểm quay:</span>
         </div>
-        <div className="flex items-center gap-1">
-          {[20, 15, 10, 5, 0].map((val) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[
+            { key: 'under20', label: '< 20đ (Dưới 20)' },
+            { key: 20, label: '≥ 20đ (Chuẩn)' },
+            { key: 15, label: '≥ 15đ' },
+            { key: 10, label: '≥ 10đ' },
+            { key: 0, label: 'Tất cả' },
+          ].map((item) => (
             <button
-              key={val}
+              key={item.key}
               type="button"
               onClick={() => {
-                setThreshold(val);
+                setThreshold(item.key as any);
                 setWonPrize(null);
                 setWinnerStudent(null);
               }}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                threshold === val
+                threshold === item.key
                   ? 'bg-purple-600 text-white shadow-xs'
                   : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
               }`}
             >
-              {val === 0 ? 'Tất cả' : val === 20 ? '≥ 20đ (Chuẩn)' : `≥ ${val}đ`}
+              {item.label}
             </button>
           ))}
+
+          {/* Nút tích chọn lặp lại học sinh */}
+          <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-purple-200 hover:border-purple-400 text-xs font-bold text-purple-900 cursor-pointer select-none ml-1 shadow-2xs">
+            <input
+              type="checkbox"
+              checked={allowRepeat}
+              onChange={(e) => setAllowRepeat(e.target.checked)}
+              disabled={isSpinning}
+              className="w-3.5 h-3.5 rounded text-purple-600 accent-purple-600 cursor-pointer"
+            />
+            <span>🔁 Lặp lại học sinh</span>
+          </label>
         </div>
       </div>
 
@@ -279,7 +302,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
           <span className="text-xs font-black text-purple-950 flex items-center gap-1.5">
             <UserCheck size={16} className="text-purple-600" />
             <span>
-              Học sinh đủ điều kiện (≥ {threshold}đ):{' '}
+              Học sinh đủ điều kiện ({threshold === 'under20' ? '< 20đ' : `≥ ${threshold}đ`}):{' '}
               <strong className="text-purple-700">{eligibleStudents.length} em</strong>
             </span>
           </span>
@@ -343,7 +366,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
           </div>
         ) : (
           <div className="text-center py-2 text-xs font-bold text-rose-600">
-            ⚠️ Chưa có học sinh nào đạt từ {threshold} điểm trở lên trong lớp này!
+            ⚠️ Chưa có học sinh nào phù hợp điều kiện ({threshold === 'under20' ? 'dưới 20 điểm' : `từ ${threshold} điểm trở lên`}) trong lớp này!
           </div>
         )}
 
