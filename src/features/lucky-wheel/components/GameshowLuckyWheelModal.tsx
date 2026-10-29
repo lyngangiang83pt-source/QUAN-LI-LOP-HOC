@@ -308,19 +308,28 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                 </button>
               </div>
 
-              {/* Nút tích chọn: Lặp lại học sinh đã quay */}
-              <label className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-amber-400/30 hover:border-amber-400/60 cursor-pointer text-xs select-none transition-all shadow-sm">
-                <input
-                  type="checkbox"
-                  checked={allowRepeatSpun}
-                  onChange={(e) => setAllowRepeatSpun(e.target.checked)}
-                  disabled={isSpinning}
-                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 focus:ring-offset-slate-900 accent-amber-400 cursor-pointer"
-                />
-                <span className="font-bold text-amber-300 flex items-center gap-1">
-                  <span>🔁 Lặp lại học sinh đã quay</span>
+              {/* Nút click chọn: Lặp lại học sinh */}
+              <button
+                type="button"
+                onClick={() => setAllowRepeatSpun((prev) => !prev)}
+                disabled={isSpinning}
+                className={`px-3.5 py-1.5 rounded-2xl font-black text-xs transition-all flex items-center gap-1.5 border shadow-sm active:scale-95 ${
+                  allowRepeatSpun
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 border-amber-300 ring-2 ring-amber-400/50 scale-105'
+                    : 'bg-slate-800/90 text-slate-300 hover:text-white hover:bg-slate-800 border-white/20'
+                }`}
+                title={allowRepeatSpun ? 'Đang BẬT lặp lại học sinh (Click để tắt)' : 'Đang TẮT lặp lại học sinh (Click để bật)'}
+              >
+                <span className="text-sm">{allowRepeatSpun ? '✅' : '⚪'}</span>
+                <span>Lặp lại học sinh</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-md font-extrabold uppercase ${
+                    allowRepeatSpun ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  {allowRepeatSpun ? 'Bật' : 'Tắt'}
                 </span>
-              </label>
+              </button>
 
               {/* Nút Chơi lại (Reset) */}
               <button
@@ -375,31 +384,49 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                 </div>
 
                 {/* NÚT BẤM QUAY LỚN NỔI BẬT DƯỚI BÁNH XE */}
-                <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="mt-4 flex flex-col items-center gap-2.5">
                   {activeCandidates.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={handleStartSpin}
-                      disabled={isSpinning}
-                      className={`group relative px-8 py-3.5 rounded-full font-black text-sm md:text-base tracking-wider uppercase transition-all duration-300 flex items-center gap-2 shadow-2xl ${
-                        isSpinning
-                          ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600'
-                          : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-slate-950 hover:from-amber-300 hover:to-orange-400 hover:scale-105 active:scale-95 shadow-amber-500/40 border-2 border-white'
-                      }`}
-                    >
-                      {isSpinning ? (
-                        <>
-                          <Sparkles className="w-5 h-5 animate-spin text-amber-300" />
-                          <span>Đang quay hồi hộp... ✨</span>
-                        </>
-                      ) : (
-                        <>
-                          <Flame className="w-5 h-5 text-amber-950 animate-bounce" />
-                          <span>QUAY NGAY BÂY GIỜ</span>
-                          <Sparkles className="w-5 h-5 text-amber-950" />
-                        </>
-                      )}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleStartSpin}
+                        disabled={isSpinning}
+                        className={`group relative px-8 py-3.5 rounded-full font-black text-sm md:text-base tracking-wider uppercase transition-all duration-300 flex items-center gap-2 shadow-2xl ${
+                          isSpinning
+                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed border border-slate-600'
+                            : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 text-slate-950 hover:from-amber-300 hover:to-orange-400 hover:scale-105 active:scale-95 shadow-amber-500/40 border-2 border-white'
+                        }`}
+                      >
+                        {isSpinning ? (
+                          <>
+                            <Sparkles className="w-5 h-5 animate-spin text-amber-300" />
+                            <span>Đang quay hồi hộp... ✨</span>
+                          </>
+                        ) : (
+                          <>
+                            <Flame className="w-5 h-5 text-amber-950 animate-bounce" />
+                            <span>QUAY NGAY BÂY GIỜ</span>
+                            <Sparkles className="w-5 h-5 text-amber-950" />
+                          </>
+                        )}
+                      </button>
+
+                      {/* Nút click chọn Lặp lại học sinh đặt ngay dưới nút Quay */}
+                      <button
+                        type="button"
+                        onClick={() => setAllowRepeatSpun((prev) => !prev)}
+                        disabled={isSpinning}
+                        className={`px-3.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border active:scale-95 shadow-xs ${
+                          allowRepeatSpun
+                            ? 'bg-amber-400/25 text-amber-300 border-amber-400/50 hover:bg-amber-400/35'
+                            : 'bg-slate-800/70 text-slate-400 border-white/10 hover:bg-slate-800 hover:text-slate-200'
+                        }`}
+                        title="Click để bật / tắt lặp lại học sinh đã quay"
+                      >
+                        <span>{allowRepeatSpun ? '✅' : '⚪'}</span>
+                        <span>Lặp lại học sinh: <strong>{allowRepeatSpun ? 'ĐANG BẬT' : 'ĐANG TẮT'}</strong></span>
+                      </button>
+                    </>
                   ) : (
                     <div className="p-4 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-center animate-scaleUp">
                       <p className="text-amber-200 font-bold text-sm mb-2">
@@ -501,6 +528,23 @@ export const GameshowLuckyWheelModal: React.FC<GameshowLuckyWheelModalProps> = (
                   Mã số: <span className="text-amber-300 font-mono">{winner.id}</span> • Điểm hiện tại:{' '}
                   <span className="text-emerald-400 font-bold">{winner.points} điểm</span>
                 </div>
+              </div>
+
+              {/* Tùy chọn click lặp lại học sinh ngay trong popup chiến thắng */}
+              <div className="flex justify-center my-3">
+                <button
+                  type="button"
+                  onClick={() => setAllowRepeatSpun((prev) => !prev)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border active:scale-95 ${
+                    allowRepeatSpun
+                      ? 'bg-amber-400/25 text-amber-300 border-amber-400/50 hover:bg-amber-400/35 shadow-xs'
+                      : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200'
+                  }`}
+                  title="Click để bật / tắt lặp lại học sinh cho các lượt quay tiếp theo"
+                >
+                  <span>{allowRepeatSpun ? '✅' : '⚪'}</span>
+                  <span>Lặp lại học sinh: <strong>{allowRepeatSpun ? 'ĐANG BẬT' : 'ĐANG TẮT'}</strong></span>
+                </button>
               </div>
 
               {/* Nút Quay Tiếp hoặc Đóng */}

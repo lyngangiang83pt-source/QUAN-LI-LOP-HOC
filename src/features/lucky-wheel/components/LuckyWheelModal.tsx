@@ -282,17 +282,21 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
             </button>
           ))}
 
-          {/* Nút tích chọn lặp lại học sinh */}
-          <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-purple-200 hover:border-purple-400 text-xs font-bold text-purple-900 cursor-pointer select-none ml-1 shadow-2xs">
-            <input
-              type="checkbox"
-              checked={allowRepeat}
-              onChange={(e) => setAllowRepeat(e.target.checked)}
-              disabled={isSpinning}
-              className="w-3.5 h-3.5 rounded text-purple-600 accent-purple-600 cursor-pointer"
-            />
-            <span>🔁 Lặp lại học sinh</span>
-          </label>
+          {/* Nút click chọn: Lặp lại học sinh */}
+          <button
+            type="button"
+            onClick={() => setAllowRepeat((prev) => !prev)}
+            disabled={isSpinning}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs ml-1 active:scale-95 ${
+              allowRepeat
+                ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-300'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-300'
+            }`}
+            title={allowRepeat ? 'Đang bật lặp lại học sinh (Click để tắt)' : 'Đang tắt lặp lại học sinh (Click để bật)'}
+          >
+            <span>{allowRepeat ? '✅' : '⚪'}</span>
+            <span>Lặp lại học sinh</span>
+          </button>
         </div>
       </div>
 
@@ -406,7 +410,7 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
 
       {/* 6. Start Spin Button */}
       {!wonPrize && !winnerStudent && (
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={handleStartSpin}
@@ -429,6 +433,22 @@ export const LuckyWheelModal: React.FC<LuckyWheelModalProps> = ({
                   : 'QUAY PHẦN THƯỞNG NGAY (+1Đ, +2Đ, NHẬN QUÀ...)'
                 : `QUAY CHỌN HỌC SINH (${eligibleStudents.length} em đủ ĐK)`}
             </span>
+          </button>
+
+          {/* Nút click chọn Lặp lại học sinh ngay trong khu vực quay */}
+          <button
+            type="button"
+            onClick={() => setAllowRepeat((prev) => !prev)}
+            disabled={isSpinning}
+            className={`text-xs font-bold transition-all flex items-center gap-1.5 px-3 py-1 rounded-xl border active:scale-95 ${
+              allowRepeat
+                ? 'bg-purple-100 text-purple-800 border-purple-300 shadow-2xs'
+                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+            }`}
+            title="Click để bật / tắt lặp lại học sinh"
+          >
+            <span>{allowRepeat ? '✅' : '⚪'}</span>
+            <span>Lặp lại học sinh: <strong>{allowRepeat ? 'ĐANG BẬT' : 'ĐANG TẮT'}</strong></span>
           </button>
         </div>
       )}
