@@ -16,6 +16,68 @@ export const hasPenaltyNote = (note?: string): boolean => {
   return note.includes('(-') || note.includes('vi phạm') || note.includes('phạt') || note.includes('Trừ');
 };
 
+export interface AssessmentGrade {
+  level: 'excellent' | 'active' | 'passed' | 'not_passed';
+  label: string; // 'Xuất sắc' | 'Tích cực' | 'Đạt' | 'Chưa đạt'
+  icon: string;
+  badgeClass: string;
+  pillClass: string;
+  desc: string;
+  rangeLabel: string;
+}
+
+export const getStudentAssessment = (points: number = 0): AssessmentGrade => {
+  if (points >= 20) {
+    return {
+      level: 'excellent',
+      label: 'Xuất sắc',
+      icon: '👑',
+      badgeClass: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black border-amber-300 ring-1 ring-amber-300/80 shadow-xs hover:from-amber-300 hover:to-yellow-400',
+      pillClass: 'bg-amber-100 text-amber-900 border-amber-300',
+      desc: 'Từ 20 điểm trở lên - Thành tích Xuất sắc!',
+      rangeLabel: '≥ 20đ',
+    };
+  }
+  if (points >= 15) {
+    return {
+      level: 'active',
+      label: 'Tích cực',
+      icon: '🌟',
+      badgeClass: 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold border-sky-300 ring-1 ring-sky-300/80 shadow-xs hover:from-sky-400 hover:to-blue-500',
+      pillClass: 'bg-sky-100 text-sky-900 border-sky-300',
+      desc: '15 - 19 điểm - Học tập Tích cực!',
+      rangeLabel: '15 - 19đ',
+    };
+  }
+  if (points >= 10) {
+    return {
+      level: 'passed',
+      label: 'Đạt',
+      icon: '✅',
+      badgeClass: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold border-emerald-300 ring-1 ring-emerald-300/80 shadow-xs hover:from-emerald-400 hover:to-teal-500',
+      pillClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+      desc: '10 - 14 điểm - Đạt yêu cầu tiết học!',
+      rangeLabel: '10 - 14đ',
+    };
+  }
+  return {
+    level: 'not_passed',
+    label: 'Chưa đạt',
+    icon: '⚠️',
+    badgeClass: 'bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold border-rose-300 ring-1 ring-rose-300/80 shadow-xs hover:from-rose-400 hover:to-red-500',
+    pillClass: 'bg-rose-100 text-rose-900 border-rose-300',
+    desc: 'Dưới 10 điểm - Chưa đạt yêu cầu!',
+    rangeLabel: '< 10đ',
+  };
+};
+
+export const ASSESSMENT_RUBRIC = [
+  { range: '≥ 20đ', label: 'Xuất sắc', icon: '👑', color: 'text-amber-950 bg-amber-100 border-amber-300' },
+  { range: '15 - 19đ', label: 'Tích cực', icon: '🌟', color: 'text-sky-950 bg-sky-100 border-sky-300' },
+  { range: '10 - 14đ', label: 'Đạt', icon: '✅', color: 'text-emerald-950 bg-emerald-100 border-emerald-300' },
+  { range: '< 10đ', label: 'Chưa đạt', icon: '⚠️', color: 'text-rose-950 bg-rose-100 border-rose-300' },
+];
+
 export const PENALTY_CRITERIA: Criteria[] = [
   { icon: '⏰', label: 'Đi muộn', pts: -2 },
   { icon: '📢', label: 'Mất trật tự', pts: -2 },

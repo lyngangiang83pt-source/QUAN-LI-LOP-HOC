@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { Student } from '../../../types';
+import { getStudentAssessment } from '../../../constants/classroomData';
 
 /**
  * Xuất file Excel (.xlsx) bảng điểm chuẩn 3 cột: MÃ HS, HỌ VÀ TÊN, TỔNG ĐIỂM
@@ -100,13 +101,14 @@ export const downloadSampleScoreCSV = (): void => {
 
 export const exportStudentsToCSV = (students: Student[], className: string): void => {
   let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // UTF-8 BOM
-  csvContent += "Hạng,Mã HS,Họ và Tên,Điểm danh hôm nay,Tổng điểm tích lũy,Ghi chú gần nhất\n";
+  csvContent += "Hạng,Mã HS,Họ và Tên,Điểm danh hôm nay,Tổng điểm tích lũy,Nhận xét,Ghi chú gần nhất\n";
 
   const sortedList = [...students].sort((a, b) => (b.points || 0) - (a.points || 0));
 
   sortedList.forEach((s, idx) => {
     const attText = s.attendance === 'present' ? 'Có mặt' : s.attendance === 'late' ? 'Muộn' : 'Vắng';
-    csvContent += `"${idx + 1}","${s.id}","${s.name}","${attText}","${s.points}","${s.lastNote || ''}"\n`;
+    const assessment = getStudentAssessment(s.points || 0);
+    csvContent += `"${idx + 1}","${s.id}","${s.name}","${attText}","${s.points}","${assessment.label}","${s.lastNote || ''}"\n`;
   });
 
   const encodedUri = encodeURI(csvContent);

@@ -1,17 +1,21 @@
 import React from 'react';
 import { Student } from '../../../types';
 import { Crown, Trophy, ExternalLink, Sparkles } from 'lucide-react';
+import { getStudentAssessment, ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
+import { audioService } from '../../../services/audioService';
 
 interface PodiumTop3BannerProps {
   students: Student[];
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
+  onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
 export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
   students,
   onOpenLeaderboardModal,
   onOpenSpotlightModal,
+  onShowToast,
 }) => {
   const sorted = React.useMemo(() => {
     return [...students].sort((a, b) => (b.points || 0) - (a.points || 0));
@@ -21,6 +25,25 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
   if (top3.length === 0) return null;
 
   const medals = ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'];
+
+  const handleCopyAssessment = (s: Student) => {
+    const assessment = getStudentAssessment(s.points || 0);
+    const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    if (assessment.level === 'excellent') {
+      audioService.play('win');
+    } else {
+      audioService.play('plus');
+    }
+
+    if (onShowToast) {
+      onShowToast(`📋 Nhận xét ${s.name}: ${assessment.icon} ${assessment.label} (${s.points}đ) - Đã sao chép!`, 'success');
+    }
+  };
 
   return (
     <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300/80 rounded-2xl p-4 md:p-5 shadow-soft-sm mb-5 animate-fadeIn">
@@ -59,6 +82,8 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {top3.map((s, idx) => {
           const isTop1 = idx === 0;
+          const assessment = getStudentAssessment(s.points || 0);
+
           return (
             <div
               key={s.id}
@@ -70,18 +95,55 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
               }`}
               title="Bấm để xem Bảng Xếp Hạng chi tiết"
             >
-              <div className="text-xs font-extrabold uppercase text-amber-800 tracking-wider">
-                {medals[idx]}
+              <div>
+                <div className="text-xs font-extrabold uppercase text-amber-800 tracking-wider">
+                  {medals[idx]}
+                </div>
+                <div className="font-extrabold text-slate-900 text-sm md:text-base my-1.5 truncate">
+                  {s.name}
+                </div>
+                <div className="inline-block mx-auto px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 font-extrabold text-xs">
+                  {s.points > 0 ? '+' : ''}{s.points} ⭐
+                </div>
               </div>
-              <div className="font-extrabold text-slate-900 text-sm md:text-base my-1.5 truncate">
-                {s.name}
-              </div>
-              <div className="inline-block mx-auto px-3 py-1 rounded-full bg-amber-500/20 text-amber-900 font-extrabold text-xs">
-                {s.points > 0 ? '+' : ''}{s.points} ⭐
+
+              {/* Nút nhận xét trong thẻ top điểm */}
+              <div className="mt-3 pt-2.5 border-t border-amber-200/60">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyAssessment(s);
+                  }}
+                  className={`w-full py-1.5 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
+                  title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                >
+                  <span className="text-sm">{assessment.icon}</span>
+                  <span>Nhận xét: {assessment.label}</span>
+                </button>
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* Thang điểm nhận xét */}
+      <div className="mt-3.5 pt-3 border-t border-amber-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="font-extrabold text-amber-950 flex items-center gap-1.5">
+          <span>📌</span>
+          <span>Thang điểm nhận xét tiết học:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {ASSESSMENT_RUBRIC.map((r, i) => (
+            <span
+              key={i}
+              className={`px-2 py-0.5 rounded-lg border text-[11px] font-bold flex items-center gap-1 shadow-2xs ${r.color}`}
+            >
+              <span>{r.icon}</span>
+              <span>{r.range}: <strong>{r.label}</strong></span>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

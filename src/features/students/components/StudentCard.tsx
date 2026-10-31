@@ -3,7 +3,7 @@ import { Student, AttendanceStatus } from '../../../types';
 import { Plus, Minus, Trash2, RotateCcw } from 'lucide-react';
 import { FloatingStarsEffect } from './FloatingStarsEffect';
 import { audioService } from '../../../services/audioService';
-import { hasPenaltyNote } from '../../../constants/classroomData';
+import { hasPenaltyNote, getStudentAssessment } from '../../../constants/classroomData';
 
 interface StudentCardProps {
   student: Student;
@@ -14,6 +14,7 @@ interface StudentCardProps {
   onApplyScore?: (studentId: string, pointDiff: number, reason: string) => void;
   onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
+  onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
 export const StudentCard: React.FC<StudentCardProps> = ({
@@ -25,9 +26,26 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   onApplyScore,
   onResetStudentScore,
   onDeleteStudent,
+  onShowToast,
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
   const isPenalized = hasPenaltyNote(student.lastNote);
+  const assessment = getStudentAssessment(student.points || 0);
+
+  const handleCopyAssessment = (s: Student) => {
+    const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    if (assessment.level === 'excellent') {
+      audioService.play('win');
+    } else {
+      audioService.play('plus');
+    }
+    if (onShowToast) {
+      onShowToast(`📋 Nhận xét ${s.name}: ${assessment.icon} ${assessment.label} (${s.points}đ) - Đã sao chép!`, 'success');
+    }
+  };
 
   const [starAnimKey, setStarAnimKey] = useState<number>(0);
   const [pointDiff, setPointDiff] = useState<number>(0);
@@ -90,18 +108,23 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         />
       )}
 
-      {/* Top Banner Tag if Qualified */}
-      {isQualified && (
-        <div
-          className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all flex items-center gap-1 ${
-            isMilestoneReached
-              ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
-              : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
-          }`}
-        >
-          {isMilestoneReached ? '👑 HOÀN THÀNH! 🎉' : '✨ Hoàn thành'}
-        </div>
-      )}
+      {/* Nút Nhận Xét Học Sinh Trong Thẻ Điểm */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCopyAssessment(student);
+        }}
+        className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-1 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all flex items-center gap-1 active:scale-95 border ${
+          isMilestoneReached
+            ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
+            : assessment.badgeClass
+        }`}
+        title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép nhận xét`}
+      >
+        <span>{isMilestoneReached ? '👑' : assessment.icon}</span>
+        <span>{isMilestoneReached ? 'HOÀN THÀNH!' : assessment.label}</span>
+      </button>
 
       <div>
         {/* Header: Name & Red Bold Code */}

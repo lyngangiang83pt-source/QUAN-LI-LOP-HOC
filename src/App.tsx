@@ -161,6 +161,7 @@ export const App: React.FC = () => {
           students={students}
           onOpenLeaderboardModal={() => setIsLeaderboardModalOpen(true)}
           onOpenSpotlightModal={() => setIsSpotlightModalOpen(true)}
+          onShowToast={showToast}
         />
       )}
 
@@ -178,6 +179,7 @@ export const App: React.FC = () => {
         onDeleteStudent={deleteStudent}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
+        onShowToast={showToast}
       />
 
       {/* --- ALL MODALS --- */}
@@ -239,6 +241,7 @@ export const App: React.FC = () => {
         className={currentClass.name}
         minWheelPoints={20}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
+        onShowToast={showToast}
       />
 
       <SpotlightCeremonyModal

@@ -16,6 +16,7 @@ interface StudentGridProps {
   onDeleteStudent: (id: string) => void;
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
+  onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
 export const StudentGrid: React.FC<StudentGridProps> = ({
@@ -31,6 +32,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   onDeleteStudent,
   onOpenImportModal,
   onOpenAddModal,
+  onShowToast,
 }) => {
   // Filter & Search Logic
   const filteredStudents = React.useMemo(() => {
@@ -105,6 +107,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
           onApplyScore={onApplyScore}
           onResetStudentScore={onResetStudentScore}
           onDeleteStudent={onDeleteStudent}
+          onShowToast={onShowToast}
         />
       ))}
     </div>

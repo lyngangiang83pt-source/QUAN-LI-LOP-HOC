@@ -3,6 +3,8 @@ import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
 import { exportStudentsToCSV } from '../../import-export/utils/csvExporter';
 import { Trophy, Download, Play } from 'lucide-react';
+import { getStudentAssessment, ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
+import { audioService } from '../../../services/audioService';
 
 interface LeaderboardModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface LeaderboardModalProps {
   className: string;
   minWheelPoints?: number;
   onOpenWheelModal: () => void;
+  onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
 export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
@@ -20,10 +23,30 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   className,
   minWheelPoints = 20,
   onOpenWheelModal,
+  onShowToast,
 }) => {
   const sorted = React.useMemo(() => {
     return [...students].sort((a, b) => (b.points || 0) - (a.points || 0));
   }, [students]);
+
+  const handleCopyAssessment = (s: Student) => {
+    const assessment = getStudentAssessment(s.points || 0);
+    const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    if (assessment.level === 'excellent') {
+      audioService.play('win');
+    } else {
+      audioService.play('plus');
+    }
+
+    if (onShowToast) {
+      onShowToast(`📋 Nhận xét ${s.name}: ${assessment.icon} ${assessment.label} (${s.points}đ) - Đã sao chép!`, 'success');
+    }
+  };
 
   const top3 = sorted.slice(0, 3);
   const podium = [];
@@ -46,26 +69,60 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
     >
       {/* Top 3 Podium Box */}
       {top3.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6 items-end pt-4 pb-2">
-          {podium.map((item) => (
-            <div
-              key={item.s.id}
-              className={`p-3 rounded-2xl border text-center bg-gradient-to-b ${item.bg} flex flex-col justify-between`}
-            >
-              <div className="text-2xl mb-1">{item.icon}</div>
-              <div className="text-[10px] md:text-xs font-black uppercase text-amber-900 tracking-wider">
-                {item.label}
+        <div className="grid grid-cols-3 gap-3 mb-4 items-end pt-4 pb-2">
+          {podium.map((item) => {
+            const assessment = getStudentAssessment(item.s.points || 0);
+            return (
+              <div
+                key={item.s.id}
+                className={`p-3 rounded-2xl border text-center bg-gradient-to-b ${item.bg} flex flex-col justify-between`}
+              >
+                <div>
+                  <div className="text-2xl mb-1">{item.icon}</div>
+                  <div className="text-[10px] md:text-xs font-black uppercase text-amber-900 tracking-wider">
+                    {item.label}
+                  </div>
+                  <div className="font-black text-slate-900 text-xs md:text-sm my-1 truncate" title={item.s.name}>
+                    {item.s.name}
+                  </div>
+                  <div className="inline-block mx-auto px-2.5 py-0.5 rounded-full bg-white/80 font-black text-amber-900 text-xs shadow-2xs">
+                    {item.s.points > 0 ? '+' : ''}{item.s.points} ⭐
+                  </div>
+                </div>
+
+                {/* Nút Nhận xét trên thẻ Podium */}
+                <div className="mt-2.5 pt-2 border-t border-black/10">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyAssessment(item.s)}
+                    className={`w-full py-1 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
+                    title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                  >
+                    <span>{assessment.icon}</span>
+                    <span>{assessment.label}</span>
+                  </button>
+                </div>
               </div>
-              <div className="font-black text-slate-900 text-xs md:text-sm my-1 truncate" title={item.s.name}>
-                {item.s.name}
-              </div>
-              <div className="inline-block mx-auto px-2.5 py-0.5 rounded-full bg-white/80 font-black text-amber-900 text-xs shadow-2xs">
-                {item.s.points > 0 ? '+' : ''}{item.s.points} ⭐
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {/* Rubric Bar */}
+      <div className="mb-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+        <span className="font-extrabold text-slate-700">📌 Thang điểm nhận xét:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {ASSESSMENT_RUBRIC.map((r, i) => (
+            <span
+              key={i}
+              className={`px-2 py-0.5 rounded-lg border text-[11px] font-bold flex items-center gap-1 ${r.color}`}
+            >
+              <span>{r.icon}</span>
+              <span>{r.range}: <strong>{r.label}</strong></span>
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* Header Info */}
       <div className="flex justify-between items-center mb-2 px-1">
@@ -83,30 +140,26 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                 <th className="py-2.5 px-3">Họ và Tên</th>
                 <th className="py-2.5 px-3 text-center w-24">Chuyên cần</th>
                 <th className="py-2.5 px-3 text-center w-24">Điểm tích lũy</th>
-                <th className="py-2.5 px-3 text-center w-28">Danh hiệu</th>
+                <th className="py-2.5 px-3 text-center w-32">Nhận xét</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-semibold">
               {sorted.map((s, idx) => {
                 const rankNum = idx + 1;
+                const assessment = getStudentAssessment(s.points || 0);
+
                 let rankBadge = <span className="text-slate-600">#{rankNum}</span>;
-                let honorBadge = <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-[10px]">👍 Tích cực</span>;
                 let rowBg = 'hover:bg-slate-50/70';
 
                 if (rankNum === 1) {
                   rankBadge = <span className="bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded-full">🥇 #1</span>;
-                  honorBadge = <span className="bg-amber-500 text-white font-black px-2 py-0.5 rounded-full text-[10px]">👑 Thủ Khoa</span>;
                   rowBg = 'bg-amber-50/50 hover:bg-amber-50';
                 } else if (rankNum === 2) {
                   rankBadge = <span className="bg-slate-200 text-slate-800 font-black px-2 py-0.5 rounded-full">🥈 #2</span>;
-                  honorBadge = <span className="bg-slate-700 text-white font-black px-2 py-0.5 rounded-full text-[10px]">🌟 Xuất sắc</span>;
                   rowBg = 'bg-slate-50/70 hover:bg-slate-100/70';
                 } else if (rankNum === 3) {
                   rankBadge = <span className="bg-orange-100 text-orange-900 font-black px-2 py-0.5 rounded-full">🥉 #3</span>;
-                  honorBadge = <span className="bg-orange-500 text-white font-black px-2 py-0.5 rounded-full text-[10px]">⭐ Top 3 Giỏi</span>;
                   rowBg = 'bg-orange-50/40 hover:bg-orange-50/70';
-                } else if ((s.points || 0) >= minWheelPoints) {
-                  honorBadge = <span className="bg-purple-100 text-purple-800 font-black px-2 py-0.5 rounded-full text-[10px]">✨ Hoàn thành</span>;
                 }
 
                 const attStatus =
@@ -129,7 +182,17 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                     <td className="py-2.5 px-3 text-center font-black text-sky-700 text-sm">
                       {s.points > 0 ? '+' : ''}{s.points} ⭐
                     </td>
-                    <td className="py-2.5 px-3 text-center">{honorBadge}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAssessment(s)}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all inline-flex items-center gap-1 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
+                        title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                      >
+                        <span>{assessment.icon}</span>
+                        <span>{assessment.label}</span>
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
