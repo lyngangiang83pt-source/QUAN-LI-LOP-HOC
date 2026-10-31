@@ -1,6 +1,6 @@
 import React from 'react';
 import { FilterType } from '../../types';
-import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash, Hourglass } from 'lucide-react';
+import { Search, Trophy, Sparkles, FolderUp, UserPlus, Hash, Hourglass, FileText } from 'lucide-react';
 
 
 interface ControlsBarProps {
@@ -13,6 +13,7 @@ interface ControlsBarProps {
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
   onOpenFindCodeModal: () => void;
+  onOpenTT22Modal?: () => void;
 }
 
 export const ControlsBar: React.FC<ControlsBarProps> = ({
@@ -25,6 +26,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   onOpenImportModal,
   onOpenAddModal,
   onOpenFindCodeModal,
+  onOpenTT22Modal,
 }) => {
   return (
     <div className="bg-white p-3.5 md:p-4 rounded-2xl shadow-soft-sm border border-slate-200/80 mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -132,6 +134,18 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
+        {onOpenTT22Modal && (
+          <button
+            type="button"
+            onClick={onOpenTT22Modal}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
+            title="Mở bảng nhận xét học sinh chuẩn Thông tư 22/2021/TT-BGDĐT"
+          >
+            <FileText size={14} />
+            <span>Nhận xét TT22</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onOpenWheelModal}

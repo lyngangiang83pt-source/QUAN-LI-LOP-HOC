@@ -14,6 +14,7 @@ interface StudentCardProps {
   onApplyScore?: (studentId: string, pointDiff: number, reason: string) => void;
   onResetStudentScore: (id: string) => void;
   onDeleteStudent: (id: string) => void;
+  onOpenTT22Modal?: (studentId: string) => void;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
@@ -26,6 +27,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
   onApplyScore,
   onResetStudentScore,
   onDeleteStudent,
+  onOpenTT22Modal,
   onShowToast,
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
@@ -113,14 +115,18 @@ export const StudentCard: React.FC<StudentCardProps> = ({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          handleCopyAssessment(student);
+          if (onOpenTT22Modal) {
+            onOpenTT22Modal(student.id);
+          } else {
+            handleCopyAssessment(student);
+          }
         }}
         className={`absolute top-0 right-0 text-[10px] font-black uppercase px-2.5 py-1 rounded-bl-xl rounded-tr-2xl shadow-xs transition-all flex items-center gap-1 active:scale-95 border ${
           isMilestoneReached
             ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 scale-110 shadow-lg ring-2 ring-amber-300'
             : assessment.badgeClass
         }`}
-        title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép nhận xét`}
+        title={`Nhận xét TT22: ${assessment.label} (${assessment.desc}) - Bấm để xem nhận xét chi tiết`}
       >
         <span>{isMilestoneReached ? '👑' : assessment.icon}</span>
         <span>{isMilestoneReached ? 'HOÀN THÀNH!' : assessment.label}</span>

@@ -16,6 +16,7 @@ interface StudentGridProps {
   onDeleteStudent: (id: string) => void;
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
+  onOpenTT22Modal?: (studentId: string) => void;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
@@ -32,6 +33,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
   onDeleteStudent,
   onOpenImportModal,
   onOpenAddModal,
+  onOpenTT22Modal,
   onShowToast,
 }) => {
   // Filter & Search Logic
@@ -107,6 +109,7 @@ export const StudentGrid: React.FC<StudentGridProps> = ({
           onApplyScore={onApplyScore}
           onResetStudentScore={onResetStudentScore}
           onDeleteStudent={onDeleteStudent}
+          onOpenTT22Modal={onOpenTT22Modal}
           onShowToast={onShowToast}
         />
       ))}

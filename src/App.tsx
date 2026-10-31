@@ -17,6 +17,7 @@ import { ImportScoreModal } from './features/import-export/components/ImportScor
 import { AddStudentModal } from './features/students/components/AddStudentModal';
 import { ScoreModal } from './features/students/components/ScoreModal';
 import { FindStudentByCodeModal } from './features/students/components/FindStudentByCodeModal';
+import { TT22AssessmentModal } from './features/students/components/TT22AssessmentModal';
 import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
 import { exportScoreFileExcel } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
@@ -70,6 +71,14 @@ export const App: React.FC = () => {
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isFindCodeModalOpen, setIsFindCodeModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [isTT22ModalOpen, setIsTT22ModalOpen] = useState(false);
+  const [selectedStudentForTT22, setSelectedStudentForTT22] = useState<string | null>(null);
+
+  const handleOpenTT22Modal = (studentId?: string) => {
+    setSelectedStudentForTT22(studentId || null);
+    setIsTT22ModalOpen(true);
+  };
+
   const [scoreModalData, setScoreModalData] = useState<{
     student: Student | null;
     mode: 'plus' | 'minus';
@@ -153,6 +162,7 @@ export const App: React.FC = () => {
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
         onOpenFindCodeModal={() => setIsFindCodeModalOpen(true)}
+        onOpenTT22Modal={() => handleOpenTT22Modal()}
       />
 
       {/* Podium Top 3 Banner (Visible when Top filter is active) */}
@@ -161,6 +171,7 @@ export const App: React.FC = () => {
           students={students}
           onOpenLeaderboardModal={() => setIsLeaderboardModalOpen(true)}
           onOpenSpotlightModal={() => setIsSpotlightModalOpen(true)}
+          onOpenTT22Modal={handleOpenTT22Modal}
           onShowToast={showToast}
         />
       )}
@@ -179,6 +190,7 @@ export const App: React.FC = () => {
         onDeleteStudent={deleteStudent}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
+        onOpenTT22Modal={handleOpenTT22Modal}
         onShowToast={showToast}
       />
 
@@ -241,6 +253,19 @@ export const App: React.FC = () => {
         className={currentClass.name}
         minWheelPoints={20}
         onOpenWheelModal={() => setIsWheelModalOpen(true)}
+        onOpenTT22Modal={handleOpenTT22Modal}
+        onShowToast={showToast}
+      />
+
+      <TT22AssessmentModal
+        isOpen={isTT22ModalOpen}
+        onClose={() => {
+          setIsTT22ModalOpen(false);
+          setSelectedStudentForTT22(null);
+        }}
+        students={students}
+        className={currentClass.name}
+        initialSelectedStudentId={selectedStudentForTT22}
         onShowToast={showToast}
       />
 

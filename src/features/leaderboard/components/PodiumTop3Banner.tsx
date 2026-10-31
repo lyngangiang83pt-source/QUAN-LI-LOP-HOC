@@ -1,6 +1,6 @@
 import React from 'react';
 import { Student } from '../../../types';
-import { Crown, Trophy, ExternalLink, Sparkles } from 'lucide-react';
+import { Crown, Trophy, ExternalLink, Sparkles, FileText } from 'lucide-react';
 import { getStudentAssessment, ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
 import { audioService } from '../../../services/audioService';
 
@@ -8,6 +8,7 @@ interface PodiumTop3BannerProps {
   students: Student[];
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
+  onOpenTT22Modal?: (studentId?: string) => void;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
@@ -15,6 +16,7 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
   students,
   onOpenLeaderboardModal,
   onOpenSpotlightModal,
+  onOpenTT22Modal,
   onShowToast,
 }) => {
   const sorted = React.useMemo(() => {
@@ -76,6 +78,18 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
             <span>Mở Bảng Xếp Hạng</span>
             <ExternalLink size={12} />
           </button>
+
+          {onOpenTT22Modal && (
+            <button
+              type="button"
+              onClick={() => onOpenTT22Modal()}
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
+              title="Mở bảng nhận xét đánh giá thường xuyên chuẩn Thông tư 22"
+            >
+              <FileText size={14} />
+              <span>Nhận xét TT22</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -113,10 +127,14 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleCopyAssessment(s);
+                    if (onOpenTT22Modal) {
+                      onOpenTT22Modal(s.id);
+                    } else {
+                      handleCopyAssessment(s);
+                    }
                   }}
                   className={`w-full py-1.5 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
-                  title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                  title={`Nhận xét TT22: ${assessment.label} (${assessment.desc}) - Bấm để xem nhận xét chi tiết`}
                 >
                   <span className="text-sm">{assessment.icon}</span>
                   <span>Nhận xét: {assessment.label}</span>

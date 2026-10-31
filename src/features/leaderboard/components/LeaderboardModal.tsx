@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
 import { exportStudentsToCSV } from '../../import-export/utils/csvExporter';
-import { Trophy, Download, Play } from 'lucide-react';
+import { Trophy, Download, Play, FileText } from 'lucide-react';
 import { getStudentAssessment, ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
 import { audioService } from '../../../services/audioService';
 
@@ -13,6 +13,7 @@ interface LeaderboardModalProps {
   className: string;
   minWheelPoints?: number;
   onOpenWheelModal: () => void;
+  onOpenTT22Modal?: (studentId?: string) => void;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
 
@@ -23,6 +24,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   className,
   minWheelPoints = 20,
   onOpenWheelModal,
+  onOpenTT22Modal,
   onShowToast,
 }) => {
   const sorted = React.useMemo(() => {
@@ -94,9 +96,16 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                 <div className="mt-2.5 pt-2 border-t border-black/10">
                   <button
                     type="button"
-                    onClick={() => handleCopyAssessment(item.s)}
+                    onClick={() => {
+                      if (onOpenTT22Modal) {
+                        onClose();
+                        onOpenTT22Modal(item.s.id);
+                      } else {
+                        handleCopyAssessment(item.s);
+                      }
+                    }}
                     className={`w-full py-1 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
-                    title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                    title={`Nhận xét TT22: ${assessment.label} (${assessment.desc}) - Bấm để xem chi tiết`}
                   >
                     <span>{assessment.icon}</span>
                     <span>{assessment.label}</span>
@@ -185,9 +194,16 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
                     <td className="py-2.5 px-3 text-center">
                       <button
                         type="button"
-                        onClick={() => handleCopyAssessment(s)}
+                        onClick={() => {
+                          if (onOpenTT22Modal) {
+                            onClose();
+                            onOpenTT22Modal(s.id);
+                          } else {
+                            handleCopyAssessment(s);
+                          }
+                        }}
                         className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all inline-flex items-center gap-1 shadow-2xs hover:scale-105 active:scale-95 border ${assessment.badgeClass}`}
-                        title={`Nhận xét: ${assessment.label} (${assessment.desc}) - Bấm để sao chép`}
+                        title={`Nhận xét TT22: ${assessment.label} (${assessment.desc}) - Bấm để xem nhận xét chi tiết`}
                       >
                         <span>{assessment.icon}</span>
                         <span>{assessment.label}</span>
@@ -203,6 +219,20 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
 
       {/* Footer Actions */}
       <div className="pt-4 flex flex-wrap gap-2.5">
+        {onOpenTT22Modal && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenTT22Modal();
+            }}
+            className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-xs transition-transform active:scale-95 flex items-center justify-center gap-1.5"
+            title="Mở bảng nhận xét chi tiết chuẩn Thông tư 22"
+          >
+            <FileText size={15} />
+            <span>Xem nhận xét TT22</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => exportStudentsToCSV(students, className)}
