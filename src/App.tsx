@@ -145,6 +145,7 @@ export const App: React.FC = () => {
         onAddAllClassBonus={() => addAllClassBonus(2, 'Thưởng cả lớp')}
         onDeductAllClassPenalty={() => deductAllClassPenalty(2, 'Nhắc nhở cả lớp')}
         onOpenClassPenaltyModal={() => setIsClassPenaltyModalOpen(true)}
+        onResetClassPoints={() => resetClassPoints(currentClassId)}
         onExportScoreFile={handleExportScoreFile}
         onManualSync={manualSync}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}

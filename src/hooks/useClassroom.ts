@@ -258,20 +258,26 @@ export const useClassroom = () => {
   const resetClassPoints = useCallback((classId: string) => {
     const target = classes.find((c) => c.id === classId);
     if (!target) return;
-    const defPts = target.defaultPoints ?? 2;
 
-    saveUndoSnapshot(`Reset điểm lớp ${target.name} về ${defPts}đ`);
+    saveUndoSnapshot(`Reset điểm lớp ${target.name} (-18đ / sàn 2đ)`);
 
     const updated = classes.map((c) => {
       if (c.id === classId) {
         return {
           ...c,
-          students: c.students.map((s) => ({
-            ...s,
-            attendance: 'present' as AttendanceStatus,
-            points: defPts,
-            lastNote: `Reset điểm đầu giờ (+${defPts}đ)`,
-          })),
+          students: c.students.map((s) => {
+            const currentPoints = s.points || 0;
+            // Quy tắc: Số điểm hiện có tự động bị trừ 18 điểm. Nếu dưới 18 điểm sẽ trở về 2 điểm ban đầu.
+            const newPoints = currentPoints < 18 ? 2 : Math.max(2, currentPoints - 18);
+            const noteText = currentPoints < 18
+              ? 'Reset cả lớp (dưới 18đ về 2đ ban đầu)'
+              : `Reset cả lớp (-18đ còn ${newPoints}đ)`;
+            return {
+              ...s,
+              points: newPoints,
+              lastNote: noteText,
+            };
+          }),
         };
       }
       return c;
@@ -279,7 +285,7 @@ export const useClassroom = () => {
 
     persistClasses(updated);
     audioService.play('plus');
-    showToast(`Đã reset điểm lớp ${target.name} về ${defPts} điểm ban đầu!`, 'success');
+    showToast(`Đã reset điểm cả lớp ${target.name}: Trừ 18 điểm (dưới 18đ về 2đ ban đầu)! 🔄`, 'success');
   }, [classes, persistClasses, saveUndoSnapshot, showToast]);
 
   const toggleAttendance = useCallback((studentId: string, newStatus: AttendanceStatus) => {

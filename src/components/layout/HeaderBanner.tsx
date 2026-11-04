@@ -5,7 +5,7 @@ import { StatsGrid } from '../../features/classroom/components/StatsGrid';
 import { SchoolBellButton } from '../../features/classroom/components/SchoolBellButton';
 import { SilenceButton } from '../../features/classroom/components/SilenceButton';
 import { SyncStatusBadge } from '../../features/supabase-sync/components/SyncStatusBadge';
-import { Sparkles, Trophy, CheckCircle, Zap, MinusCircle, Download, FileSpreadsheet, Gauge, Crown } from 'lucide-react';
+import { Sparkles, Trophy, CheckCircle, Zap, MinusCircle, Download, FileSpreadsheet, Gauge, Crown, RotateCcw } from 'lucide-react';
 
 interface HeaderBannerProps {
   classes: ClassItem[];
@@ -29,6 +29,7 @@ interface HeaderBannerProps {
   onAddAllClassBonus: () => void;
   onDeductAllClassPenalty?: () => void;
   onOpenClassPenaltyModal?: () => void;
+  onResetClassPoints?: () => void;
   onExportScoreFile: () => void;
   onManualSync: () => void;
   onOpenSupabaseModal: () => void;
@@ -57,6 +58,7 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
   onAddAllClassBonus,
   onDeductAllClassPenalty,
   onOpenClassPenaltyModal,
+  onResetClassPoints,
   onExportScoreFile,
   onManualSync,
   onOpenSupabaseModal,
@@ -192,6 +194,29 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             >
               <MinusCircle size={15} />
               <span>Cả lớp -1đ</span>
+            </button>
+          )}
+
+          {/* Whole Class Reset Button (-18đ / sàn 2đ) */}
+          {onResetClassPoints && (
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  confirm(
+                    `Thầy/Cô có chắc chắn muốn RESET ĐIỂM CẢ LỚP "${currentClass.name}" không?\n\n` +
+                    `• Học sinh có từ 18 điểm trở lên: Tự động trừ 18 điểm (≥ 2đ).\n` +
+                    `• Học sinh có điểm dưới 18 điểm: Trở về 2 điểm ban đầu.`
+                  )
+                ) {
+                  onResetClassPoints();
+                }
+              }}
+              className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+              title="Reset điểm cả lớp: Trừ 18 điểm (học sinh dưới 18 điểm trở về 2 điểm ban đầu)"
+            >
+              <RotateCcw size={15} />
+              <span>Reset cả lớp (-18đ)</span>
             </button>
           )}
 

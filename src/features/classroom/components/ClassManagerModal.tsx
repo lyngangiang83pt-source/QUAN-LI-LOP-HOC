@@ -245,11 +245,21 @@ export const ClassManagerModal: React.FC<ClassManagerModalProps> = ({
                   ) : (
                     <button
                       type="button"
-                      onClick={() => onResetPoints(c.id)}
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `Thầy/Cô có chắc chắn muốn RESET ĐIỂM LỚP "${c.name}" không?\n\n` +
+                            `• Học sinh có từ 18 điểm trở lên: Tự động trừ 18 điểm (≥ 2đ).\n` +
+                            `• Học sinh dưới 18 điểm: Trở về 2 điểm ban đầu.`
+                          )
+                        ) {
+                          onResetPoints(c.id);
+                        }
+                      }}
                       className="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-xs border border-amber-300 transition-colors flex items-center gap-1"
-                      title="Reset lại điểm toàn bộ học sinh lớp này về điểm mặc định"
+                      title="Reset điểm cả lớp: Trừ 18 điểm (học sinh dưới 18 điểm trở về 2 điểm ban đầu)"
                     >
-                      <RotateCcw size={13} /> Reset {c.defaultPoints ?? 2}đ
+                      <RotateCcw size={13} /> Reset cả lớp (-18đ)
                     </button>
                   )}
 
