@@ -259,7 +259,11 @@ export const useClassroom = () => {
     const target = classes.find((c) => c.id === classId);
     if (!target) return;
 
-    saveUndoSnapshot(`Reset điểm lớp ${target.name} (-18đ / sàn 2đ)`);
+    // Đếm số lượng học sinh đạt chuẩn (>= 18đ) và số lượng học sinh dưới 18đ
+    const xCount = target.students.filter((s) => (s.points || 0) >= 18).length;
+    const yCount = target.students.length - xCount;
+
+    saveUndoSnapshot(`Reset điểm lớp ${target.name} (trừ 18đ: ${xCount} em, sàn 2đ: ${yCount} em)`);
 
     const updated = classes.map((c) => {
       if (c.id === classId) {
@@ -285,7 +289,7 @@ export const useClassroom = () => {
 
     persistClasses(updated);
     audioService.play('plus');
-    showToast(`Đã reset điểm cả lớp ${target.name}: Trừ 18 điểm (dưới 18đ về 2đ ban đầu)! 🔄`, 'success');
+    showToast(`Đã trừ 18đ cho ${xCount} em đạt chuẩn và đưa ${yCount} em về 2đ sàn thành công! 🔄`, 'success');
   }, [classes, persistClasses, saveUndoSnapshot, showToast]);
 
   const toggleAttendance = useCallback((studentId: string, newStatus: AttendanceStatus) => {

@@ -202,11 +202,14 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             <button
               type="button"
               onClick={() => {
+                const x = students.filter((s) => (s.points || 0) >= 18).length;
+                const y = students.length - x;
                 if (
                   confirm(
                     `Thầy/Cô có chắc chắn muốn RESET ĐIỂM CẢ LỚP "${currentClass.name}" không?\n\n` +
-                    `• Học sinh có từ 18 điểm trở lên: Tự động trừ 18 điểm (≥ 2đ).\n` +
-                    `• Học sinh có điểm dưới 18 điểm: Trở về 2 điểm ban đầu.`
+                    `📊 Dự kiến biến động điểm số lớp ${currentClass.name}:\n` +
+                    `• ${x} em đạt chuẩn (≥ 18đ): Sẽ bị trừ 18 điểm.\n` +
+                    `• ${y} em dưới 18 điểm: Sẽ trở về 2 điểm sàn ban đầu.`
                   )
                 ) {
                   onResetClassPoints();
