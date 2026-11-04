@@ -18,6 +18,7 @@ import { AddStudentModal } from './features/students/components/AddStudentModal'
 import { ScoreModal } from './features/students/components/ScoreModal';
 import { FindStudentByCodeModal } from './features/students/components/FindStudentByCodeModal';
 import { TT22AssessmentModal } from './features/students/components/TT22AssessmentModal';
+import { ResetHonorModal } from './features/classroom/components/ResetHonorModal';
 import { SupabaseConfigModal } from './features/supabase-sync/components/SupabaseConfigModal';
 import { exportScoreFileExcel } from './features/import-export/utils/csvExporter';
 import { Student } from './types';
@@ -34,6 +35,9 @@ export const App: React.FC = () => {
     setSearchQuery,
     toasts,
     showToast,
+    resetHonorData,
+    isResetHonorModalOpen,
+    setIsResetHonorModalOpen,
     undoRecord,
     undoLastAction,
     dismissUndo,
@@ -305,6 +309,13 @@ export const App: React.FC = () => {
         mode={scoreModalData.mode}
         onApplyScore={updateScore}
         onResetScore={resetStudentScore}
+      />
+
+      <ResetHonorModal
+        isOpen={isResetHonorModalOpen}
+        onClose={() => setIsResetHonorModalOpen(false)}
+        data={resetHonorData}
+        onShowToast={showToast}
       />
 
       <SupabaseConfigModal

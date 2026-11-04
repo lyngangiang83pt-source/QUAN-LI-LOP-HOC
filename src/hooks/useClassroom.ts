@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ClassItem, Student, AttendanceStatus, FilterType, ToastItem, SyncStatus } from '../types';
+import { ClassItem, Student, AttendanceStatus, FilterType, ToastItem, SyncStatus, ResetHonorData } from '../types';
 import { DEFAULT_CLASSES } from '../constants/classroomData';
 import { audioService } from '../services/audioService';
 import { triggerGoldStarsCelebration } from '../services/confettiService';
@@ -42,6 +42,8 @@ export const useClassroom = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [undoRecord, setUndoRecord] = useState<UndoRecord | null>(null);
+  const [resetHonorData, setResetHonorData] = useState<ResetHonorData | null>(null);
+  const [isResetHonorModalOpen, setIsResetHonorModalOpen] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('CLASSROOM_ANIMATIONS_ENABLED');
@@ -63,14 +65,20 @@ export const useClassroom = () => {
 
   const students = useMemo(() => currentClass.students || [], [currentClass]);
 
-  // Toast helper
-  const showToast = useCallback((message: string, type: ToastItem['type'] = 'success') => {
+  // Toast helper với hỗ trợ nút hành động (action) & thời gian hiển thị linh hoạt
+  const showToast = useCallback((
+    message: string, 
+    type: ToastItem['type'] = 'success',
+    action?: ToastItem['action'],
+    durationMs?: number
+  ) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type, action, durationMs }]);
 
+    const timeout = durationMs ?? (action ? 8000 : 2800);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2800);
+    }, timeout);
   }, []);
 
   const toggleAnimations = useCallback(() => {
@@ -259,9 +267,25 @@ export const useClassroom = () => {
     const target = classes.find((c) => c.id === classId);
     if (!target) return;
 
-    // Đếm số lượng học sinh đạt chuẩn (>= 18đ) và số lượng học sinh dưới 18đ
-    const xCount = target.students.filter((s) => (s.points || 0) >= 18).length;
+    // Danh sách học sinh đạt chuẩn (>= 18đ) để vinh danh & tuyên dương
+    const honoredStudents = target.students
+      .filter((s) => (s.points || 0) >= 18)
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        prevPoints: s.points || 0,
+        newPoints: Math.max(2, (s.points || 0) - 18),
+      }));
+
+    const xCount = honoredStudents.length;
     const yCount = target.students.length - xCount;
+
+    if (xCount > 0) {
+      setResetHonorData({
+        className: target.name,
+        students: honoredStudents,
+      });
+    }
 
     saveUndoSnapshot(`Reset điểm lớp ${target.name} (trừ 18đ: ${xCount} em, sàn 2đ: ${yCount} em)`);
 
@@ -289,7 +313,19 @@ export const useClassroom = () => {
 
     persistClasses(updated);
     audioService.play('plus');
-    showToast(`Đã trừ 18đ cho ${xCount} em đạt chuẩn và đưa ${yCount} em về 2đ sàn thành công! 🔄`, 'success');
+    showToast(
+      `Đã trừ 18đ cho ${xCount} em đạt chuẩn và đưa ${yCount} em về 2đ sàn thành công! 🔄`,
+      'success',
+      xCount > 0
+        ? {
+            label: '📋 Xem danh sách',
+            onClick: () => {
+              setIsResetHonorModalOpen(true);
+            },
+          }
+        : undefined,
+      xCount > 0 ? 8000 : 3200
+    );
   }, [classes, persistClasses, saveUndoSnapshot, showToast]);
 
   const toggleAttendance = useCallback((studentId: string, newStatus: AttendanceStatus) => {
@@ -664,6 +700,9 @@ export const useClassroom = () => {
     setSearchQuery,
     toasts,
     showToast,
+    resetHonorData,
+    isResetHonorModalOpen,
+    setIsResetHonorModalOpen,
     undoRecord,
     undoLastAction,
     dismissUndo,

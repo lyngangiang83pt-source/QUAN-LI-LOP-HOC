@@ -30,6 +30,23 @@ export interface ToastItem {
   id: string;
   message: string;
   type: 'success' | 'danger' | 'wheel' | 'rank' | 'info';
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  durationMs?: number;
+}
+
+export interface ResetHonoredStudent {
+  id: string;
+  name: string;
+  prevPoints: number;
+  newPoints: number;
+}
+
+export interface ResetHonorData {
+  className: string;
+  students: ResetHonoredStudent[];
 }
 
 export type SyncState = 'idle' | 'syncing' | 'connected' | 'error' | 'offline';
