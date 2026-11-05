@@ -21,7 +21,21 @@ export const useClassroom = () => {
   const [classes, setClasses] = useState<ClassItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_CLASSES);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: ClassItem[] = JSON.parse(saved);
+        // Tự động kiểm tra và chuẩn hóa lớp 6B3 đạt đủ 38 học sinh chuẩn
+        const cls6B3Index = parsed.findIndex((c) => c.name.toUpperCase().includes('6B3'));
+        if (cls6B3Index !== -1 && (parsed[cls6B3Index].students?.length || 0) < 38) {
+          parsed[cls6B3Index] = DEFAULT_CLASSES[0];
+          localStorage.setItem(STORAGE_CLASSES, JSON.stringify(parsed));
+          return parsed;
+        } else if (cls6B3Index === -1) {
+          const updated = [DEFAULT_CLASSES[0], ...parsed];
+          localStorage.setItem(STORAGE_CLASSES, JSON.stringify(updated));
+          return updated;
+        }
+        return parsed;
+      }
     } catch {
       // Fallback
     }
@@ -129,8 +143,11 @@ export const useClassroom = () => {
         if (savedCurId && remote.some((c) => c.id === savedCurId)) {
           setCurrentClassId(savedCurId);
         } else {
-          setCurrentClassId(remote[0].id);
-          localStorage.setItem(STORAGE_CURRENT_ID, remote[0].id);
+          // Ưu tiên chọn lớp 6B3 nếu có trong danh sách
+          const class6B3 = remote.find((c) => c.name.toUpperCase().includes('6B3'));
+          const defaultId = class6B3 ? class6B3.id : remote[0].id;
+          setCurrentClassId(defaultId);
+          localStorage.setItem(STORAGE_CURRENT_ID, defaultId);
         }
 
         setSyncStatus({ state: 'connected', message: '☁️ Supabase: Đã kết nối ✅' });
@@ -678,8 +695,11 @@ export const useClassroom = () => {
         if (savedCurId && remote.some((c) => c.id === savedCurId)) {
           setCurrentClassId(savedCurId);
         } else {
-          setCurrentClassId(remote[0].id);
-          localStorage.setItem(STORAGE_CURRENT_ID, remote[0].id);
+          // Ưu tiên chọn lớp 6B3 nếu có trong danh sách
+          const class6B3 = remote.find((c) => c.name.toUpperCase().includes('6B3'));
+          const defaultId = class6B3 ? class6B3.id : remote[0].id;
+          setCurrentClassId(defaultId);
+          localStorage.setItem(STORAGE_CURRENT_ID, defaultId);
         }
         setSyncStatus({ state: 'connected', message: '☁️ Supabase: Đã kết nối ✅' });
         showToast('Đã tải và đồng bộ thành công dữ liệu từ Supabase Cloud!', 'success');
