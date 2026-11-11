@@ -1,7 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Modal } from '../../../components/common/Modal';
 import { Student } from '../../../types';
-import { TT22Comment, generateAllTT22Comments } from '../../../utils/tt22AssessmentGenerator';
+import { 
+  TT22Comment, 
+  generateAllTT22Comments, 
+  generateTT22Comment, 
+  getPrefixForLevel 
+} from '../../../utils/tt22AssessmentGenerator';
 import { ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
 import { audioService } from '../../../services/audioService';
 import { 
@@ -43,11 +48,14 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
   const [commentsMap, setCommentsMap] = useState<{ [id: string]: TT22Comment }>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
+  const [uppercasePrefix, setUppercasePrefix] = useState(false);
+  const [seedOffset, setSeedOffset] = useState(0);
+  const [studentOffsetMap, setStudentOffsetMap] = useState<{ [id: string]: number }>({});
 
   // Khởi tạo lời nhận xét tự động theo TT22 khi mở modal hoặc thay đổi danh sách
   useEffect(() => {
     if (isOpen) {
-      const all = generateAllTT22Comments(students);
+      const all = generateAllTT22Comments(students, uppercasePrefix, 0);
       const map: { [id: string]: TT22Comment } = {};
       all.forEach((c) => {
         map[c.studentId] = c;
@@ -57,12 +65,54 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
       setLevelFilter('all');
       setIsCopiedAll(false);
       setCopiedId(null);
+      setSeedOffset(0);
+      setStudentOffsetMap({});
     }
   }, [isOpen, students]);
 
-  // Làm mới ngẫu nhiên các biến thể nhận xét (tránh lặp khuôn giữa các em)
+  // Đổi kiểu viết hoa cụm từ đầu câu ("XUẤT SẮC:" hoặc "Xuất sắc:")
+  const handleToggleUppercase = () => {
+    const nextUpper = !uppercasePrefix;
+    setUppercasePrefix(nextUpper);
+    setCommentsMap((prev) => {
+      const nextMap = { ...prev };
+      students.forEach((s) => {
+        const existing = nextMap[s.id];
+        if (existing) {
+          const nextPrefix = getPrefixForLevel(existing.level, nextUpper);
+          const oldPrefix = existing.prefix;
+          let newFullComment = existing.fullComment;
+          if (newFullComment.startsWith(oldPrefix)) {
+            newFullComment = newFullComment.replace(oldPrefix, nextPrefix);
+          } else {
+            newFullComment = `${nextPrefix} ${existing.content}`;
+          }
+          nextMap[s.id] = {
+            ...existing,
+            prefix: nextPrefix,
+            fullComment: newFullComment,
+            parentMessage: `Kính gửi phụ huynh em ${s.name} (Mã: ${s.id})! Điểm tích lũy: ${s.points || 0}đ. Nhận xét TT22: ${newFullComment}`,
+            wordCount: newFullComment.trim().split(/\s+/).filter(Boolean).length,
+          };
+        }
+      });
+      return nextMap;
+    });
+    if (onShowToast) {
+      onShowToast(
+        nextUpper 
+          ? '🔤 Đã chuyển cụm từ đầu sang VIẾT HOA (XUẤT SẮC, TÍCH CỰC...)!' 
+          : '🔡 Đã chuyển cụm từ đầu sang chuẩn chữ hoa đầu (Xuất sắc, Tích cực...)!', 
+        'info'
+      );
+    }
+  };
+
+  // Làm mới ngẫu nhiên các biến thể nhận xét cả lớp (tránh lặp khuôn giữa các em)
   const handleRegenerateVariations = () => {
-    const all = generateAllTT22Comments(students);
+    const nextOffset = seedOffset + 1;
+    setSeedOffset(nextOffset);
+    const all = generateAllTT22Comments(students, uppercasePrefix, nextOffset);
     const map: { [id: string]: TT22Comment } = {};
     all.forEach((c) => {
       map[c.studentId] = c;
@@ -70,7 +120,19 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
     setCommentsMap(map);
     audioService.play('plus');
     if (onShowToast) {
-      onShowToast('✨ Đã làm mới các biến thể câu nhận xét chuẩn TT22!', 'success');
+      onShowToast('✨ Đã làm mới các biến thể câu nhận xét chuẩn TT22 (15 - 20 từ)!', 'success');
+    }
+  };
+
+  // Làm mới riêng mẫu nhận xét của 1 học sinh
+  const handleRegenerateOne = (student: Student) => {
+    const nextIdx = (studentOffsetMap[student.id] || 0) + 1;
+    setStudentOffsetMap((prev) => ({ ...prev, [student.id]: nextIdx }));
+    const newComment = generateTT22Comment(student, nextIdx, uppercasePrefix);
+    setCommentsMap((prev) => ({ ...prev, [student.id]: newComment }));
+    audioService.play('plus');
+    if (onShowToast) {
+      onShowToast(`🔄 Đã đổi mẫu nhận xét mới cho em ${student.name}!`, 'info');
     }
   };
 
@@ -114,13 +176,13 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
     const lines: string[] = [];
     lines.push(`DANH SÁCH NHẬN XÉT HỌC SINH THEO THÔNG TƯ 22/2021/TT-BGDĐT`);
     lines.push(`Lớp: ${className} | Tổng số: ${students.length} học sinh`);
-    lines.push(`Hình thức: ${viewMode === 'so_theo_doi' ? 'Sổ theo dõi & đánh giá học sinh' : 'Sổ liên lạc phụ huynh'}\n`);
+    lines.push(`Hình thức: ${viewMode === 'so_theo_doi' ? 'Sổ theo dõi & đánh giá học sinh (15 - 20 từ)' : 'Sổ liên lạc phụ huynh'}\n`);
 
     students.forEach((s, idx) => {
       const item = commentsMap[s.id];
       if (item) {
         const text = viewMode === 'so_theo_doi' ? item.fullComment : item.parentMessage;
-        lines.push(`${idx + 1}. [${s.id}] ${s.name} (${s.points}đ - ${item.levelLabel}):\n${text}\n`);
+        lines.push(`${idx + 1}. [${s.id}] ${s.name} (${s.points}đ - ${item.levelLabel} | ${item.wordCount} từ):\n${text}\n`);
       }
     });
 
@@ -148,7 +210,8 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
         'HỌ VÀ TÊN': s.name || '',
         'ĐIỂM TÍCH LŨY': s.points || 0,
         'MỨC ĐÁNH GIÁ (TT22)': item ? item.levelLabel : '',
-        'NHẬN XÉT SỔ THEO DÕI & HỌC BẠ': item ? item.fullComment : '',
+        'SỐ TỪ': item ? item.wordCount : 0,
+        'NHẬN XÉT SỔ THEO DÕI & HỌC BẠ (15-20 TỪ)': item ? item.fullComment : '',
         'TIN NHẮN SỔ LIÊN LẠC PHỤ HUYNH': item ? item.parentMessage : '',
       };
     });
@@ -160,8 +223,9 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
       { wch: 25 },
       { wch: 14 },
       { wch: 18 },
-      { wch: 45 },
+      { wch: 10 },
       { wch: 55 },
+      { wch: 65 },
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -240,7 +304,7 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
             }`}
           >
             <BookOpen size={14} />
-            <span>Sổ theo dõi & Học bạ (25-45 từ)</span>
+            <span>Sổ theo dõi & Học bạ (15-20 từ)</span>
           </button>
 
           <button
@@ -257,13 +321,26 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
           </button>
         </div>
 
-        {/* Nút hành động nhanh: Sao chép cả lớp & Xuất Excel */}
+        {/* Nút hành động nhanh: Đổi kiểu chữ hoa, Sao chép cả lớp & Xuất Excel */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleToggleUppercase}
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-black transition-all flex items-center gap-1 shadow-2xs active:scale-95 ${
+              uppercasePrefix
+                ? 'bg-emerald-600 text-white border-emerald-600'
+                : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+            }`}
+            title="Bấm để chuyển đổi giữa viết hoa cụm từ đầu (XUẤT SẮC:, TÍCH CỰC:) và viết thường hoa đầu từ (Xuất sắc:, Tích cực:)"
+          >
+            <span className="font-mono text-[11px] font-black">{uppercasePrefix ? 'XUẤT SẮC:' : 'Xuất sắc:'}</span>
+          </button>
+
           <button
             type="button"
             onClick={handleRegenerateVariations}
             className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs active:scale-95"
-            title="Tạo lại ngẫu nhiên các mẫu câu nhận xét khác để tránh trùng lặp giữa các em"
+            title="Tạo lại ngẫu nhiên các mẫu câu nhận xét khác (15-20 từ) để tránh trùng lặp giữa các em"
           >
             <RefreshCw size={13} />
             <span className="hidden sm:inline">Làm mới câu</span>
@@ -415,11 +492,37 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
                       </span>
                     </div>
 
-                    {/* Nút Sao chép & Độ dài chữ */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[11px] text-slate-400 font-bold">
-                        {item.wordCount} chữ
+                    {/* Nút Đổi câu riêng, Sao chép & Độ dài chữ */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span 
+                        className={`text-[11px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 border ${
+                          item.wordCount >= 15 && item.wordCount <= 20
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}
+                        title={
+                          item.wordCount >= 15 && item.wordCount <= 20
+                            ? 'Chuẩn quy định 15 - 20 từ theo Thông tư 22'
+                            : 'Lưu ý: Độ dài khuyến nghị theo TT22 là 15 - 20 từ'
+                        }
+                      >
+                        {item.wordCount >= 15 && item.wordCount <= 20 ? (
+                          <Check size={11} className="text-emerald-600" />
+                        ) : (
+                          <AlertCircle size={11} className="text-amber-600" />
+                        )}
+                        <span>{item.wordCount} từ</span>
                       </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRegenerateOne(s)}
+                        className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors shadow-2xs active:scale-95"
+                        title="Đổi mẫu câu nhận xét khác cho riêng học sinh này"
+                      >
+                        <RefreshCw size={12} />
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => handleCopyOne(s.id)}
