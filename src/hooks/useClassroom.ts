@@ -284,18 +284,19 @@ export const useClassroom = () => {
     const target = classes.find((c) => c.id === classId);
     if (!target) return;
 
-    // Danh sách học sinh đạt chuẩn (>= 18đ) để vinh danh & tuyên dương
+    const defPts = target.defaultPoints ?? 2;
+
+    // Danh sách học sinh đạt thành tích cao (>= 18đ) trước khi reset để vinh danh & tuyên dương nếu cần
     const honoredStudents = target.students
       .filter((s) => (s.points || 0) >= 18)
       .map((s) => ({
         id: s.id,
         name: s.name,
         prevPoints: s.points || 0,
-        newPoints: Math.max(2, (s.points || 0) - 18),
+        newPoints: defPts,
       }));
 
     const xCount = honoredStudents.length;
-    const yCount = target.students.length - xCount;
 
     if (xCount > 0) {
       setResetHonorData({
@@ -304,25 +305,18 @@ export const useClassroom = () => {
       });
     }
 
-    saveUndoSnapshot(`Reset điểm lớp ${target.name} (trừ 18đ: ${xCount} em, sàn 2đ: ${yCount} em)`);
+    saveUndoSnapshot(`Reset điểm lớp ${target.name} về ${defPts}đ ban đầu`);
 
     const updated = classes.map((c) => {
       if (c.id === classId) {
         return {
           ...c,
-          students: c.students.map((s) => {
-            const currentPoints = s.points || 0;
-            // Quy tắc: Số điểm hiện có tự động bị trừ 18 điểm. Nếu dưới 18 điểm sẽ trở về 2 điểm ban đầu.
-            const newPoints = currentPoints < 18 ? 2 : Math.max(2, currentPoints - 18);
-            const noteText = currentPoints < 18
-              ? 'Reset cả lớp (dưới 18đ về 2đ ban đầu)'
-              : `Reset cả lớp (-18đ còn ${newPoints}đ)`;
-            return {
-              ...s,
-              points: newPoints,
-              lastNote: noteText,
-            };
-          }),
+          students: c.students.map((s) => ({
+            ...s,
+            attendance: 'present' as AttendanceStatus,
+            points: defPts,
+            lastNote: `Reset cả lớp (+${defPts}đ)`,
+          })),
         };
       }
       return c;
@@ -331,17 +325,17 @@ export const useClassroom = () => {
     persistClasses(updated);
     audioService.play('plus');
     showToast(
-      `Đã trừ 18đ cho ${xCount} em đạt chuẩn và đưa ${yCount} em về 2đ sàn thành công! 🔄`,
+      `Đã reset toàn bộ điểm học sinh lớp ${target.name} về ${defPts} điểm ban đầu (+${defPts}đ) thành công! 🔄`,
       'success',
       xCount > 0
         ? {
-            label: '📋 Xem danh sách',
+            label: '📋 Tuyên dương trước reset',
             onClick: () => {
               setIsResetHonorModalOpen(true);
             },
           }
         : undefined,
-      xCount > 0 ? 8000 : 3200
+      xCount > 0 ? 8000 : 3500
     );
   }, [classes, persistClasses, saveUndoSnapshot, showToast]);
 

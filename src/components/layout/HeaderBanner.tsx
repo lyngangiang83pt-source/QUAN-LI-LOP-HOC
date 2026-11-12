@@ -197,29 +197,25 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             </button>
           )}
 
-          {/* Whole Class Reset Button (-18đ / sàn 2đ) */}
+          {/* Whole Class Reset Button (+2đ) */}
           {onResetClassPoints && (
             <button
               type="button"
               onClick={() => {
-                const x = students.filter((s) => (s.points || 0) >= 18).length;
-                const y = students.length - x;
                 if (
                   confirm(
-                    `Thầy/Cô có chắc chắn muốn RESET ĐIỂM CẢ LỚP "${currentClass.name}" không?\n\n` +
-                    `📊 Dự kiến biến động điểm số lớp ${currentClass.name}:\n` +
-                    `• ${x} em đạt chuẩn (≥ 18đ): Sẽ bị trừ 18 điểm.\n` +
-                    `• ${y} em dưới 18 điểm: Sẽ trở về 2 điểm sàn ban đầu.`
+                    `Thầy/Cô có chắc chắn muốn RESET ĐIỂM CẢ LỚP "${currentClass.name}" về 2 điểm ban đầu (+2đ) không?\n\n` +
+                    `• Toàn bộ ${students.length} học sinh trong lớp sẽ được đặt lại về 2 điểm khởi đầu tiết học.`
                   )
                 ) {
                   onResetClassPoints();
                 }
               }}
               className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              title="Reset điểm cả lớp: Trừ 18 điểm (học sinh dưới 18 điểm trở về 2 điểm ban đầu)"
+              title="Reset điểm cả lớp: Đưa toàn bộ học sinh về 2 điểm ban đầu (+2đ)"
             >
               <RotateCcw size={15} />
-              <span>Reset cả lớp (-18đ)</span>
+              <span>Reset cả lớp (+2đ)</span>
             </button>
           )}
 

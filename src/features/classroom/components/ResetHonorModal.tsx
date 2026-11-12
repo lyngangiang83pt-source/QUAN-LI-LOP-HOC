@@ -33,14 +33,14 @@ export const ResetHonorModal: React.FC<ResetHonorModalProps> = ({
 
   const handleCopyZalo = () => {
     const lines = [
-      `🎉 BẢNG VINH DANH & TUYÊN DƯƠNG HỌC SINH ĐẠT CHUẨN 🎉`,
+      `🎉 BẢNG VINH DANH & TUYÊN DƯƠNG HỌC SINH XUẤT SẮC 🎉`,
       `Lớp: ${data.className} | Ngày: ${new Date().toLocaleDateString('vi-VN')}`,
-      `Thầy/Cô nhiệt liệt tuyên dương ${sortedStudents.length} học sinh xuất sắc đã đạt mốc điểm chuẩn (≥ 18đ) trong hiệp thi đua vừa qua:\n`,
+      `Thầy/Cô nhiệt liệt tuyên dương ${sortedStudents.length} học sinh xuất sắc đã đạt mốc điểm cao (≥ 18đ) trong đợt học vừa qua:\n`,
     ];
 
     sortedStudents.forEach((s, idx) => {
       const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '⭐';
-      lines.push(`${idx + 1}. ${medal} [Mã: ${s.id}] ${s.name}: ${s.prevPoints}đ (sau trừ 18đ còn ${s.newPoints}đ)`);
+      lines.push(`${idx + 1}. ${medal} [Mã: ${s.id}] ${s.name}: ${s.prevPoints}đ (sau reset về ${s.newPoints}đ)`);
     });
 
     lines.push(`\nChúc mừng các em và chúc cả lớp tiếp tục bứt phá trong hiệp tiếp theo! 🌟👏`);
@@ -151,7 +151,7 @@ export const ResetHonorModal: React.FC<ResetHonorModalProps> = ({
                       {s.prevPoints} ⭐
                     </span>
                     <span className="text-slate-400 font-bold text-xs">➔</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-black text-xs shadow-2xs" title="Điểm sau khi trừ 18đ">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-black text-xs shadow-2xs" title="Điểm sau khi reset về 2đ">
                       +{s.newPoints} ⭐
                     </span>
                   </div>
