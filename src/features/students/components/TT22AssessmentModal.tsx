@@ -7,7 +7,7 @@ import {
   generateTT22Comment, 
   getPrefixForLevel 
 } from '../../../utils/tt22AssessmentGenerator';
-import { ASSESSMENT_RUBRIC } from '../../../constants/classroomData';
+import { ASSESSMENT_RUBRIC, parsePenaltyFromNote } from '../../../constants/classroomData';
 import { audioService } from '../../../services/audioService';
 import { 
   FileText, 
@@ -32,6 +32,7 @@ interface TT22AssessmentModalProps {
   className: string;
   initialSelectedStudentId?: string | null;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
+  onUpdateStudentStats?: (studentId: string, updates: { absentCount?: number; penaltyPoints?: number }) => void;
 }
 
 export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
@@ -41,6 +42,7 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
   className,
   initialSelectedStudentId,
   onShowToast,
+  onUpdateStudentStats,
 }) => {
   const [viewMode, setViewMode] = useState<'so_theo_doi' | 'so_lien_lac'>('so_theo_doi');
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,10 +53,20 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
   const [uppercasePrefix, setUppercasePrefix] = useState(false);
   const [seedOffset, setSeedOffset] = useState(0);
   const [studentOffsetMap, setStudentOffsetMap] = useState<{ [id: string]: number }>({});
+  const [studentStatsMap, setStudentStatsMap] = useState<{ [id: string]: { absentCount: number; penaltyPoints: number } }>({});
 
   // Khởi tạo lời nhận xét tự động theo TT22 khi mở modal hoặc thay đổi danh sách
   useEffect(() => {
     if (isOpen) {
+      const statsMap: { [id: string]: { absentCount: number; penaltyPoints: number } } = {};
+      students.forEach((s) => {
+        statsMap[s.id] = {
+          absentCount: s.absentCount || 0,
+          penaltyPoints: s.penaltyPoints ?? parsePenaltyFromNote(s.lastNote),
+        };
+      });
+      setStudentStatsMap(statsMap);
+
       const all = generateAllTT22Comments(students, uppercasePrefix, 0);
       const map: { [id: string]: TT22Comment } = {};
       all.forEach((c) => {
@@ -69,6 +81,50 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
       setStudentOffsetMap({});
     }
   }, [isOpen, students]);
+
+  // Cập nhật số lượt nghỉ hoặc điểm bị trừ của học sinh trực tiếp trong modal
+  const handleUpdateStudentStats = (studentId: string, deltaAbsent: number, deltaPenalty: number) => {
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const currentStats = studentStatsMap[studentId] || {
+      absentCount: student.absentCount || 0,
+      penaltyPoints: student.penaltyPoints ?? parsePenaltyFromNote(student.lastNote),
+    };
+
+    const nextAbsent = Math.max(0, currentStats.absentCount + deltaAbsent);
+    const nextPenalty = Math.max(0, currentStats.penaltyPoints + deltaPenalty);
+
+    const updatedStats = { absentCount: nextAbsent, penaltyPoints: nextPenalty };
+    setStudentStatsMap((prev) => ({ ...prev, [studentId]: updatedStats }));
+
+    // Tái tạo nhận xét với số liệu chuyên cần / kỷ luật mới
+    const studentWithStats: Student = {
+      ...student,
+      absentCount: nextAbsent,
+      penaltyPoints: nextPenalty,
+    };
+
+    const currentOffset = studentOffsetMap[studentId] || 0;
+    const newComment = generateTT22Comment(studentWithStats, currentOffset, uppercasePrefix);
+    setCommentsMap((prev) => ({ ...prev, [studentId]: newComment }));
+
+    if (onUpdateStudentStats) {
+      onUpdateStudentStats(studentId, updatedStats);
+    }
+
+    audioService.play('plus');
+    if (onShowToast) {
+      if ((student.points || 0) >= 20) {
+        if (nextAbsent > 3 || nextPenalty >= 5) {
+          const reason = nextAbsent > 3 ? `nghỉ ${nextAbsent} lượt (> 3)` : `bị trừ ${nextPenalty}đ (≥ 5đ)`;
+          onShowToast(`⚠️ ${student.name}: ${reason} ➔ Chuyển nhận xét sang "Tích cực"!`, 'info');
+        } else if (currentStats.absentCount > 3 || currentStats.penaltyPoints >= 5) {
+          onShowToast(`👑 ${student.name}: Đạt chuẩn nhận xét "Xuất sắc"!`, 'success');
+        }
+      }
+    }
+  };
 
   // Đổi kiểu viết hoa cụm từ đầu câu ("XUẤT SẮC:" hoặc "Xuất sắc:")
   const handleToggleUppercase = () => {
@@ -204,12 +260,19 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
   const handleExportExcel = () => {
     const data = students.map((s, idx) => {
       const item = commentsMap[s.id];
+      const stats = studentStatsMap[s.id] || {
+        absentCount: s.absentCount || 0,
+        penaltyPoints: s.penaltyPoints ?? parsePenaltyFromNote(s.lastNote),
+      };
       return {
         'STT': idx + 1,
         'MÃ HỌC SINH': s.id || '',
         'HỌ VÀ TÊN': s.name || '',
         'ĐIỂM TÍCH LŨY': s.points || 0,
+        'SỐ LƯỢT NGHỈ': stats.absentCount,
+        'ĐIỂM BỊ TRỪ': stats.penaltyPoints,
         'MỨC ĐÁNH GIÁ (TT22)': item ? item.levelLabel : '',
+        'LƯU Ý CHUYÊN CẦN / NỀ NẾP': item?.downgradedFromExcellent ? item.downgradeReason : '',
         'SỐ TỪ': item ? item.wordCount : 0,
         'NHẬN XÉT SỔ THEO DÕI & HỌC BẠ (15-20 TỪ)': item ? item.fullComment : '',
         'TIN NHẮN SỔ LIÊN LẠC PHỤ HUYNH': item ? item.parentMessage : '',
@@ -222,7 +285,10 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
       { wch: 14 },
       { wch: 25 },
       { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
       { wch: 18 },
+      { wch: 32 },
       { wch: 10 },
       { wch: 55 },
       { wch: 65 },
@@ -490,6 +556,74 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
                         <span>{item.icon}</span>
                         <span>{item.levelLabel}</span>
                       </span>
+
+                      {/* Huy hiệu cảnh báo hạ mức từ Xuất sắc sang Tích cực */}
+                      {item.downgradedFromExcellent && (
+                        <span 
+                          className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-800 border border-rose-300 flex items-center gap-1 shadow-2xs" 
+                          title={item.downgradeReason}
+                        >
+                          <span>⚠️</span>
+                          <span>Đổi sang "Tích cực" ({item.downgradeReason})</span>
+                        </span>
+                      )}
+
+                      {/* Bộ điều chỉnh chuyên cần (Nghỉ học) & kỷ luật (Bị trừ điểm) */}
+                      <div className="flex items-center gap-1.5 ml-auto sm:ml-0 text-xs">
+                        <div 
+                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200/60 transition-colors px-2 py-0.5 rounded-lg border border-slate-200"
+                          title="Số lượt nghỉ học. Nếu nghỉ trên 3 lượt sẽ không nhận xét Xuất sắc mà chuyển thành Tích cực"
+                        >
+                          <span className="text-[10px] font-black uppercase text-slate-500">Nghỉ:</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStudentStats(s.id, -1, 0)}
+                            className="w-4 h-4 rounded hover:bg-white text-slate-700 font-black flex items-center justify-center text-xs active:scale-90"
+                            title="Giảm 1 lượt nghỉ"
+                          >
+                            -
+                          </button>
+                          <span className={`font-black text-xs min-w-3 text-center ${(studentStatsMap[s.id]?.absentCount || 0) > 3 ? 'text-rose-600 font-black' : 'text-slate-800'}`}>
+                            {studentStatsMap[s.id]?.absentCount || 0}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStudentStats(s.id, 1, 0)}
+                            className="w-4 h-4 rounded hover:bg-white text-slate-700 font-black flex items-center justify-center text-xs active:scale-90"
+                            title="Tăng 1 lượt nghỉ"
+                          >
+                            +
+                          </button>
+                          <span className="text-[10px] text-slate-400">lượt</span>
+                        </div>
+
+                        <div 
+                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200/60 transition-colors px-2 py-0.5 rounded-lg border border-slate-200"
+                          title="Số điểm bị trừ. Nếu bị trừ từ 5đ trở lên sẽ không nhận xét Xuất sắc mà chuyển thành Tích cực"
+                        >
+                          <span className="text-[10px] font-black uppercase text-slate-500">Bị trừ:</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStudentStats(s.id, 0, -1)}
+                            className="w-4 h-4 rounded hover:bg-white text-slate-700 font-black flex items-center justify-center text-xs active:scale-90"
+                            title="Giảm 1 điểm phạt"
+                          >
+                            -
+                          </button>
+                          <span className={`font-black text-xs min-w-3 text-center ${(studentStatsMap[s.id]?.penaltyPoints || 0) >= 5 ? 'text-rose-600 font-black' : 'text-slate-800'}`}>
+                            {studentStatsMap[s.id]?.penaltyPoints || 0}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStudentStats(s.id, 0, 1)}
+                            className="w-4 h-4 rounded hover:bg-white text-slate-700 font-black flex items-center justify-center text-xs active:scale-90"
+                            title="Tăng 1 điểm phạt"
+                          >
+                            +
+                          </button>
+                          <span className="text-[10px] text-slate-400">đ</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Nút Đổi câu riêng, Sao chép & Độ dài chữ */}

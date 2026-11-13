@@ -1,4 +1,4 @@
-import { ClassItem, Criteria, PrizeItem } from '../types';
+import { ClassItem, Criteria, PrizeItem, Student } from '../types';
 
 export const BONUS_CRITERIA: Criteria[] = [
   { icon: '🌱', label: 'Cơ hội sửa sai (Gỡ lỗi)', pts: 2 },
@@ -13,7 +13,13 @@ export const BONUS_CRITERIA: Criteria[] = [
 
 export const hasPenaltyNote = (note?: string): boolean => {
   if (!note) return false;
-  return note.includes('(-') || note.includes('vi phạm') || note.includes('phạt') || note.includes('Trừ');
+  return note.includes('(-') || note.includes('vi phạm') || note.includes('phạt') || note.includes('Trừ') || note.includes('bị trừ');
+};
+
+export const parsePenaltyFromNote = (note?: string): number => {
+  if (!note) return 0;
+  const match = note.match(/(?:bị trừ|trừ|phạt|-)\s*(\d+)\s*đ/i);
+  return match && match[1] ? parseInt(match[1], 10) : 0;
 };
 
 export interface AssessmentGrade {
@@ -24,10 +30,55 @@ export interface AssessmentGrade {
   pillClass: string;
   desc: string;
   rangeLabel: string;
+  downgradedFromExcellent?: boolean;
+  downgradeReason?: string;
 }
 
-export const getStudentAssessment = (points: number = 0): AssessmentGrade => {
+export const getStudentAssessment = (
+  target: number | Student = 0,
+  options?: { absentCount?: number; penaltyPoints?: number }
+): AssessmentGrade => {
+  let points = 0;
+  let absentCount = options?.absentCount ?? 0;
+  let penaltyPoints = options?.penaltyPoints ?? 0;
+
+  if (typeof target === 'object' && target !== null) {
+    points = target.points || 0;
+    absentCount = options?.absentCount ?? target.absentCount ?? 0;
+    penaltyPoints = options?.penaltyPoints ?? target.penaltyPoints ?? 0;
+
+    // Tự động nhận diện điểm trừ từ ghi chú gần nhất nếu penaltyPoints chưa được đặt
+    if (penaltyPoints === 0 && target.lastNote) {
+      penaltyPoints = parsePenaltyFromNote(target.lastNote);
+    }
+  } else {
+    points = Number(target) || 0;
+  }
+
   if (points >= 20) {
+    const isAbsentDisqualified = absentCount > 3;
+    const isPenaltyDisqualified = penaltyPoints >= 5;
+
+    // Quy định: Nghỉ trên 3 lượt hoặc bị trừ từ 5đ trở lên thì KHÔNG nhận xét Xuất sắc mà chuyển thành Tích cực
+    if (isAbsentDisqualified || isPenaltyDisqualified) {
+      const reasons: string[] = [];
+      if (isAbsentDisqualified) reasons.push(`nghỉ ${absentCount} lượt (> 3)`);
+      if (isPenaltyDisqualified) reasons.push(`bị trừ ${penaltyPoints}đ (≥ 5đ)`);
+      const reasonText = reasons.join(', ');
+
+      return {
+        level: 'active',
+        label: 'Tích cực',
+        icon: '🌟',
+        badgeClass: 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold border-sky-300 ring-1 ring-sky-300/80 shadow-xs hover:from-sky-400 hover:to-blue-500',
+        pillClass: 'bg-sky-100 text-sky-900 border-sky-300',
+        desc: `Đạt ${points}đ nhưng ${reasonText} ➔ Chuyển thành Tích cực!`,
+        rangeLabel: '≥ 20đ (Tích cực)',
+        downgradedFromExcellent: true,
+        downgradeReason: `Đạt ${points}đ nhưng ${reasonText}`,
+      };
+    }
+
     return {
       level: 'excellent',
       label: 'Xuất sắc',

@@ -29,7 +29,7 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
   const medals = ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'];
 
   const handleCopyAssessment = (s: Student) => {
-    const assessment = getStudentAssessment(s.points || 0);
+    const assessment = getStudentAssessment(s);
     const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;
 
     if (navigator?.clipboard?.writeText) {
@@ -96,7 +96,7 @@ export const PodiumTop3Banner: React.FC<PodiumTop3BannerProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {top3.map((s, idx) => {
           const isTop1 = idx === 0;
-          const assessment = getStudentAssessment(s.points || 0);
+          const assessment = getStudentAssessment(s);
 
           return (
             <div

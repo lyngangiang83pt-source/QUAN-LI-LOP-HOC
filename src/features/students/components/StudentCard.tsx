@@ -32,7 +32,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
 }) => {
   const isQualified = (student.points || 0) >= minWheelPoints;
   const isPenalized = hasPenaltyNote(student.lastNote);
-  const assessment = getStudentAssessment(student.points || 0);
+  const assessment = getStudentAssessment(student);
 
   const handleCopyAssessment = (s: Student) => {
     const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;

@@ -32,7 +32,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
   }, [students]);
 
   const handleCopyAssessment = (s: Student) => {
-    const assessment = getStudentAssessment(s.points || 0);
+    const assessment = getStudentAssessment(s);
     const text = `Học sinh ${s.name} (Mã: ${s.id}) - ${s.points} điểm ➔ Nhận xét: ${assessment.label} (${assessment.desc})`;
 
     if (navigator?.clipboard?.writeText) {
@@ -73,7 +73,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
       {top3.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-4 items-end pt-4 pb-2">
           {podium.map((item) => {
-            const assessment = getStudentAssessment(item.s.points || 0);
+            const assessment = getStudentAssessment(item.s);
             return (
               <div
                 key={item.s.id}
@@ -155,7 +155,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
             <tbody className="divide-y divide-slate-100 font-semibold">
               {sorted.map((s, idx) => {
                 const rankNum = idx + 1;
-                const assessment = getStudentAssessment(s.points || 0);
+                const assessment = getStudentAssessment(s);
 
                 let rankBadge = <span className="text-slate-600">#{rankNum}</span>;
                 let rowBg = 'hover:bg-slate-50/70';

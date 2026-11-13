@@ -107,7 +107,7 @@ export const exportStudentsToCSV = (students: Student[], className: string): voi
 
   sortedList.forEach((s, idx) => {
     const attText = s.attendance === 'present' ? 'Có mặt' : s.attendance === 'late' ? 'Muộn' : 'Vắng';
-    const assessment = getStudentAssessment(s.points || 0);
+    const assessment = getStudentAssessment(s);
     csvContent += `"${idx + 1}","${s.id}","${s.name}","${attText}","${s.points}","${assessment.label}","${s.lastNote || ''}"\n`;
   });
 

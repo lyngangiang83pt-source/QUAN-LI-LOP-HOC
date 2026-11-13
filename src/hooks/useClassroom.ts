@@ -376,11 +376,18 @@ export const useClassroom = () => {
       newPts = 2;
     }
 
+    let newAbsentCount = student.absentCount || 0;
+    if (newStatus === 'absent' && oldStatus !== 'absent') {
+      newAbsentCount += 1;
+    } else if (oldStatus === 'absent' && newStatus !== 'absent') {
+      newAbsentCount = Math.max(0, newAbsentCount - 1);
+    }
+
     const statusText = newStatus === 'present' ? 'Có mặt (+2đ)' : newStatus === 'late' ? 'Đi muộn (+1đ)' : 'Vắng mặt';
     saveUndoSnapshot(`Điểm danh: ${student.name} ➔ ${statusText}`);
 
     const updatedStudents = students.map((s) =>
-      s.id === studentId ? { ...s, attendance: newStatus, points: newPts, lastNote: note } : s
+      s.id === studentId ? { ...s, attendance: newStatus, points: newPts, lastNote: note, absentCount: newAbsentCount } : s
     );
 
     if (student.dbId) {
@@ -402,10 +409,17 @@ export const useClassroom = () => {
     const sign = pointDiff > 0 ? '+' : '';
     const note = `${reason} (${sign}${pointDiff}đ)`;
 
+    let newPenalty = student.penaltyPoints || 0;
+    if (pointDiff < 0) {
+      newPenalty += Math.abs(pointDiff);
+    } else if (reason.includes('Cơ hội sửa sai') || reason.includes('gỡ lỗi')) {
+      newPenalty = Math.max(0, newPenalty - 2);
+    }
+
     saveUndoSnapshot(`${student.name}: ${sign}${pointDiff} điểm (${reason})`);
 
     const updatedStudents = students.map((s) =>
-      s.id === studentId ? { ...s, points: newPts, lastNote: note } : s
+      s.id === studentId ? { ...s, points: newPts, lastNote: note, penaltyPoints: newPenalty } : s
     );
 
     if (student.dbId) {
@@ -517,6 +531,7 @@ export const useClassroom = () => {
         return {
           ...s,
           points: Math.max(0, (s.points || 0) - penaltyPts),
+          penaltyPoints: (s.penaltyPoints || 0) + penaltyPts,
           lastNote: `${reason} (-${penaltyPts}đ)`,
         };
       }
@@ -532,6 +547,23 @@ export const useClassroom = () => {
       showToast(`⚠️ Đã trừ -${penaltyPts} điểm của ${eligibleStudents.length} học sinh ${scopeLabel} (${reason})!`, 'danger');
     }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
+
+  const updateStudentStats = useCallback((
+    studentId: string,
+    updates: { absentCount?: number; penaltyPoints?: number }
+  ) => {
+    const updatedStudents = students.map((s) => {
+      if (s.id === studentId) {
+        return {
+          ...s,
+          absentCount: updates.absentCount !== undefined ? Math.max(0, updates.absentCount) : (s.absentCount || 0),
+          penaltyPoints: updates.penaltyPoints !== undefined ? Math.max(0, updates.penaltyPoints) : (s.penaltyPoints || 0),
+        };
+      }
+      return s;
+    });
+    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
+  }, [classes, currentClassId, persistClasses, students]);
 
   const addStudent = useCallback((name: string) => {
     if (!name || !name.trim()) return;
@@ -731,6 +763,7 @@ export const useClassroom = () => {
     resetStudentScore,
     toggleAttendance,
     updateScore,
+    updateStudentStats,
     markAllPresent,
     setAllDefault2Points,
     addAllClassBonus,

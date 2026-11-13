@@ -52,6 +52,7 @@ export const App: React.FC = () => {
     resetStudentScore,
     toggleAttendance,
     updateScore,
+    updateStudentStats,
     markAllPresent,
     setAllDefault2Points,
     addAllClassBonus,
@@ -272,6 +273,7 @@ export const App: React.FC = () => {
         className={currentClass.name}
         initialSelectedStudentId={selectedStudentForTT22}
         onShowToast={showToast}
+        onUpdateStudentStats={updateStudentStats}
       />
 
       <SpotlightCeremonyModal

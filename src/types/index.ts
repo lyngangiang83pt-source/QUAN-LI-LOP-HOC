@@ -7,6 +7,8 @@ export interface Student {
   points: number;
   lastNote?: string;
   dbId?: number; // Supabase Primary Key
+  absentCount?: number; // Số lượt nghỉ học (vắng)
+  penaltyPoints?: number; // Tổng số điểm bị trừ / phạt
 }
 
 export interface ClassItem {

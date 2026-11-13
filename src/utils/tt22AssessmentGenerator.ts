@@ -1,5 +1,5 @@
 import { Student } from '../types';
-import { getStudentAssessment } from '../constants/classroomData';
+import { getStudentAssessment, parsePenaltyFromNote } from '../constants/classroomData';
 
 export interface TT22Comment {
   studentId: string;
@@ -16,6 +16,10 @@ export interface TT22Comment {
   fullComment: string; // Đầy đủ 15-20 từ bắt đầu bằng cụm từ đánh giá
   parentMessage: string; // Tin nhắn gửi phụ huynh (Zalo / Sổ liên lạc)
   wordCount: number;
+  downgradedFromExcellent?: boolean;
+  downgradeReason?: string;
+  absentCount?: number;
+  penaltyPoints?: number;
 }
 
 export interface CommentTemplate {
@@ -233,6 +237,59 @@ const TEMPLATES_NOT_PASSED: CommentTemplate[] = [
   },
 ];
 
+// Mẫu câu nhận xét dành riêng cho học sinh đạt ≥ 20đ nhưng bị hạ xuống "Tích cực" (Nghỉ > 3 lượt hoặc bị trừ ≥ 5đ)
+// Độ dài: 17 - 19 từ (chuẩn 15 - 20 từ)
+const TEMPLATES_DOWNGRADED_ABSENT: CommentTemplate[] = [
+  {
+    text: 'Tiếp thu bài tốt, đạt điểm cao nhưng nghỉ học nhiều, cần đi học chuyên cần hơn.',
+    strength: 'Tiếp thu bài tốt, đạt điểm tích lũy cao.',
+    limitation: 'Nghỉ học trên 3 lượt trong đợt học.',
+    actionPlan: 'Cần đi học chuyên cần và đều đặn hơn.',
+  },
+  {
+    text: 'Nắm chắc kiến thức, đạt thành tích cao nhưng nghỉ trên ba buổi, cần đi học đều.',
+    strength: 'Nắm chắc kiến thức, kết quả học tập tốt.',
+    limitation: 'Số buổi nghỉ học vượt quá 3 lượt.',
+    actionPlan: 'Cần sắp xếp đi học đầy đủ các buổi.',
+  },
+  {
+    text: 'Hoàn thành tốt bài tập nhưng nghỉ học nhiều buổi, cần chuyên cần đến lớp hơn.',
+    strength: 'Hoàn thành tốt các nhiệm vụ học tập.',
+    limitation: 'Thường xuyên vắng mặt trong các tiết học.',
+    actionPlan: 'Cố gắng đi học đầy đủ để nắm chắc bài.',
+  },
+];
+
+const TEMPLATES_DOWNGRADED_PENALTY: CommentTemplate[] = [
+  {
+    text: 'Học tập tốt, đạt điểm cao nhưng bị trừ điểm nề nếp, cần chú ý kỷ luật.',
+    strength: 'Năng lực tiếp thu tốt, đạt điểm số cao.',
+    limitation: 'Còn vi phạm nội quy, bị trừ từ 5 điểm trở lên.',
+    actionPlan: 'Cần chú ý kỷ luật và giữ gìn nề nếp lớp.',
+  },
+  {
+    text: 'Tiếp thu bài nhanh nhưng còn vi phạm kỷ luật, cần nghiêm túc chấp hành nội quy.',
+    strength: 'Tiếp thu bài nhanh, làm bài đạt điểm cao.',
+    limitation: 'Bị trừ từ 5 điểm trở lên do vi phạm.',
+    actionPlan: 'Nghiêm túc chấp hành tốt nội quy lớp học.',
+  },
+  {
+    text: 'Bài làm tốt, đạt kết quả cao nhưng bị trừ nhiều điểm, cần chú ý nề nếp.',
+    strength: 'Bài làm tốt, đạt kết quả điểm số cao.',
+    limitation: 'Bị trừ nhiều điểm kỷ luật trong giờ học.',
+    actionPlan: 'Cần chú ý nề nếp và tập trung học tập.',
+  },
+];
+
+const TEMPLATES_DOWNGRADED_BOTH: CommentTemplate[] = [
+  {
+    text: 'Điểm số cao nhưng nghỉ nhiều và vi phạm nội quy, cần nghiêm túc chấn chỉnh.',
+    strength: 'Có năng lực học tập, bài làm đạt điểm tốt.',
+    limitation: 'Nghỉ trên 3 lượt và bị trừ từ 5 điểm trở lên.',
+    actionPlan: 'Nghiêm túc chấn chỉnh chuyên cần và nề nếp.',
+  },
+];
+
 function getHashIndex(str: string, max: number): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -262,15 +319,33 @@ export const generateTT22Comment = (
   uppercasePrefix: boolean = false
 ): TT22Comment => {
   const points = student.points || 0;
-  const assessment = getStudentAssessment(points);
+  const assessment = getStudentAssessment(student);
   const prefix = getPrefixForLevel(assessment.level, uppercasePrefix);
   const note = (student.lastNote || '').toLowerCase();
 
   let template: CommentTemplate;
   const hashKey = `${student.id}_${student.name}_${index}`;
 
-  // Kiểm tra nếu có ghi chú vi phạm cụ thể để tạo nhận xét trúng đích thực tế
-  if (note.includes('mất trật tự') || note.includes('làm việc riêng') || note.includes('nói chuyện')) {
+  const absentCount = student.absentCount || 0;
+  const penaltyPoints = student.penaltyPoints ?? parsePenaltyFromNote(student.lastNote);
+
+  // 1. Quy định đặc biệt: Học sinh đạt ≥ 20đ nhưng nghỉ trên 3 lượt hoặc bị trừ từ 5đ
+  //    thì KHÔNG nhận xét "Xuất sắc" mà chuyển thành "Tích cực"
+  if (assessment.downgradedFromExcellent) {
+    const isAbsent = absentCount > 3;
+    const isPenalty = penaltyPoints >= 5;
+
+    if (isAbsent && isPenalty) {
+      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_BOTH.length);
+      template = TEMPLATES_DOWNGRADED_BOTH[idx];
+    } else if (isAbsent) {
+      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_ABSENT.length);
+      template = TEMPLATES_DOWNGRADED_ABSENT[idx];
+    } else {
+      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_PENALTY.length);
+      template = TEMPLATES_DOWNGRADED_PENALTY[idx];
+    }
+  } else if (note.includes('mất trật tự') || note.includes('làm việc riêng') || note.includes('nói chuyện')) {
     if (assessment.level === 'active') {
       template = {
         text: 'Hoàn thành bài tập tốt nhưng đôi khi còn nói chuyện riêng, cần tập trung hơn trong giờ.',
@@ -387,6 +462,10 @@ export const generateTT22Comment = (
     fullComment,
     parentMessage,
     wordCount,
+    downgradedFromExcellent: assessment.downgradedFromExcellent,
+    downgradeReason: assessment.downgradeReason,
+    absentCount,
+    penaltyPoints,
   };
 };
 
