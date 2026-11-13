@@ -21,7 +21,8 @@ import {
   Award,
   Filter,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -307,6 +308,38 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
     }
   };
 
+  // Xuất file nhận xét tinh gọn gồm đúng 3 cột: STT | HỌ VÀ TÊN | NHẬN XÉT (tiện nạp nhanh vào vnEdu/SMAS)
+  const handleExport3ColumnExcel = () => {
+    const data = students.map((s, idx) => {
+      const item = commentsMap[s.id];
+      const commentText = viewMode === 'so_theo_doi' ? item?.fullComment : item?.parentMessage;
+      return {
+        'STT': idx + 1,
+        'HỌ VÀ TÊN': s.name || '',
+        'NHẬN XÉT': commentText || '',
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    worksheet['!cols'] = [
+      { wch: 6 },
+      { wch: 25 },
+      { wch: 70 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    const sheetName = `Nhan_Xet_${className}`.replace(/[:\\/?*\[\]]/g, '_').slice(0, 31);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    const fileName = `Nhan_Xet_3_Cot_Lop_${className.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    audioService.play('win');
+    if (onShowToast) {
+      onShowToast('📥 Đã tải file nhận xét 3 cột (STT, Họ và tên, Nhận xét) thành công!', 'success');
+    }
+  };
+
   // Lọc danh sách học sinh theo tìm kiếm và mức điểm
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
@@ -427,12 +460,22 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
 
           <button
             type="button"
+            onClick={handleExport3ColumnExcel}
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
+            title="Xuất file nhận xét gồm đúng 3 cột: STT, Họ và tên, Nhận xét (chuẩn nạp vnEdu/SMAS)"
+          >
+            <FileSpreadsheet size={14} />
+            <span>Xuất file nhận xét (3 cột)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleExportExcel}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs font-black shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
-            title="Xuất file Excel đầy đủ nhận xét của cả lớp để nạp vào vnEdu/SMAS"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black border border-slate-300 shadow-2xs transition-transform active:scale-95 flex items-center gap-1.5"
+            title="Xuất file Excel đầy đủ chi tiết nhận xét & điểm số của cả lớp"
           >
             <Download size={14} />
-            <span>Xuất Excel TT22</span>
+            <span>Xuất Excel đủ cột</span>
           </button>
         </div>
       </div>
