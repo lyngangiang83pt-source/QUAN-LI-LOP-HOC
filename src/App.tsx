@@ -8,7 +8,6 @@ import { ToastContainer } from './components/common/ToastContainer';
 import { UndoNotificationBanner } from './components/common/UndoNotificationBanner';
 import { ClassManagerModal } from './features/classroom/components/ClassManagerModal';
 import { ClassPenaltyModal } from './features/classroom/components/ClassPenaltyModal';
-import { LuckyWheelModal } from './features/lucky-wheel/components/LuckyWheelModal';
 import { GameshowLuckyWheelModal } from './features/lucky-wheel/components/GameshowLuckyWheelModal';
 import { LeaderboardModal } from './features/leaderboard/components/LeaderboardModal';
 import { SpotlightCeremonyModal } from './features/leaderboard/components/SpotlightCeremonyModal';
@@ -67,7 +66,6 @@ export const App: React.FC = () => {
   // Modal Visibility States
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isClassPenaltyModalOpen, setIsClassPenaltyModalOpen] = useState(false);
-  const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
   const [isGameshowWheelOpen, setIsGameshowWheelOpen] = useState(false);
   const [isLeaderboardModalOpen, setIsLeaderboardModalOpen] = useState(false);
   const [isSpotlightModalOpen, setIsSpotlightModalOpen] = useState(false);
@@ -137,7 +135,6 @@ export const App: React.FC = () => {
         onSelectClass={(id) => switchClass(id, false)}
         onOpenClassModal={() => setIsClassModalOpen(true)}
         onEditClassInfo={handleEditClassInfo}
-        onOpenWheelModal={() => setIsWheelModalOpen(true)}
         onOpenGameshowWheelModal={() => setIsGameshowWheelOpen(true)}
         onOpenLeaderboardModal={() => {
           setCurrentFilter('top');
@@ -164,7 +161,6 @@ export const App: React.FC = () => {
         minWheelPoints={20}
         onSetFilter={setCurrentFilter}
         onSearchChange={setSearchQuery}
-        onOpenWheelModal={() => setIsWheelModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenAddModal={() => setIsAddStudentModalOpen(true)}
         onOpenFindCodeModal={() => setIsFindCodeModalOpen(true)}
@@ -237,13 +233,6 @@ export const App: React.FC = () => {
         onDeductAllClassPenalty={deductAllClassPenalty}
       />
 
-      <LuckyWheelModal
-        isOpen={isWheelModalOpen}
-        onClose={() => setIsWheelModalOpen(false)}
-        students={students}
-        onApplyBonusScore={updateScore}
-      />
-
       <GameshowLuckyWheelModal
         isOpen={isGameshowWheelOpen}
         onClose={() => setIsGameshowWheelOpen(false)}
@@ -258,7 +247,6 @@ export const App: React.FC = () => {
         students={students}
         className={currentClass.name}
         minWheelPoints={20}
-        onOpenWheelModal={() => setIsWheelModalOpen(true)}
         onOpenTT22Modal={handleOpenTT22Modal}
         onShowToast={showToast}
       />

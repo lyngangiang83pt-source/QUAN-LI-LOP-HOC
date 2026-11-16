@@ -9,7 +9,7 @@ interface ControlsBarProps {
   minWheelPoints?: number;
   onSetFilter: (filter: FilterType) => void;
   onSearchChange: (query: string) => void;
-  onOpenWheelModal: () => void;
+  onOpenWheelModal?: () => void;
   onOpenImportModal: () => void;
   onOpenAddModal: () => void;
   onOpenFindCodeModal: () => void;
@@ -145,16 +145,6 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
             <span>Nhận xét TT22</span>
           </button>
         )}
-
-        <button
-          type="button"
-          onClick={onOpenWheelModal}
-
-          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-xs shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
-        >
-          <Sparkles size={14} />
-          <span>Quay thưởng</span>
-        </button>
 
         <button
           type="button"

@@ -19,7 +19,7 @@ interface HeaderBannerProps {
   onSelectClass: (id: string) => void;
   onOpenClassModal: () => void;
   onEditClassInfo: () => void;
-  onOpenWheelModal: () => void;
+  onOpenWheelModal?: () => void;
   onOpenGameshowWheelModal?: () => void;
   onOpenLeaderboardModal: () => void;
   onOpenSpotlightModal?: () => void;
@@ -112,16 +112,6 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
               <span>Vòng quay may mắn</span>
             </button>
           )}
-
-          {/* Wheel Button (Quay thưởng mốc điểm) */}
-          <button
-            type="button"
-            onClick={onOpenWheelModal}
-            className="px-3.5 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-purple-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-          >
-            <Sparkles size={16} />
-            <span>Quay thưởng ({qualifiedCount} em ≥ {minWheelPoints}đ)</span>
-          </button>
 
           {/* Leaderboard Button */}
           <button

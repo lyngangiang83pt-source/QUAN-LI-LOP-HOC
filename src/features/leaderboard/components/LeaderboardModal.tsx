@@ -12,7 +12,7 @@ interface LeaderboardModalProps {
   students: Student[];
   className: string;
   minWheelPoints?: number;
-  onOpenWheelModal: () => void;
+  onOpenWheelModal?: () => void;
   onOpenTT22Modal?: (studentId?: string) => void;
   onShowToast?: (msg: string, type?: 'success' | 'danger' | 'wheel' | 'rank' | 'info') => void;
 }
@@ -240,17 +240,6 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
         >
           <Download size={15} />
           <span>Xuất bảng xếp hạng Excel</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            onOpenWheelModal();
-          }}
-          className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xs shadow-xs transition-transform active:scale-95 flex items-center gap-1.5"
-        >
-          <Play size={14} className="fill-white" />
-          <span>Mở Vòng Quay May Mắn</span>
         </button>
         <button
           type="button"
