@@ -433,41 +433,57 @@ export const useClassroom = () => {
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const markAllPresent = useCallback(() => {
-    saveUndoSnapshot('Điểm danh tất cả học sinh CÓ MẶT (+2đ)');
+    const targetClass = classes.find((c) => c.id === currentClassId);
+    const defPts = targetClass?.defaultPoints ?? 2;
 
-    const updatedStudents = students.map((s) => {
-      if (s.attendance !== 'present') {
-        const addPts = s.attendance === 'late' ? 1 : 2;
-        return {
-          ...s,
-          attendance: 'present' as AttendanceStatus,
-          points: (s.points || 0) + addPts,
-          lastNote: 'Điểm danh có mặt (+2đ chuyên cần)',
-        };
-      }
-      return s;
-    });
+    // Danh sách học sinh đạt thành tích cao (>= 18đ) trước khi reset để vinh danh & tuyên dương nếu cần
+    const honoredStudents = students
+      .filter((s) => (s.points || 0) >= 18)
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        prevPoints: s.points || 0,
+        newPoints: defPts,
+      }));
 
-    persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('win');
-    triggerGoldStarsCelebration();
-    showToast('Tất cả học sinh đã có mặt và được cộng 2 điểm chuyên cần! 🌟', 'success');
-  }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
+    const xCount = honoredStudents.length;
+    if (xCount > 0 && targetClass) {
+      setResetHonorData({
+        className: targetClass.name,
+        students: honoredStudents,
+      });
+    }
 
-  const setAllDefault2Points = useCallback(() => {
-    saveUndoSnapshot('Cấp 2đ tích lũy ban đầu cho cả lớp');
+    saveUndoSnapshot(`Reset tất cả học sinh về ${defPts}đ & Có mặt`);
 
     const updatedStudents = students.map((s) => ({
       ...s,
       attendance: 'present' as AttendanceStatus,
-      points: 2,
-      lastNote: 'Cấp 2 điểm tích lũy ban đầu',
+      points: defPts,
+      lastNote: `Reset về ${defPts}đ & Có mặt`,
     }));
 
     persistClasses(classes.map((c) => (c.id === currentClassId ? { ...c, students: updatedStudents } : c)));
-    audioService.play('plus');
-    showToast('Đã cấp 2 điểm tích lũy ban đầu cho toàn bộ học sinh trong lớp! 🌟', 'success');
+    audioService.play('win');
+    triggerGoldStarsCelebration();
+    showToast(
+      `Tất cả học sinh đã có mặt và được đặt lại về ${defPts} điểm khởi đầu! 🌟`,
+      'success',
+      xCount > 0
+        ? {
+            label: '📋 Tuyên dương trước reset',
+            onClick: () => {
+              setIsResetHonorModalOpen(true);
+            },
+          }
+        : undefined,
+      xCount > 0 ? 8000 : 3500
+    );
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
+
+  const setAllDefault2Points = useCallback(() => {
+    markAllPresent();
+  }, [markAllPresent]);
 
   const addAllClassBonus = useCallback((bonusPts: number = 2, reason: string = 'Thưởng cả lớp') => {
     const eligibleStudents = students.filter((s) => s.attendance === 'present' || s.attendance === 'late');

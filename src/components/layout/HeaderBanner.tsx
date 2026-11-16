@@ -136,19 +136,25 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
             </button>
           )}
 
-          {/* Mark All Present Button */}
+          {/* Reset All to 2pts / Mark All Present Button */}
           <button
             type="button"
             onClick={() => {
-              if (confirm('Thầy/Cô có muốn điểm danh TẤT CẢ học sinh là CÓ MẶT (+2đ chuyên cần) không?')) {
+              if (
+                confirm(
+                  `Thầy/Cô có muốn RESET TẤT CẢ học sinh lớp "${currentClass.name}" về 2 điểm ban đầu (và điểm danh CÓ MẶT) không?\n\n` +
+                  `• Toàn bộ ${students.length} học sinh sẽ được điểm danh CÓ MẶT.\n` +
+                  `• Điểm của tất cả học sinh sẽ được đặt lại về 2 điểm khởi đầu tiết học.`
+                )
+              ) {
                 onMarkAllPresent();
               }
             }}
             className="px-3.5 py-2 rounded-full bg-emerald-500/80 hover:bg-emerald-600 text-white font-bold text-xs md:text-sm border border-white/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
-            title="Điểm danh tất cả học sinh có mặt (+2đ chuyên cần)"
+            title="Điểm danh tất cả học sinh có mặt và reset về 2 điểm ban đầu"
           >
-            <CheckCircle size={15} />
-            <span>Có mặt tất cả (+2đ)</span>
+            <RotateCcw size={15} />
+            <span>Reset tất cả về 2đ</span>
           </button>
 
           {/* Whole Class +2pts Button */}
@@ -195,14 +201,15 @@ export const HeaderBanner: React.FC<HeaderBannerProps> = ({
                 if (
                   confirm(
                     `Thầy/Cô có chắc chắn muốn đưa ĐIỂM CẢ LỚP "${currentClass.name}" về 2 điểm ban đầu không?\n\n` +
-                    `• Toàn bộ ${students.length} học sinh trong lớp sẽ được đặt lại về 2 điểm khởi đầu tiết học.`
+                    `• Toàn bộ ${students.length} học sinh trong lớp sẽ được đặt lại về 2 điểm khởi đầu tiết học.\n` +
+                    `• Trạng thái điểm danh (Có mặt / Muộn / Vắng) của học sinh được GIỮ NGUYÊN.`
                   )
                 ) {
                   onResetClassPoints();
                 }
               }}
               className="px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs md:text-sm border border-white/40 shadow-lg shadow-amber-600/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              title="Đưa điểm cả lớp về 2 điểm ban đầu"
+              title="Đưa điểm cả lớp về 2 điểm ban đầu (Giữ nguyên trạng thái điểm danh)"
             >
               <RotateCcw size={15} />
               <span>Cả lớp về 2đ</span>

@@ -11,7 +11,7 @@ Dự án được xây dựng trên nền tảng **React 18, TypeScript, Vite, T
 - 🏫 **Quản lý đa lớp học (Multi-Class Management):** Dễ dàng thêm mới, chuyển đổi linh hoạt giữa các lớp (VD: 6B2, 10A1...), tùy chỉnh môn học và điểm tích lũy khởi đầu.
 - 📋 **Điểm danh chuyên cần thông minh:** 
   - Điểm danh Có mặt (+2 điểm), Điểm danh Muộn (+1 điểm), Vắng phép, Vắng không phép.
-  - Thao tác 1 chạm: *Có mặt tất cả*, *Cộng 2 điểm cả lớp*, *Làm mới ngày học*.
+  - Thao tác 1 chạm: *Reset tất cả về 2đ* (Điểm danh có mặt & đưa điểm về 2đ khởi đầu), *Cộng 2 điểm cả lớp*, *Cả lớp -1đ*.
 - 🎡 **Vòng quay may mắn (Canvas Lucky Wheel):** Quay số ngẫu nhiên dành cho học sinh tích cực đạt từ 5 điểm trở lên với hiệu ứng âm thanh Web Audio và pháo hoa rực rỡ.
 - 🏆 **Bảng vinh danh & Bục Top 3 Podium:** Tự động xếp hạng học sinh theo thứ tự điểm cao đến thấp, trao danh hiệu Thủ khoa và Vinh danh xuất sắc.
 - ☁️ **Đồng bộ đám mây Supabase (2-Way Cloud Sync):** Tự động đồng bộ hai chiều thời gian thực lên PostgreSQL Database trên Supabase, hỗ trợ ghi nhật ký `attendance_logs` và lưu trữ đệm ngoại tuyến (Offline-First qua LocalStorage).
