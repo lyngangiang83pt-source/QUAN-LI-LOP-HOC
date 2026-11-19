@@ -594,6 +594,14 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
                       <span className="px-2 py-0.5 rounded-full bg-slate-100 font-extrabold text-sky-700 text-xs">
                         {s.points} ⭐
                       </span>
+                      {item.scoreRangeDesc && (
+                        <span 
+                          className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 hidden sm:inline-flex items-center" 
+                          title={`Phân khúc điểm số: ${item.scoreRangeDesc}`}
+                        >
+                          {item.scoreRangeDesc}
+                        </span>
+                      )}
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-black flex items-center gap-1 border shadow-2xs ${
                         item.level === 'excellent' ? 'bg-amber-100 text-amber-950 border-amber-300' :
                         item.level === 'active' ? 'bg-sky-100 text-sky-950 border-sky-300' :
