@@ -116,11 +116,15 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
 
     audioService.play('plus');
     if (onShowToast) {
-      if ((student.points || 0) >= 20) {
-        if (nextAbsent > 3 || nextPenalty >= 5) {
-          const reason = nextAbsent > 3 ? `nghỉ ${nextAbsent} lượt (> 3)` : `bị trừ ${nextPenalty}đ (≥ 5đ)`;
+      if (nextAbsent >= 4 && currentStats.absentCount < 4) {
+        onShowToast(`⚠️ ${student.name}: Vắng ${nextAbsent} lượt (≥ 4) ➔ Tự động hạ 1 bậc TT22 sang "${newComment.levelLabel}"!`, 'danger');
+      } else if (nextAbsent < 4 && currentStats.absentCount >= 4) {
+        onShowToast(`✅ ${student.name}: Đã giảm số buổi vắng (< 4) ➔ Phục hồi bậc nhận xét TT22 ("${newComment.levelLabel}")!`, 'success');
+      } else if ((student.points || 0) >= 20) {
+        if (nextPenalty >= 5 && currentStats.penaltyPoints < 5) {
+          const reason = `bị trừ ${nextPenalty}đ (≥ 5đ)`;
           onShowToast(`⚠️ ${student.name}: ${reason} ➔ Chuyển nhận xét sang "Tích cực"!`, 'info');
-        } else if (currentStats.absentCount > 3 || currentStats.penaltyPoints >= 5) {
+        } else if (currentStats.penaltyPoints >= 5 && nextPenalty < 5 && nextAbsent < 4) {
           onShowToast(`👑 ${student.name}: Đạt chuẩn nhận xét "Xuất sắc"!`, 'success');
         }
       }
@@ -273,7 +277,7 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
         'SỐ LƯỢT NGHỈ': stats.absentCount,
         'ĐIỂM BỊ TRỪ': stats.penaltyPoints,
         'MỨC ĐÁNH GIÁ (TT22)': item ? item.levelLabel : '',
-        'LƯU Ý CHUYÊN CẦN / NỀ NẾP': item?.downgradedFromExcellent ? item.downgradeReason : '',
+        'LƯU Ý CHUYÊN CẦN / NỀ NẾP': item?.downgradeReason || (stats.absentCount >= 4 ? `Vắng ${stats.absentCount} lượt (≥ 4)` : ''),
         'SỐ TỪ': item ? item.wordCount : 0,
         'NHẬN XÉT SỔ THEO DÕI & HỌC BẠ (15-20 TỪ)': item ? item.fullComment : '',
         'TIN NHẮN SỔ LIÊN LẠC PHỤ HUYNH': item ? item.parentMessage : '',
@@ -600,22 +604,26 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
                         <span>{item.levelLabel}</span>
                       </span>
 
-                      {/* Huy hiệu cảnh báo hạ mức từ Xuất sắc sang Tích cực */}
-                      {item.downgradedFromExcellent && (
+                      {/* Huy hiệu cảnh báo hạ bậc nhận xét TT22 do vắng hoặc kỷ luật */}
+                      {(item.downgraded || item.downgradedFromExcellent) && (
                         <span 
                           className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-800 border border-rose-300 flex items-center gap-1 shadow-2xs" 
                           title={item.downgradeReason}
                         >
                           <span>⚠️</span>
-                          <span>Đổi sang "Tích cực" ({item.downgradeReason})</span>
+                          <span>Hạ xuống "{item.levelLabel}" ({item.downgradeReason})</span>
                         </span>
                       )}
 
                       {/* Bộ điều chỉnh chuyên cần (Nghỉ học) & kỷ luật (Bị trừ điểm) */}
                       <div className="flex items-center gap-1.5 ml-auto sm:ml-0 text-xs">
                         <div 
-                          className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200/60 transition-colors px-2 py-0.5 rounded-lg border border-slate-200"
-                          title="Số lượt nghỉ học. Nếu nghỉ trên 3 lượt sẽ không nhận xét Xuất sắc mà chuyển thành Tích cực"
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border transition-colors ${
+                            (studentStatsMap[s.id]?.absentCount || 0) >= 4
+                              ? 'bg-rose-50 border-rose-300 ring-1 ring-rose-300/80'
+                              : 'bg-slate-100 hover:bg-slate-200/60 border-slate-200'
+                          }`}
+                          title="Số lượt nghỉ học. Vắng từ 4 lượt trở lên sẽ TỰ ĐỘNG xếp xuống 1 bậc nhận xét TT22"
                         >
                           <span className="text-[10px] font-black uppercase text-slate-500">Nghỉ:</span>
                           <button
@@ -626,7 +634,7 @@ export const TT22AssessmentModal: React.FC<TT22AssessmentModalProps> = ({
                           >
                             -
                           </button>
-                          <span className={`font-black text-xs min-w-3 text-center ${(studentStatsMap[s.id]?.absentCount || 0) > 3 ? 'text-rose-600 font-black' : 'text-slate-800'}`}>
+                          <span className={`font-black text-xs min-w-3 text-center ${(studentStatsMap[s.id]?.absentCount || 0) >= 4 ? 'text-rose-600 font-black' : 'text-slate-800'}`}>
                             {studentStatsMap[s.id]?.absentCount || 0}
                           </span>
                           <button

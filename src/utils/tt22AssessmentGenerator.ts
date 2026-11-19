@@ -17,6 +17,9 @@ export interface TT22Comment {
   parentMessage: string; // Tin nhắn gửi phụ huynh (Zalo / Sổ liên lạc)
   wordCount: number;
   downgradedFromExcellent?: boolean;
+  downgraded?: boolean;
+  originalLevel?: 'excellent' | 'active' | 'passed' | 'not_passed';
+  originalLabel?: string;
   downgradeReason?: string;
   absentCount?: number;
   penaltyPoints?: number;
@@ -290,6 +293,60 @@ const TEMPLATES_DOWNGRADED_BOTH: CommentTemplate[] = [
   },
 ];
 
+// Mẫu câu cho học sinh 15 - 19đ (Tích cực) bị hạ xuống "Đạt" do vắng từ 4 lượt trở lên
+const TEMPLATES_DOWNGRADED_ACTIVE_TO_PASSED_ABSENT: CommentTemplate[] = [
+  {
+    text: 'Có ý thức học tập tốt nhưng nghỉ học từ 4 buổi trở lên, cần đi học đều đặn hơn.',
+    strength: 'Có ý thức học tập, hiểu bài tương đối tốt.',
+    limitation: 'Vắng học từ 4 buổi trở lên trong đợt học.',
+    actionPlan: 'Sắp xếp đi học chuyên cần để theo kịp bài.',
+  },
+  {
+    text: 'Tiếp thu bài tương đối nhanh nhưng vắng học nhiều buổi, cần chuyên cần đến lớp hơn.',
+    strength: 'Tiếp thu bài tương đối nhanh trên lớp.',
+    limitation: 'Số buổi vắng học nhiều (từ 4 lượt trở lên).',
+    actionPlan: 'Cố gắng đi học đầy đủ để củng cố kiến thức.',
+  },
+  {
+    text: 'Học tập tích cực nhưng còn nghỉ học nhiều, cần nỗ lực đi học đầy đủ để tiến bộ.',
+    strength: 'Hăng hái học tập khi có mặt tại lớp.',
+    limitation: 'Nghỉ học từ 4 lượt trở lên ảnh hưởng tiến độ.',
+    actionPlan: 'Khắc phục việc vắng học và duy trì chuyên cần.',
+  },
+];
+
+// Mẫu câu cho học sinh 10 - 14đ (Đạt) bị hạ xuống "Chưa đạt" do vắng từ 4 lượt trở lên
+const TEMPLATES_DOWNGRADED_PASSED_TO_NOT_PASSED_ABSENT: CommentTemplate[] = [
+  {
+    text: 'Nắm được kiến thức cơ bản nhưng nghỉ học từ bốn lượt, cần đi học chuyên cần hơn.',
+    strength: 'Có tiếp thu khi được giáo viên hướng dẫn.',
+    limitation: 'Nghỉ học từ 4 lượt trở lên, hổng kiến thức.',
+    actionPlan: 'Nghiêm túc đi học đều và ôn lại bài cũ.',
+  },
+  {
+    text: 'Còn hổng kiến thức do vắng học nhiều buổi, cần đi học đầy đủ và tích cực ôn bài.',
+    strength: 'Lễ phép và có tinh thần lắng nghe thầy cô.',
+    limitation: 'Vắng học từ 4 lượt làm gián đoạn việc học.',
+    actionPlan: 'Đi học chuyên cần và nhờ bạn bè giúp đỡ ôn bài.',
+  },
+  {
+    text: 'Chưa theo kịp bài học do nghỉ nhiều buổi, gia đình cần sát sao đôn đốc việc học.',
+    strength: 'Có thái độ tích cực khi được nhắc nhở.',
+    limitation: 'Nghỉ học từ 4 lượt trở lên dẫn đến hổng bài.',
+    actionPlan: 'Gia đình phối hợp đôn đốc em đi học đầy đủ.',
+  },
+];
+
+// Mẫu câu cho học sinh dưới 10đ và vắng từ 4 lượt trở lên
+const TEMPLATES_NOT_PASSED_ABSENT: CommentTemplate[] = [
+  {
+    text: 'Vắng học từ bốn lượt trở lên và chưa nắm bài, gia đình cần sát sao đôn đốc.',
+    strength: 'Lễ phép với thầy cô và bạn bè trong lớp.',
+    limitation: 'Nghỉ học từ 4 buổi và tiếp thu bài chậm.',
+    actionPlan: 'Gia đình cần sát sao phối hợp cùng nhà trường.',
+  },
+];
+
 function getHashIndex(str: string, max: number): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -329,22 +386,35 @@ export const generateTT22Comment = (
   const absentCount = student.absentCount || 0;
   const penaltyPoints = student.penaltyPoints ?? parsePenaltyFromNote(student.lastNote);
 
-  // 1. Quy định đặc biệt: Học sinh đạt ≥ 20đ nhưng nghỉ trên 3 lượt hoặc bị trừ từ 5đ
-  //    thì KHÔNG nhận xét "Xuất sắc" mà chuyển thành "Tích cực"
-  if (assessment.downgradedFromExcellent) {
-    const isAbsent = absentCount > 3;
-    const isPenalty = penaltyPoints >= 5;
+  // 1. Quy định: Vắng từ 4 lượt trở lên hoặc bị trừ từ 5đ trở lên tự động xếp xuống 1 bậc nhận xét TT22
+  if (assessment.downgraded) {
+    if (assessment.originalLevel === 'excellent') {
+      const isAbsent = absentCount >= 4;
+      const isPenalty = penaltyPoints >= 5;
 
-    if (isAbsent && isPenalty) {
-      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_BOTH.length);
-      template = TEMPLATES_DOWNGRADED_BOTH[idx];
-    } else if (isAbsent) {
-      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_ABSENT.length);
-      template = TEMPLATES_DOWNGRADED_ABSENT[idx];
+      if (isAbsent && isPenalty) {
+        const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_BOTH.length);
+        template = TEMPLATES_DOWNGRADED_BOTH[idx];
+      } else if (isAbsent) {
+        const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_ABSENT.length);
+        template = TEMPLATES_DOWNGRADED_ABSENT[idx];
+      } else {
+        const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_PENALTY.length);
+        template = TEMPLATES_DOWNGRADED_PENALTY[idx];
+      }
+    } else if (assessment.originalLevel === 'active') {
+      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_ACTIVE_TO_PASSED_ABSENT.length);
+      template = TEMPLATES_DOWNGRADED_ACTIVE_TO_PASSED_ABSENT[idx];
+    } else if (assessment.originalLevel === 'passed') {
+      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_PASSED_TO_NOT_PASSED_ABSENT.length);
+      template = TEMPLATES_DOWNGRADED_PASSED_TO_NOT_PASSED_ABSENT[idx];
     } else {
-      const idx = getHashIndex(hashKey, TEMPLATES_DOWNGRADED_PENALTY.length);
-      template = TEMPLATES_DOWNGRADED_PENALTY[idx];
+      const idx = getHashIndex(hashKey, TEMPLATES_NOT_PASSED_ABSENT.length);
+      template = TEMPLATES_NOT_PASSED_ABSENT[idx];
     }
+  } else if (absentCount >= 4 && assessment.level === 'not_passed') {
+    const idx = getHashIndex(hashKey, TEMPLATES_NOT_PASSED_ABSENT.length);
+    template = TEMPLATES_NOT_PASSED_ABSENT[idx];
   } else if (note.includes('mất trật tự') || note.includes('làm việc riêng') || note.includes('nói chuyện')) {
     if (assessment.level === 'active') {
       template = {
@@ -463,6 +533,9 @@ export const generateTT22Comment = (
     parentMessage,
     wordCount,
     downgradedFromExcellent: assessment.downgradedFromExcellent,
+    downgraded: assessment.downgraded,
+    originalLevel: assessment.originalLevel,
+    originalLabel: assessment.originalLabel,
     downgradeReason: assessment.downgradeReason,
     absentCount,
     penaltyPoints,

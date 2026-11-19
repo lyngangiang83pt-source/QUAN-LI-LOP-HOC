@@ -139,9 +139,19 @@ export const StudentCard: React.FC<StudentCardProps> = ({
             <h3 className="font-extrabold text-slate-900 text-base leading-tight">
               {student.name}
             </h3>
-            {/* Red bold student code in parentheses */}
-            <div className="text-xs text-rose-600 font-extrabold mt-0.5">
-              (Mã: {student.id})
+            {/* Red bold student code in parentheses & Absent warning tag */}
+            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+              <span className="text-xs text-rose-600 font-extrabold">
+                (Mã: {student.id})
+              </span>
+              {(student.absentCount || 0) >= 4 && (
+                <span
+                  className="px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300"
+                  title={`Em ${student.name} đã vắng ${student.absentCount} lượt (≥ 4 lượt) ➔ Tự động hạ 1 bậc TT22 sang "${assessment.label}"`}
+                >
+                  ⚠️ Vắng {student.absentCount} buổi (Hạ 1 bậc TT22)
+                </span>
+              )}
             </div>
           </div>
           <button

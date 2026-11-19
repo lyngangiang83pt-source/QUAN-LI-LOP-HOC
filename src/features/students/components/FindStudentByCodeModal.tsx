@@ -239,6 +239,11 @@ export const FindStudentByCodeModal: React.FC<FindStudentByCodeModalProps> = ({
                       <Sparkles size={10} /> Hoàn thành
                     </span>
                   )}
+                  {(activeStudent.absentCount || 0) >= 4 && (
+                    <span className="bg-rose-500/40 text-rose-100 border border-rose-300/60 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-0.5">
+                      ⚠️ Vắng {activeStudent.absentCount} buổi (Hạ 1 bậc TT22)
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -31,7 +31,10 @@ export interface AssessmentGrade {
   desc: string;
   rangeLabel: string;
   downgradedFromExcellent?: boolean;
+  downgraded?: boolean;
   downgradeReason?: string;
+  originalLevel?: 'excellent' | 'active' | 'passed' | 'not_passed';
+  originalLabel?: string;
 }
 
 export const getStudentAssessment = (
@@ -55,14 +58,15 @@ export const getStudentAssessment = (
     points = Number(target) || 0;
   }
 
-  if (points >= 20) {
-    const isAbsentDisqualified = absentCount > 3;
-    const isPenaltyDisqualified = penaltyPoints >= 5;
+  const isAbsentDisqualified = absentCount >= 4; // Vắng từ 4 lượt trở lên
+  const isPenaltyDisqualified = penaltyPoints >= 5; // Bị trừ từ 5đ trở lên
 
-    // Quy định: Nghỉ trên 3 lượt hoặc bị trừ từ 5đ trở lên thì KHÔNG nhận xét Xuất sắc mà chuyển thành Tích cực
+  // 1. Mức Xuất sắc (≥ 20 điểm)
+  if (points >= 20) {
+    // Quy định: Nghỉ từ 4 lượt trở lên hoặc bị trừ từ 5đ trở lên thì tự động hạ 1 bậc xuống Tích cực
     if (isAbsentDisqualified || isPenaltyDisqualified) {
       const reasons: string[] = [];
-      if (isAbsentDisqualified) reasons.push(`nghỉ ${absentCount} lượt (> 3)`);
+      if (isAbsentDisqualified) reasons.push(`vắng ${absentCount} lượt (≥ 4)`);
       if (isPenaltyDisqualified) reasons.push(`bị trừ ${penaltyPoints}đ (≥ 5đ)`);
       const reasonText = reasons.join(', ');
 
@@ -72,10 +76,13 @@ export const getStudentAssessment = (
         icon: '🌟',
         badgeClass: 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold border-sky-300 ring-1 ring-sky-300/80 shadow-xs hover:from-sky-400 hover:to-blue-500',
         pillClass: 'bg-sky-100 text-sky-900 border-sky-300',
-        desc: `Đạt ${points}đ nhưng ${reasonText} ➔ Chuyển thành Tích cực!`,
-        rangeLabel: '≥ 20đ (Tích cực)',
+        desc: `Đạt ${points}đ nhưng ${reasonText} ➔ Tự động hạ 1 bậc xuống Tích cực!`,
+        rangeLabel: '≥ 20đ (Hạ Tích cực)',
+        downgraded: true,
         downgradedFromExcellent: true,
         downgradeReason: `Đạt ${points}đ nhưng ${reasonText}`,
+        originalLevel: 'excellent',
+        originalLabel: 'Xuất sắc',
       };
     }
 
@@ -89,7 +96,26 @@ export const getStudentAssessment = (
       rangeLabel: '≥ 20đ',
     };
   }
+
+  // 2. Mức Tích cực (15 - 19 điểm)
   if (points >= 15) {
+    // Quy định: Vắng từ 4 lượt trở lên tự động hạ 1 bậc xuống Đạt
+    if (isAbsentDisqualified) {
+      return {
+        level: 'passed',
+        label: 'Đạt',
+        icon: '✅',
+        badgeClass: 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold border-emerald-300 ring-1 ring-emerald-300/80 shadow-xs hover:from-emerald-400 hover:to-teal-500',
+        pillClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+        desc: `Đạt ${points}đ (Tích cực) nhưng vắng ${absentCount} lượt (≥ 4) ➔ Tự động hạ 1 bậc xuống Đạt!`,
+        rangeLabel: '15 - 19đ (Hạ Đạt)',
+        downgraded: true,
+        downgradeReason: `Đạt ${points}đ nhưng vắng ${absentCount} lượt (≥ 4)`,
+        originalLevel: 'active',
+        originalLabel: 'Tích cực',
+      };
+    }
+
     return {
       level: 'active',
       label: 'Tích cực',
@@ -100,7 +126,26 @@ export const getStudentAssessment = (
       rangeLabel: '15 - 19đ',
     };
   }
+
+  // 3. Mức Đạt (10 - 14 điểm)
   if (points >= 10) {
+    // Quy định: Vắng từ 4 lượt trở lên tự động hạ 1 bậc xuống Chưa đạt
+    if (isAbsentDisqualified) {
+      return {
+        level: 'not_passed',
+        label: 'Chưa đạt',
+        icon: '⚠️',
+        badgeClass: 'bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold border-rose-300 ring-1 ring-rose-300/80 shadow-xs hover:from-rose-400 hover:to-red-500',
+        pillClass: 'bg-rose-100 text-rose-900 border-rose-300',
+        desc: `Đạt ${points}đ (Đạt) nhưng vắng ${absentCount} lượt (≥ 4) ➔ Tự động hạ 1 bậc xuống Chưa đạt!`,
+        rangeLabel: '10 - 14đ (Hạ Chưa đạt)',
+        downgraded: true,
+        downgradeReason: `Đạt ${points}đ nhưng vắng ${absentCount} lượt (≥ 4)`,
+        originalLevel: 'passed',
+        originalLabel: 'Đạt',
+      };
+    }
+
     return {
       level: 'passed',
       label: 'Đạt',
@@ -111,14 +156,21 @@ export const getStudentAssessment = (
       rangeLabel: '10 - 14đ',
     };
   }
+
+  // 4. Mức Chưa đạt (< 10 điểm)
+  const desc = isAbsentDisqualified
+    ? `Dưới 10 điểm và vắng ${absentCount} lượt (≥ 4) - Cần chú ý chuyên cần và nỗ lực nhiều hơn!`
+    : 'Dưới 10 điểm - Chưa đạt yêu cầu!';
+
   return {
     level: 'not_passed',
     label: 'Chưa đạt',
     icon: '⚠️',
     badgeClass: 'bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold border-rose-300 ring-1 ring-rose-300/80 shadow-xs hover:from-rose-400 hover:to-red-500',
     pillClass: 'bg-rose-100 text-rose-900 border-rose-300',
-    desc: 'Dưới 10 điểm - Chưa đạt yêu cầu!',
+    desc,
     rangeLabel: '< 10đ',
+    downgradeReason: isAbsentDisqualified ? `Vắng ${absentCount} lượt (≥ 4)` : undefined,
   };
 };
 

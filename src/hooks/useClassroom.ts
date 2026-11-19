@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClassItem, Student, AttendanceStatus, FilterType, ToastItem, SyncStatus, ResetHonorData } from '../types';
-import { DEFAULT_CLASSES } from '../constants/classroomData';
+import { DEFAULT_CLASSES, getStudentAssessment } from '../constants/classroomData';
 import { audioService } from '../services/audioService';
 import { triggerGoldStarsCelebration } from '../services/confettiService';
 import { SupabaseSyncService } from '../features/supabase-sync/supabaseSyncService';
@@ -397,7 +397,15 @@ export const useClassroom = () => {
     if (pointDiff > 0) audioService.play('plus');
     else if (pointDiff < 0) audioService.play('minus');
 
-    showToast(`Đã điểm danh: ${student.name} ➔ ${statusText}`, pointDiff >= 0 ? 'success' : 'danger');
+    if (newStatus === 'absent' && newAbsentCount >= 4) {
+      const currentAssessment = getStudentAssessment({ ...student, points: newPts, absentCount: newAbsentCount });
+      showToast(`⚠️ ${student.name} đã vắng ${newAbsentCount} lượt (≥ 4 lượt) ➔ Tự động hạ 1 bậc TT22 (sang "${currentAssessment.label}")!`, 'danger');
+    } else if (oldStatus === 'absent' && newStatus !== 'absent' && (student.absentCount || 0) >= 4 && newAbsentCount < 4) {
+      const restoredAssessment = getStudentAssessment({ ...student, points: newPts, absentCount: newAbsentCount });
+      showToast(`✅ ${student.name} đã giảm số lượt vắng (< 4) ➔ Phục hồi bậc TT22 ("${restoredAssessment.label}")!`, 'success');
+    } else {
+      showToast(`Đã điểm danh: ${student.name} ➔ ${statusText}`, pointDiff >= 0 ? 'success' : 'danger');
+    }
   }, [classes, currentClassId, persistClasses, saveUndoSnapshot, showToast, students]);
 
   const updateScore = useCallback((studentId: string, pointDiff: number, reason: string) => {
